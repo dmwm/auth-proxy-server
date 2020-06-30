@@ -80,7 +80,7 @@ type Configuration struct {
 	AuthTokenUrl       string    `json:"auth_token_url"` // CERN SSO OAuth2 OICD Token url
 	CMSHeaders         bool      `json:"cms_headers"`    // set CMS headers
 	RedirectUrl        string    `json:"redirect_url"`   // redirect auth url for proxy server
-	Verbose            bool      `json:"verbose"`        // verbose output
+	Verbose            int       `json:"verbose"`        // verbose output
 	Ingress            []Ingress `json:"ingress"`        // incress section
 	ServerCrt          string    `json:"server_cert"`    // server certificate
 	ServerKey          string    `json:"server_key"`     // server certificate
@@ -92,7 +92,7 @@ type Configuration struct {
 
 // ServerSettings controls server parameters
 type ServerSettings struct {
-	Verbose bool `json:"verbose"` // verbosity output
+	Verbose int `json:"verbose"` // verbosity output
 }
 
 // TokenAttributes contains structure of access token attributes
@@ -181,7 +181,7 @@ func parseConfig(configFile string) error {
 	if Config.OAuthUrl == "" {
 		Config.OAuthUrl = "https://auth.cern.ch/auth/realms/cern"
 	}
-	if Config.Verbose {
+	if Config.Verbose > 0 {
 		log.Printf("%+v\n", Config)
 	}
 	return nil
@@ -237,6 +237,9 @@ func serveReverseProxy(targetUrl string, res http.ResponseWriter, req *http.Requ
 	}
 	req.Header.Set("X-Forwarded-Host", reqHost)
 	req.Host = url.Host
+	if Config.Verbose > 0 {
+		log.Printf("proxy request: %+v\n", req)
+	}
 
 	// Note that ServeHttp is non blocking and uses a go routine under the hood
 	proxy.ServeHTTP(res, req)
@@ -257,12 +260,12 @@ func introspectToken(token string) (TokenAttributes, error) {
 	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	r.Header.Add("User-Agent", "go-client")
 	client := http.Client{}
-	if Config.Verbose {
+	if Config.Verbose > 1 {
 		dump, err := httputil.DumpRequestOut(r, true)
 		log.Println("request", string(dump), err)
 	}
 	resp, err := client.Do(r)
-	if Config.Verbose {
+	if Config.Verbose > 1 {
 		dump, err := httputil.DumpResponse(resp, true)
 		log.Println("response", string(dump), err)
 	}
@@ -300,12 +303,12 @@ func renewToken(token string, r *http.Request) (TokenInfo, error) {
 	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	r.Header.Add("User-Agent", "go-client")
 	client := http.Client{}
-	if Config.Verbose {
+	if Config.Verbose > 1 {
 		dump, err := httputil.DumpRequestOut(r, true)
 		log.Println("request", string(dump), err)
 	}
 	resp, err := client.Do(r)
-	if Config.Verbose {
+	if Config.Verbose > 1 {
 		dump, err := httputil.DumpResponse(resp, true)
 		log.Println("response", string(dump), err)
 	}
@@ -346,7 +349,7 @@ func checkAccessToken(r *http.Request) bool {
 		log.Println(msg)
 		return false
 	}
-	if Config.Verbose {
+	if Config.Verbose > 1 {
 		if err := printJSON(attrs, "token attributes"); err != nil {
 			msg := fmt.Sprintf("Failed to output token attributes: %v", err)
 			log.Println(msg)
@@ -382,7 +385,7 @@ func serverSettingsHandler(w http.ResponseWriter, r *http.Request) {
 // user tokens
 func serverCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	sess := globalSessions.SessionStart(w, r)
-	if Config.Verbose {
+	if Config.Verbose > 0 {
 		msg := fmt.Sprintf("call from '/callback', r.URL %s, sess.path %v", r.URL, sess.Get("path"))
 		printHTTPRequest(r, msg)
 	}
@@ -402,7 +405,7 @@ func serverCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to exchange token: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
-	if Config.Verbose {
+	if Config.Verbose > 1 {
 		log.Println("oauth2Token", oauth2Token)
 	}
 	rawIDToken, ok := oauth2Token.Extra("id_token").(string)
@@ -413,7 +416,7 @@ func serverCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	refreshToken, ok := oauth2Token.Extra("refresh_token").(string)
 	refreshExpire, ok := oauth2Token.Extra("refresh_expires_in").(float64)
 	accessExpire, ok := oauth2Token.Extra("expires_in").(float64)
-	if Config.Verbose {
+	if Config.Verbose > 1 {
 		log.Println("rawIDToken", rawIDToken)
 	}
 	idToken, err := Verifier.Verify(Context, rawIDToken)
@@ -447,7 +450,7 @@ func serverCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	sess.Set("accessExpire", int64(accessExpire))
 	sess.Set("userinfo", resp.IDTokenClaims)
 	urlPath := sess.Get("path").(string)
-	if Config.Verbose {
+	if Config.Verbose > 0 {
 		log.Println("session data", string(data))
 		log.Println("redirect to", urlPath)
 	}
@@ -461,7 +464,7 @@ func serverCallbackHandler(w http.ResponseWriter, r *http.Request) {
 // to display or renew user tokens, respectively
 func serverRequestHandler(w http.ResponseWriter, r *http.Request) {
 	sess := globalSessions.SessionStart(w, r)
-	if Config.Verbose {
+	if Config.Verbose > 0 {
 		msg := fmt.Sprintf("call from '/', r.URL %s, sess.Path %v", r.URL, sess.Get("path"))
 		printHTTPRequest(r, msg)
 	}
@@ -489,13 +492,17 @@ func serverRequestHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		// set CMS headers
 		if Config.CMSHeaders {
-			if Config.Verbose {
+			if Config.Verbose > 1 {
 				if err := printJSON(userData, "user data"); err != nil {
 					log.Println("unable to print user data")
 				}
 			}
-			CMSAuth.SetCMSHeaders(r, userData, CricRecords, Config.Verbose)
-			if Config.Verbose {
+			if Config.Verbose > 2 {
+				CMSAuth.SetCMSHeaders(r, userData, CricRecords, true)
+			} else {
+				CMSAuth.SetCMSHeaders(r, userData, CricRecords, false)
+			}
+			if Config.Verbose > 0 {
 				printHTTPRequest(r, "cms headers")
 			}
 		}
@@ -562,7 +569,7 @@ func serverRequestHandler(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, msg, http.StatusInternalServerError)
 				return
 			}
-			if Config.Verbose {
+			if Config.Verbose > 1 {
 				printJSON(tokenInfo, "new token info")
 			}
 			if !strings.Contains(strings.ToLower(accept), "json") {
@@ -582,7 +589,7 @@ func serverRequestHandler(w http.ResponseWriter, r *http.Request) {
 		// to redirect user request
 		for _, rec := range Config.Ingress {
 			if strings.Contains(r.URL.Path, rec.Path) {
-				if Config.Verbose {
+				if Config.Verbose > 0 {
 					log.Printf("ingress request path %s, record path %s, service url %s, old path %s, new path %s\n", r.URL.Path, rec.Path, rec.ServiceUrl, rec.OldPath, rec.NewPath)
 				}
 				url := rec.ServiceUrl
@@ -596,7 +603,7 @@ func serverRequestHandler(w http.ResponseWriter, r *http.Request) {
 					if r.URL.Path == "" {
 						r.URL.Path = "/"
 					}
-					if Config.Verbose {
+					if Config.Verbose > 0 {
 						log.Printf("service url %s, new request path %s\n", url, r.URL.Path)
 					}
 				}
@@ -638,7 +645,7 @@ func serverRequestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	// there is no proper authentication yet, redirect users to auth callback
 	aurl := OAuth2Config.AuthCodeURL(oauthState)
-	if Config.Verbose {
+	if Config.Verbose > 0 {
 		log.Println("auth redirect to", aurl)
 	}
 	http.Redirect(w, r, aurl, http.StatusFound)
@@ -719,11 +726,22 @@ func main() {
 	flag.StringVar(&config, "config", "", "configuration file")
 	flag.Parse()
 	err := parseConfig(config)
+	// log time, filename, and line number
+	if Config.Verbose > 0 {
+		log.SetFlags(log.LstdFlags | log.Lshortfile)
+	} else {
+		log.SetFlags(log.LstdFlags)
+	}
+
 	if err == nil {
 		CMSAuth.Init(Config.Hmac)
 		// update periodically cric records
 		go func() {
 			cricRecords := make(cmsauth.CricRecords)
+			verbose := false
+			if Config.Verbose > 2 {
+				verbose = true
+			}
 			var err error
 			for {
 				interval := Config.UpdateCricInterval
@@ -732,10 +750,10 @@ func main() {
 				}
 				// parse cric records
 				if Config.CricUrl != "" {
-					cricRecords, err = cmsauth.GetCricData(Config.CricUrl, Config.Verbose)
+					cricRecords, err = cmsauth.GetCricData(Config.CricUrl, verbose)
 					log.Printf("obtain CRIC records from %s, %v", Config.CricUrl, err)
 				} else if Config.CricFile != "" {
-					cricRecords, err = cmsauth.ParseCric(Config.CricFile, Config.Verbose)
+					cricRecords, err = cmsauth.ParseCric(Config.CricFile, verbose)
 					log.Printf("obtain CRIC records from %s, %v", Config.CricFile, err)
 				} else {
 					log.Println("Untable to get CRIC records no file or no url was provided")
