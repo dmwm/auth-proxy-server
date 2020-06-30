@@ -243,7 +243,7 @@ func serveReverseProxy(targetUrl string, res http.ResponseWriter, req *http.Requ
 	}
 	req.Host = url.Host
 	if Config.Verbose > 0 {
-		log.Printf("proxy request: %+v\n", req)
+		log.Printf("### proxy request: %+v\n", req)
 	}
 
 	// Note that ServeHttp is non blocking and uses a go routine under the hood
@@ -354,7 +354,7 @@ func checkAccessToken(r *http.Request) bool {
 		log.Println(msg)
 		return false
 	}
-	if Config.Verbose > 1 {
+	if Config.Verbose > 2 {
 		if err := printJSON(attrs, "token attributes"); err != nil {
 			msg := fmt.Sprintf("Failed to output token attributes: %v", err)
 			log.Println(msg)
@@ -410,7 +410,7 @@ func serverCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to exchange token: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
-	if Config.Verbose > 1 {
+	if Config.Verbose > 2 {
 		log.Println("oauth2Token", oauth2Token)
 	}
 	rawIDToken, ok := oauth2Token.Extra("id_token").(string)
@@ -421,7 +421,7 @@ func serverCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	refreshToken, ok := oauth2Token.Extra("refresh_token").(string)
 	refreshExpire, ok := oauth2Token.Extra("refresh_expires_in").(float64)
 	accessExpire, ok := oauth2Token.Extra("expires_in").(float64)
-	if Config.Verbose > 1 {
+	if Config.Verbose > 2 {
 		log.Println("rawIDToken", rawIDToken)
 	}
 	idToken, err := Verifier.Verify(Context, rawIDToken)
@@ -497,12 +497,12 @@ func serverRequestHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		// set CMS headers
 		if Config.CMSHeaders {
-			if Config.Verbose > 1 {
+			if Config.Verbose > 2 {
 				if err := printJSON(userData, "user data"); err != nil {
 					log.Println("unable to print user data")
 				}
 			}
-			if Config.Verbose > 2 {
+			if Config.Verbose > 3 {
 				CMSAuth.SetCMSHeaders(r, userData, CricRecords, true)
 			} else {
 				CMSAuth.SetCMSHeaders(r, userData, CricRecords, false)
@@ -574,7 +574,7 @@ func serverRequestHandler(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, msg, http.StatusInternalServerError)
 				return
 			}
-			if Config.Verbose > 1 {
+			if Config.Verbose > 2 {
 				printJSON(tokenInfo, "new token info")
 			}
 			if !strings.Contains(strings.ToLower(accept), "json") {
