@@ -70,25 +70,26 @@ type Ingress struct {
 
 // Configuration stores server configuration parameters
 type Configuration struct {
-	Port               int       `json:"port"`             // server port number
-	Base               string    `json:"base"`             // base URL
-	ClientID           string    `json:"client_id"`        // OICD client id
-	ClientSecret       string    `json:"client_secret"`    // OICD client secret
-	TargetUrl          string    `json:"target_url"`       // proxy target url (where requests will go)
-	XForwardedHost     string    `json:"x_forwarded_host"` // X-Forwarded-Host field of HTTP request
-	DocumentRoot       string    `json:"document_root"`    // root directory for the server
-	OAuthUrl           string    `json:"oauth_url"`        // CERN SSO OAuth2 realm url
-	AuthTokenUrl       string    `json:"auth_token_url"`   // CERN SSO OAuth2 OICD Token url
-	CMSHeaders         bool      `json:"cms_headers"`      // set CMS headers
-	RedirectUrl        string    `json:"redirect_url"`     // redirect auth url for proxy server
-	Verbose            int       `json:"verbose"`          // verbose output
-	Ingress            []Ingress `json:"ingress"`          // incress section
-	ServerCrt          string    `json:"server_cert"`      // server certificate
-	ServerKey          string    `json:"server_key"`       // server certificate
-	Hmac               string    `json:"hmac"`             // cmsweb hmac file
-	CricUrl            string    `json:"cric_url"`         // CRIC URL
-	CricFile           string    `json:"cric_file"`        // name of the CRIC file
-	UpdateCricInterval int64     `json:"update_cric"`      // interval (in sec) to update cric records
+	Port                int       `json:"port"`                   // server port number
+	Base                string    `json:"base"`                   // base URL
+	ClientID            string    `json:"client_id"`              // OICD client id
+	ClientSecret        string    `json:"client_secret"`          // OICD client secret
+	TargetUrl           string    `json:"target_url"`             // proxy target url (where requests will go)
+	XForwardedHost      string    `json:"X-Forwarded-Host"`       // X-Forwarded-Host field of HTTP request
+	XContentTypeOptions string    `json:"X-Content-Type-Options"` // X-Content-Type-Options option
+	DocumentRoot        string    `json:"document_root"`          // root directory for the server
+	OAuthUrl            string    `json:"oauth_url"`              // CERN SSO OAuth2 realm url
+	AuthTokenUrl        string    `json:"auth_token_url"`         // CERN SSO OAuth2 OICD Token url
+	CMSHeaders          bool      `json:"cms_headers"`            // set CMS headers
+	RedirectUrl         string    `json:"redirect_url"`           // redirect auth url for proxy server
+	Verbose             int       `json:"verbose"`                // verbose output
+	Ingress             []Ingress `json:"ingress"`                // incress section
+	ServerCrt           string    `json:"server_cert"`            // server certificate
+	ServerKey           string    `json:"server_key"`             // server certificate
+	Hmac                string    `json:"hmac"`                   // cmsweb hmac file
+	CricUrl             string    `json:"cric_url"`               // CRIC URL
+	CricFile            string    `json:"cric_file"`              // name of the CRIC file
+	UpdateCricInterval  int64     `json:"update_cric"`            // interval (in sec) to update cric records
 }
 
 // ServerSettings controls server parameters
@@ -240,6 +241,9 @@ func serveReverseProxy(targetUrl string, res http.ResponseWriter, req *http.Requ
 		req.Header.Set("X-Forwarded-Host", Config.XForwardedHost)
 	} else {
 		req.Header.Set("X-Forwarded-Host", reqHost)
+	}
+	if Config.XContentTypeOptions != "" {
+		req.Header.Set("X-Content-Type-Options", Config.XContentTypeOptions)
 	}
 	req.Host = url.Host
 	if Config.Verbose > 0 {
