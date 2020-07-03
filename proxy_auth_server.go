@@ -34,6 +34,7 @@ Reverse proxy examples:
    https://github.com/bechurch/reverse-proxy-demo/blob/master/main.go
    https://imti.co/golang-reverse-proxy/
    https://itnext.io/capturing-metrics-with-gos-reverse-proxy-5c36cb20cb20
+   https://www.integralist.co.uk/posts/golang-reverse-proxy/
 */
 
 import (
@@ -242,12 +243,17 @@ func serveReverseProxy(targetUrl string, res http.ResponseWriter, req *http.Requ
 	} else {
 		req.Header.Set("X-Forwarded-Host", reqHost)
 	}
-	if Config.XContentTypeOptions != "" {
-		req.Header.Set("X-Content-Type-Options", Config.XContentTypeOptions)
-	}
 	req.Host = url.Host
 	if Config.Verbose > 0 {
 		log.Printf("### proxy request: %+v\n", req)
+	}
+
+	// use custom modify response function to setup response headers
+	proxy.ModifyResponse = func(resp *http.Response) error {
+		if Config.XContentTypeOptions != "" {
+			resp.Header.Set("X-Content-Type-Options", Config.XContentTypeOptions)
+		}
+		return nil
 	}
 
 	// Note that ServeHttp is non blocking and uses a go routine under the hood
