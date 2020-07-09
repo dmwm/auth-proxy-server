@@ -782,21 +782,23 @@ func auth_proxy_server(serverCrt, serverKey string) {
 	http.HandleFunc(fmt.Sprintf("%s/callback", Config.Base), serverCallbackHandler)
 
 	// the request handler
-	serverMux := http.NewServeMux()
-	serverMux.HandleFunc("/", serverRequestHandler)
-	//     http.HandleFunc("/", serverRequestHandler)
+	//     serverMux := http.NewServeMux()
+	//     serverMux.HandleFunc("/", serverRequestHandler)
+	http.HandleFunc("/", serverRequestHandler)
 
 	// start HTTP or HTTPs server based on provided configuration
 	addr := fmt.Sprintf(":%d", Config.Port)
 	if serverCrt != "" && serverKey != "" {
 		//start HTTPS server which require user certificates
-		server := &http.Server{Addr: addr, Handler: serverMux}
+		//         server := &http.Server{Addr: addr, Handler: serverMux}
+		server := &http.Server{Addr: addr}
 		log.Printf("Starting HTTPs server on %s", addr)
 		log.Fatal(server.ListenAndServeTLS(serverCrt, serverKey))
 	} else {
 		// Start server without user certificates
 		log.Printf("Starting HTTP server on %s", addr)
-		log.Fatal(http.ListenAndServe(addr, serverMux))
+		//         log.Fatal(http.ListenAndServe(addr, serverMux))
+		log.Fatal(http.ListenAndServe(addr, nil))
 	}
 }
 
