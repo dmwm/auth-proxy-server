@@ -734,13 +734,13 @@ func auth_proxy_server(serverCrt, serverKey string) {
 	addr := fmt.Sprintf(":%d", Config.Port)
 	if serverCrt != "" && serverKey != "" {
 		//start HTTPS server which require user certificates
-		server := &http.Server{Addr: addr}
+		server := &http.Server{Addr: addr, Handler: serverMux}
 		log.Printf("Starting HTTPs server on %s", addr)
 		log.Fatal(server.ListenAndServeTLS(serverCrt, serverKey))
 	} else {
 		// Start server without user certificates
 		log.Printf("Starting HTTP server on %s", addr)
-		log.Fatal(http.ListenAndServe(addr, nil))
+		log.Fatal(http.ListenAndServe(addr, serverMux))
 	}
 }
 
@@ -768,13 +768,13 @@ func x509_proxy_server(serverCrt, serverKey string) {
 	addr := fmt.Sprintf(":%d", Config.X509Port)
 	if serverCrt != "" && serverKey != "" {
 		//start HTTPS server which require user certificates
-		server := &http.Server{Addr: addr}
+		server := &http.Server{Addr: addr, Handler: serverMux}
 		log.Printf("Starting x509 HTTPs server on %s", addr)
 		log.Fatal(server.ListenAndServeTLS(serverCrt, serverKey))
 	} else {
 		// Start server without user certificates
 		log.Printf("Starting x509 HTTP server on %s", addr)
-		log.Fatal(http.ListenAndServe(addr, nil))
+		log.Fatal(http.ListenAndServe(addr, serverMux))
 	}
 }
 
