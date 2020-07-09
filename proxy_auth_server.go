@@ -663,6 +663,7 @@ func serverRequestHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		redirect(w, r)
+		return
 	}
 	// there is no proper authentication yet, redirect users to auth callback
 	aurl := OAuth2Config.AuthCodeURL(oauthState)
@@ -752,6 +753,7 @@ func x509RequestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if status {
 		redirect(w, r)
+		return
 	}
 	w.WriteHeader(http.StatusUnauthorized)
 }
