@@ -72,6 +72,7 @@ type Ingress struct {
 // Configuration stores server configuration parameters
 type Configuration struct {
 	Port                int       `json:"port"`                   // server port number
+	X509Port            int       `json:"x509port"`               // server port number for x509 clients
 	Base                string    `json:"base"`                   // base URL
 	ClientID            string    `json:"client_id"`              // OICD client id
 	ClientSecret        string    `json:"client_secret"`          // OICD client secret
@@ -258,6 +259,67 @@ func serveReverseProxy(targetUrl string, res http.ResponseWriter, req *http.Requ
 
 	// Note that ServeHttp is non blocking and uses a go routine under the hood
 	proxy.ServeHTTP(res, req)
+}
+
+// helper function to redirect HTTP request
+func redirect(w http.ResponseWriter, r *http.Request) {
+	// if Configuration provides Ingress rules we'll use them
+	// to redirect user request
+	for _, rec := range Config.Ingress {
+		if strings.Contains(r.URL.Path, rec.Path) {
+			if Config.Verbose > 0 {
+				log.Printf("ingress request path %s, record path %s, service url %s, old path %s, new path %s\n", r.URL.Path, rec.Path, rec.ServiceUrl, rec.OldPath, rec.NewPath)
+			}
+			url := rec.ServiceUrl
+			if rec.OldPath != "" {
+				// replace old path to new one, e.g. /couchdb/_all_dbs => /_all_dbs
+				r.URL.Path = strings.Replace(r.URL.Path, rec.OldPath, rec.NewPath, 1)
+				// if r.URL.Path ended with "/", remove it to avoid
+				// cases /path/index.html/ after old->new path substitution
+				r.URL.Path = strings.TrimSuffix(r.URL.Path, "/")
+				// replace empty path with root path
+				if r.URL.Path == "" {
+					r.URL.Path = "/"
+				}
+				if Config.Verbose > 0 {
+					log.Printf("service url %s, new request path %s\n", url, r.URL.Path)
+				}
+			}
+			log.Println("serveReverseProxy", url, r.URL.Path)
+			serveReverseProxy(url, w, r)
+			return
+		}
+	}
+	// if no redirection was done, then we'll use either TargetURL
+	// or return Hello reply
+	if Config.TargetUrl != "" {
+		serveReverseProxy(Config.TargetUrl, w, r)
+	} else {
+		if Config.DocumentRoot != "" {
+			fname := fmt.Sprintf("%s%s", Config.DocumentRoot, r.URL.Path)
+			if strings.HasSuffix(fname, "css") {
+				w.Header().Set("Content-Type", "text/css")
+			} else if strings.HasSuffix(fname, "js") {
+				w.Header().Set("Content-Type", "application/javascript")
+			}
+			if r.URL.Path == "/" {
+				fname = fmt.Sprintf("%s/index.html", Config.DocumentRoot)
+			}
+			if _, err := os.Stat(fname); err == nil {
+				body, err := ioutil.ReadFile(fname)
+				if err == nil {
+					data := []byte(body)
+					w.Write(data)
+					return
+				}
+			}
+		}
+		msg := fmt.Sprintf("Hello %s", r.URL.Path)
+		data := []byte(msg)
+		w.Write(data)
+		return
+	}
+	return
 }
 
 // helper function to verify/validate given token
@@ -600,63 +662,7 @@ func serverRequestHandler(w http.ResponseWriter, r *http.Request) {
 			w.Write(data)
 			return
 		}
-		// if Configuration provides Ingress rules we'll use them
-		// to redirect user request
-		for _, rec := range Config.Ingress {
-			if strings.Contains(r.URL.Path, rec.Path) {
-				if Config.Verbose > 0 {
-					log.Printf("ingress request path %s, record path %s, service url %s, old path %s, new path %s\n", r.URL.Path, rec.Path, rec.ServiceUrl, rec.OldPath, rec.NewPath)
-				}
-				url := rec.ServiceUrl
-				if rec.OldPath != "" {
-					// replace old path to new one, e.g. /couchdb/_all_dbs => /_all_dbs
-					r.URL.Path = strings.Replace(r.URL.Path, rec.OldPath, rec.NewPath, 1)
-					// if r.URL.Path ended with "/", remove it to avoid
-					// cases /path/index.html/ after old->new path substitution
-					r.URL.Path = strings.TrimSuffix(r.URL.Path, "/")
-					// replace empty path with root path
-					if r.URL.Path == "" {
-						r.URL.Path = "/"
-					}
-					if Config.Verbose > 0 {
-						log.Printf("service url %s, new request path %s\n", url, r.URL.Path)
-					}
-				}
-				log.Println("serveReverseProxy", url, r.URL.Path)
-				serveReverseProxy(url, w, r)
-				return
-			}
-		}
-		// if no redirection was done, then we'll use either TargetURL
-		// or return Hello reply
-		if Config.TargetUrl != "" {
-			serveReverseProxy(Config.TargetUrl, w, r)
-		} else {
-			if Config.DocumentRoot != "" {
-				fname := fmt.Sprintf("%s%s", Config.DocumentRoot, r.URL.Path)
-				if strings.HasSuffix(fname, "css") {
-					w.Header().Set("Content-Type", "text/css")
-				} else if strings.HasSuffix(fname, "js") {
-					w.Header().Set("Content-Type", "application/javascript")
-				}
-				if r.URL.Path == "/" {
-					fname = fmt.Sprintf("%s/index.html", Config.DocumentRoot)
-				}
-				if _, err := os.Stat(fname); err == nil {
-					body, err := ioutil.ReadFile(fname)
-					if err == nil {
-						data := []byte(body)
-						w.Write(data)
-						return
-					}
-				}
-			}
-			msg := fmt.Sprintf("Hello %s", r.URL.Path)
-			data := []byte(msg)
-			w.Write(data)
-			return
-		}
-		return
+		redirect(w, r)
 	}
 	// there is no proper authentication yet, redirect users to auth callback
 	aurl := OAuth2Config.AuthCodeURL(oauthState)
@@ -720,7 +726,9 @@ func auth_proxy_server(serverCrt, serverKey string) {
 	http.HandleFunc(fmt.Sprintf("%s/callback", Config.Base), serverCallbackHandler)
 
 	// the request handler
-	http.HandleFunc("/", serverRequestHandler)
+	serverMux := http.NewServeMux()
+	serverMux.HandleFunc("/", serverRequestHandler)
+	//     http.HandleFunc("/", serverRequestHandler)
 
 	// start HTTP or HTTPs server based on provided configuration
 	addr := fmt.Sprintf(":%d", Config.Port)
@@ -732,6 +740,40 @@ func auth_proxy_server(serverCrt, serverKey string) {
 	} else {
 		// Start server without user certificates
 		log.Printf("Starting HTTP server on %s", addr)
+		log.Fatal(http.ListenAndServe(addr, nil))
+	}
+}
+
+// x509RequestHandler handle requests for x509 clients
+func x509RequestHandler(w http.ResponseWriter, r *http.Request) {
+	status := CMSAuth.CheckAuthnAuthz(r.Header)
+	if Config.Verbose > 0 {
+		log.Println("x509RequestHandler", r.Header, status)
+	}
+	if status {
+		redirect(w, r)
+	}
+	w.WriteHeader(http.StatusUnauthorized)
+}
+
+// helper function to start x509 proxy server
+func x509_proxy_server(serverCrt, serverKey string) {
+
+	// the request handler
+	serverMux := http.NewServeMux()
+	serverMux.HandleFunc("/", x509RequestHandler)
+	//     http.HandleFunc("/", x509RequestHandler)
+
+	// start HTTP or HTTPs server based on provided configuration
+	addr := fmt.Sprintf(":%d", Config.X509Port)
+	if serverCrt != "" && serverKey != "" {
+		//start HTTPS server which require user certificates
+		server := &http.Server{Addr: addr}
+		log.Printf("Starting x509 HTTPs server on %s", addr)
+		log.Fatal(server.ListenAndServeTLS(serverCrt, serverKey))
+	} else {
+		// Start server without user certificates
+		log.Printf("Starting x509 HTTP server on %s", addr)
 		log.Fatal(http.ListenAndServe(addr, nil))
 	}
 }
@@ -787,8 +829,14 @@ func main() {
 		_, e1 := os.Stat(Config.ServerCrt)
 		_, e2 := os.Stat(Config.ServerKey)
 		if e1 == nil && e2 == nil {
+			if Config.X509Port > 0 {
+				go x509_proxy_server(Config.ServerCrt, Config.ServerKey)
+			}
 			auth_proxy_server(Config.ServerCrt, Config.ServerKey)
 		} else {
+			if Config.X509Port > 0 {
+				go x509_proxy_server("", "")
+			}
 			auth_proxy_server("", "")
 		}
 	}
