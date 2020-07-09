@@ -662,62 +662,7 @@ func serverRequestHandler(w http.ResponseWriter, r *http.Request) {
 			w.Write(data)
 			return
 		}
-		// if Configuration provides Ingress rules we'll use them
-		// to redirect user request
-		for _, rec := range Config.Ingress {
-			if strings.Contains(r.URL.Path, rec.Path) {
-				if Config.Verbose > 0 {
-					log.Printf("ingress request path %s, record path %s, service url %s, old path %s, new path %s\n", r.URL.Path, rec.Path, rec.ServiceUrl, rec.OldPath, rec.NewPath)
-				}
-				url := rec.ServiceUrl
-				if rec.OldPath != "" {
-					// replace old path to new one, e.g. /couchdb/_all_dbs => /_all_dbs
-					r.URL.Path = strings.Replace(r.URL.Path, rec.OldPath, rec.NewPath, 1)
-					// if r.URL.Path ended with "/", remove it to avoid
-					// cases /path/index.html/ after old->new path substitution
-					r.URL.Path = strings.TrimSuffix(r.URL.Path, "/")
-					// replace empty path with root path
-					if r.URL.Path == "" {
-						r.URL.Path = "/"
-					}
-					if Config.Verbose > 0 {
-						log.Printf("service url %s, new request path %s\n", url, r.URL.Path)
-					}
-				}
-				log.Println("serveReverseProxy", url, r.URL.Path)
-				serveReverseProxy(url, w, r)
-				return
-			}
-		}
-		// if no redirection was done, then we'll use either TargetURL
-		// or return Hello reply
-		if Config.TargetUrl != "" {
-			serveReverseProxy(Config.TargetUrl, w, r)
-		} else {
-			if Config.DocumentRoot != "" {
-				fname := fmt.Sprintf("%s%s", Config.DocumentRoot, r.URL.Path)
-				if strings.HasSuffix(fname, "css") {
-					w.Header().Set("Content-Type", "text/css")
-				} else if strings.HasSuffix(fname, "js") {
-					w.Header().Set("Content-Type", "application/javascript")
-				}
-				if r.URL.Path == "/" {
-					fname = fmt.Sprintf("%s/index.html", Config.DocumentRoot)
-				}
-				if _, err := os.Stat(fname); err == nil {
-					body, err := ioutil.ReadFile(fname)
-					if err == nil {
-						data := []byte(body)
-						w.Write(data)
-						return
-					}
-				}
-			}
-			msg := fmt.Sprintf("Hello %s", r.URL.Path)
-			data := []byte(msg)
-			w.Write(data)
-			return
-		}
+		redirect(w, r)
 		return
 	}
 	// there is no proper authentication yet, redirect users to auth callback
