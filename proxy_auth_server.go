@@ -789,7 +789,11 @@ func x509RequestHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		// set CMS headers based on provided user certificate
-		CMSAuth.SetCMSHeaders(r, userData, CricRecords, true)
+		if Config.Verbose > 3 {
+			CMSAuth.SetCMSHeaders(r, userData, CricRecords, true)
+		} else {
+			CMSAuth.SetCMSHeaders(r, userData, CricRecords, false)
+		}
 	}
 	// check CMS headers
 	status := CMSAuth.CheckAuthnAuthz(r.Header)
