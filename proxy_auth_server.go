@@ -74,7 +74,6 @@ type Ingress struct {
 // Configuration stores server configuration parameters
 type Configuration struct {
 	Port                int       `json:"port"`                   // server port number
-	X509                bool      `json:"x509"`                   // run x509 auth server
 	RootCAs             []string  `json:"rootCAs"`                // server Root CA
 	Base                string    `json:"base"`                   // base URL
 	ClientID            string    `json:"client_id"`              // OICD client id
@@ -885,6 +884,8 @@ func x509_proxy_server(serverCrt, serverKey string) {
 func main() {
 	var config string
 	flag.StringVar(&config, "config", "", "configuration file")
+	var useX509 bool
+	flag.BoolVar(&useX509, "useX509", false, "use X509 auth server")
 	flag.Parse()
 	err := parseConfig(config)
 	// log time, filename, and line number
@@ -950,7 +951,7 @@ func main() {
 			crt = Config.ServerCrt
 			key = Config.ServerKey
 		}
-		if Config.X509 {
+		if useX509 {
 			x509_proxy_server(crt, key)
 			return
 		}
