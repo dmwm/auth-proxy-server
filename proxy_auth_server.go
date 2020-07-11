@@ -243,7 +243,8 @@ func logRequest(userData map[string]interface{}, start time.Time, r *http.Reques
 	} else {
 		aproto = fmt.Sprintf("TLS version: %+v\n", r.TLS.Version)
 	}
-	cipher := tls.CipherSuiteName(r.TLS.CipherSuite)
+	//     cipher := tls.CipherSuiteName(r.TLS.CipherSuite)
+	cipher := r.TLS.CipherSuite
 	cauth := userData["cms-authn-method"]
 	authMsg := fmt.Sprintf("[auth: %v %s \"%s\" %v]", aproto, cipher, userData["dn"], cauth)
 	dataMsg := fmt.Sprintf("[data: %d]", r.ContentLength)
