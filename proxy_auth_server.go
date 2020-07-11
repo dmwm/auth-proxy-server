@@ -224,7 +224,7 @@ func printHTTPRequest(r *http.Request, msg string) {
 }
 
 // helper function to log every single user request
-func logRequest(userData map[string]interface{}, start time.Time, r *http.Request) {
+func logRequest(start time.Time, r *http.Request) {
 	// our apache configuration
 	// CustomLog "||@APACHE2_ROOT@/bin/rotatelogs -f @LOGDIR@/access_log_%Y%m%d.txt 86400" \
 	//   "%t %v [client: %a] [backend: %h] \"%r\" %>s [data: %I in %O out %b body %D us ] [auth: %{SSL_PROTOCOL}x %{SSL_CIPHER}x \"%{SSL_CLIENT_S_DN}x\" \"%{cms-auth}C\" ] [ref: \"%{Referer}i\" \"%{User-Agent}i\" ]"
@@ -243,17 +243,17 @@ func logRequest(userData map[string]interface{}, start time.Time, r *http.Reques
 	} else {
 		aproto = fmt.Sprintf("TLS version: %+v\n", r.TLS.Version)
 	}
-	//     cipher := tls.CipherSuiteName(r.TLS.CipherSuite)
-	cipher := r.TLS.CipherSuite
-	cauth := userData["cms-authn-method"]
-	authMsg := fmt.Sprintf("[auth: %v %s \"%s\" %v]", aproto, cipher, userData["dn"], cauth)
+	cipher := tls.CipherSuiteName(r.TLS.CipherSuite)
+	cauth := r.Header["Cms-Authn-Method"]
+	authMsg := fmt.Sprintf("[auth: %v %v \"%v\" %v]", aproto, cipher, r.Header["Cms-Auth-Cert"], cauth)
 	dataMsg := fmt.Sprintf("[data: %d]", r.ContentLength)
 	referer := r.Referer()
 	if referer == "" {
 		referer = "-"
 	}
+	addr := fmt.Sprintf("[client: %v] [backend: %v]", r.Header["X-Forwarded-For"], r.RemoteAddr)
 	refMsg := fmt.Sprintf("[ref: \"%s\" \"%v\"]", referer, r.Header["User-Agent"])
-	log.Printf("%s %s %s %s %d %s %s %s %v\n", r.Host, r.Method, r.RequestURI, r.Proto, status, dataMsg, authMsg, refMsg, time.Since(start))
+	log.Printf("%s %s %s %s %d %s %s %s %v\n", addr, r.Method, r.RequestURI, r.Proto, status, dataMsg, authMsg, refMsg, time.Since(start))
 }
 
 // Serve a reverse proxy for a given url
@@ -576,7 +576,7 @@ func serverCallbackHandler(w http.ResponseWriter, r *http.Request) {
 func serverRequestHandler(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	userData := make(map[string]interface{})
-	defer logRequest(userData, start, r)
+	defer logRequest(start, r)
 	sess := globalSessions.SessionStart(w, r)
 	if Config.Verbose > 0 {
 		msg := fmt.Sprintf("call from '/', r.URL %s, sess.Path %v", r.URL, sess.Get("path"))
@@ -798,7 +798,7 @@ func findUser(subjects []string) (cmsauth.CricEntry, error) {
 func x509RequestHandler(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	userData := make(map[string]interface{})
-	defer logRequest(userData, start, r)
+	defer logRequest(start, r)
 	// get client CAs
 	if r.TLS != nil {
 		certs := r.TLS.PeerCertificates
