@@ -223,6 +223,38 @@ func printHTTPRequest(r *http.Request, msg string) {
 	fmt.Printf("\n\nFinding value of \"Accept\" %q\n", r.Header["Accept"])
 }
 
+// helper function to log every single user request
+func logRequest(userData map[string]interface{}, start time.Time, r *http.Request) {
+	// our apache configuration
+	// CustomLog "||@APACHE2_ROOT@/bin/rotatelogs -f @LOGDIR@/access_log_%Y%m%d.txt 86400" \
+	//   "%t %v [client: %a] [backend: %h] \"%r\" %>s [data: %I in %O out %b body %D us ] [auth: %{SSL_PROTOCOL}x %{SSL_CIPHER}x \"%{SSL_CLIENT_S_DN}x\" \"%{cms-auth}C\" ] [ref: \"%{Referer}i\" \"%{User-Agent}i\" ]"
+	status := http.StatusOK
+	var aproto string
+	if r.TLS.Version == tls.VersionTLS10 {
+		aproto = "TLS10"
+	} else if r.TLS.Version == tls.VersionTLS11 {
+		aproto = "TLS11"
+	} else if r.TLS.Version == tls.VersionTLS12 {
+		aproto = "TLS12"
+	} else if r.TLS.Version == tls.VersionTLS13 {
+		aproto = "TLS13"
+	} else if r.TLS.Version == tls.VersionSSL30 {
+		aproto = "SSL30"
+	} else {
+		aproto = fmt.Sprintf("TLS version: %+v\n", r.TLS.Version)
+	}
+	cipher := tls.CipherSuiteName(r.TLS.CipherSuite)
+	cauth := userData["cms-authn-method"]
+	authMsg := fmt.Sprintf("[auth: %v %s \"%s\" %v]", aproto, cipher, userData["dn"], cauth)
+	dataMsg := fmt.Sprintf("[data: %d]", r.ContentLength)
+	referer := r.Referer()
+	if referer == "" {
+		referer = "-"
+	}
+	refMsg := fmt.Sprintf("[ref: \"%s\" \"%v\"]", referer, r.Header["User-Agent"])
+	log.Printf("%s %s %s %s %d %s %s %s %v\n", r.Host, r.Method, r.RequestURI, r.Proto, status, dataMsg, authMsg, refMsg, time.Since(start))
+}
+
 // Serve a reverse proxy for a given url
 func serveReverseProxy(targetUrl string, res http.ResponseWriter, req *http.Request) {
 	// parse the url
@@ -287,7 +319,6 @@ func redirect(w http.ResponseWriter, r *http.Request) {
 					log.Printf("service url %s, new request path %s\n", url, r.URL.Path)
 				}
 			}
-			log.Println("serveReverseProxy", url, r.URL.Path)
 			serveReverseProxy(url, w, r)
 			return
 		}
@@ -542,6 +573,9 @@ func serverCallbackHandler(w http.ResponseWriter, r *http.Request) {
 // struct. The only exceptions are /token and /renew end-points which used internally
 // to display or renew user tokens, respectively
 func serverRequestHandler(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	userData := make(map[string]interface{})
+	defer logRequest(userData, start, r)
 	sess := globalSessions.SessionStart(w, r)
 	if Config.Verbose > 0 {
 		msg := fmt.Sprintf("call from '/', r.URL %s, sess.Path %v", r.URL, sess.Get("path"))
@@ -559,7 +593,6 @@ func serverRequestHandler(w http.ResponseWriter, r *http.Request) {
 	accept := r.Header["Accept"][0]
 	if userInfo != nil || hasToken {
 		// decode userInfo
-		var userData map[string]interface{}
 		switch t := userInfo.(type) {
 		case *json.RawMessage:
 			err := json.Unmarshal(*t, &userData)
@@ -720,8 +753,6 @@ func auth_proxy_server(serverCrt, serverKey string) {
 	oidcConfig := &oidc.Config{ClientID: Config.ClientID}
 	Verifier = provider.Verifier(oidcConfig)
 
-	// define server handlers
-
 	// the server settings handler
 	http.HandleFunc(fmt.Sprintf("%s/server", Config.Base), serverSettingsHandler)
 
@@ -734,7 +765,12 @@ func auth_proxy_server(serverCrt, serverKey string) {
 	// start HTTP or HTTPs server based on provided configuration
 	addr := fmt.Sprintf(":%d", Config.Port)
 	if serverCrt != "" && serverKey != "" {
-		server := &http.Server{Addr: addr}
+		server := &http.Server{
+			Addr:           addr,
+			ReadTimeout:    300 * time.Second,
+			WriteTimeout:   300 * time.Second,
+			MaxHeaderBytes: 1 << 20,
+		}
 		log.Printf("Starting HTTPs server on %s", addr)
 		log.Fatal(server.ListenAndServeTLS(serverCrt, serverKey))
 	} else {
@@ -759,10 +795,12 @@ func findUser(subjects []string) (cmsauth.CricEntry, error) {
 
 // x509RequestHandler handle requests for x509 clients
 func x509RequestHandler(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	userData := make(map[string]interface{})
+	defer logRequest(userData, start, r)
 	// get client CAs
 	if r.TLS != nil {
 		certs := r.TLS.PeerCertificates
-		userData := make(map[string]interface{})
 		for _, asn1Data := range certs {
 			cert, err := x509.ParseCertificate(asn1Data.Raw)
 			if err != nil {
@@ -821,7 +859,6 @@ func x509_proxy_server(serverCrt, serverKey string) {
 			log.Fatal("Unable to read RootCA, %s\n", fname)
 		}
 		log.Println("Load", fname)
-		//         rootCAs.AppendCertsFromPEM(caCert)
 		if ok := rootCAs.AppendCertsFromPEM(caCert); !ok {
 			log.Fatal("invalid PEM format while importing trust-chain: %q", fname)
 		}
@@ -875,7 +912,13 @@ func x509_proxy_server(serverCrt, serverKey string) {
 	addr := fmt.Sprintf(":%d", Config.Port)
 	if serverCrt != "" && serverKey != "" {
 		//start HTTPS server which require user certificates
-		server := &http.Server{Addr: addr, TLSConfig: tlsConfig}
+		server := &http.Server{
+			Addr:           addr,
+			TLSConfig:      tlsConfig,
+			ReadTimeout:    300 * time.Second,
+			WriteTimeout:   300 * time.Second,
+			MaxHeaderBytes: 1 << 20,
+		}
 		log.Printf("Starting x509 HTTPs server on %s", addr)
 		log.Fatal(server.ListenAndServeTLS(serverCrt, serverKey))
 	} else {
@@ -894,9 +937,9 @@ func main() {
 	err := parseConfig(config)
 	// log time, filename, and line number
 	if Config.Verbose > 0 {
-		log.SetFlags(log.LstdFlags | log.Lshortfile)
+		log.SetFlags(log.LstdFlags | log.Lshortfile | log.LUTC)
 	} else {
-		log.SetFlags(log.LstdFlags)
+		log.SetFlags(log.LstdFlags | log.LUTC)
 	}
 
 	if err == nil {
