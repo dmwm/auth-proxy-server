@@ -94,6 +94,7 @@ type Configuration struct {
 	CricUrl             string    `json:"cric_url"`               // CRIC URL
 	CricFile            string    `json:"cric_file"`              // name of the CRIC file
 	UpdateCricInterval  int64     `json:"update_cric"`            // interval (in sec) to update cric records
+	UTC                 bool      `json:utc`                      // report logger time in UTC
 }
 
 // ServerSettings controls server parameters
@@ -130,6 +131,18 @@ func (t *TokenInfo) String() string {
 	s = fmt.Sprintf("%s\nRefreshToken:\n%s", s, t.RefreshToken)
 	s = fmt.Sprintf("%s\nRefreshExpire: %d", s, t.RefreshExpire)
 	return s
+}
+
+// custom logger
+type logWriter struct {
+}
+
+func (writer logWriter) Write(bytes []byte) (int, error) {
+	if Config.UTC {
+		return fmt.Print("[" + time.Now().UTC().String() + "] " + string(bytes))
+	}
+	return fmt.Print("[" + time.Now().String() + "] " + string(bytes))
+	//     return fmt.Print("[" + time.Now().UTC().Format("2006-01-02T15:04:05.999Z") + " UTC] " + string(bytes))
 }
 
 // CMSAuth structure to create CMS Auth headers
@@ -186,9 +199,6 @@ func parseConfig(configFile string) error {
 	}
 	if Config.OAuthUrl == "" {
 		Config.OAuthUrl = "https://auth.cern.ch/auth/realms/cern"
-	}
-	if Config.Verbose > 0 {
-		log.Printf("%+v\n", Config)
 	}
 	return nil
 }
@@ -938,10 +948,14 @@ func main() {
 	flag.Parse()
 	err := parseConfig(config)
 	// log time, filename, and line number
+	log.SetFlags(0)
 	if Config.Verbose > 0 {
-		log.SetFlags(log.LstdFlags | log.Lshortfile | log.LUTC)
-	} else {
-		log.SetFlags(log.LstdFlags | log.LUTC)
+		log.SetFlags(log.Lshortfile)
+	}
+	log.SetOutput(new(logWriter))
+
+	if Config.Verbose > 0 {
+		log.Printf("%+v\n", Config)
 	}
 
 	if err == nil {
