@@ -18,7 +18,7 @@ cat > config.json << EOF
     "cric_file": "/etc/secrets/cric.json",
     "update_cric": 3600,
     "ingress": [
-        {"path":"/path", "service_url":"http://srv.namespace.svc.cluster.local:<port>"}
+        {"path":"/path", "service_url":"http://services.namespace.svc.cluster.local:<port>"}
     ],
     "cms_headers": true,
     "rootCAs": ["/path/certificates/CA.crt", "/path/certificates/CA1.crt"],
