@@ -55,5 +55,9 @@ Here are the results of our tests using 1000 requests and different set of
 concurrent clients (100, 200, 300, 400, 500). Each time we measured average
 requests/second throughput as well as count number of successfull and failed
 responses.
+
+#### throughput measurements
 ![Throughput](https://github.com/vkuznet/auth-proxy-server/raw/master/docs/perf-rps.png)
+
+#### failure rate measurements
 ![Failure-rate](https://github.com/vkuznet/auth-proxy-server/raw/master/docs/perf-failure.png)
