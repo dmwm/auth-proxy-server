@@ -58,6 +58,7 @@ import (
 	oidc "github.com/coreos/go-oidc"
 	"github.com/dmwm/cmsauth"
 	"github.com/google/uuid"
+	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
 	"github.com/thomasdarimont/go-kc-example/session"
 	_ "github.com/thomasdarimont/go-kc-example/session_memory"
 	"golang.org/x/oauth2"
@@ -76,6 +77,7 @@ type Configuration struct {
 	Port                int       `json:"port"`                   // server port number
 	RootCAs             []string  `json:"rootCAs"`                // server Root CA
 	Base                string    `json:"base"`                   // base URL
+	LogFile             string    `json:"log_file"`               // server log file
 	ClientID            string    `json:"client_id"`              // OICD client id
 	ClientSecret        string    `json:"client_secret"`          // OICD client secret
 	TargetUrl           string    `json:"target_url"`             // proxy target url (where requests will go)
@@ -958,6 +960,13 @@ func main() {
 
 	if Config.Verbose > 0 {
 		log.Printf("%+v\n", Config)
+	}
+
+	if Config.LogFile != "" {
+		rl, err := rotatelogs.New(Config.LogFile + "-%Y%m%d")
+		if err == nil {
+			log.SetOutput(rl)
+		}
 	}
 
 	if err == nil {
