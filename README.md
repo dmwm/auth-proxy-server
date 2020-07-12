@@ -57,7 +57,18 @@ requests/second throughput as well as count number of successfull and failed
 responses.
 
 #### throughput measurements
+The following plots shows throughput performance of Go-based and apache based
+reverse proxy servers. Here we use the following notations: Go-auth-srvN and
+Apache-srvN where N refers to number of replicas of given server in k8s
+setup, i.e. srv4 means we run 4 replicas of that server in k8s cluster.
 ![Throughput](https://github.com/vkuznet/auth-proxy-server/raw/master/docs/perf-rps.png)
 
 #### failure rate measurements
 ![Failure-rate](https://github.com/vkuznet/auth-proxy-server/raw/master/docs/perf-failure.png)
+
+#### Additional remarks
+We also want to point out that k8s image sizes are quite different, the
+Go-based server has uncompressed size of 12.4MB/5.18MB (for uncompressed/compressed),
+while cmsweb frontend image is 1.97GB/707MB, respectively. The average memory
+usage of srv2 tests was 20MB for Go-based server, and 400MB for apache one.
+And, CPU usage was 237 millicore for Go-based server and 462 millicore.
