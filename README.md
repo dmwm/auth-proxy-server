@@ -23,6 +23,7 @@ cat > config.json << EOF
     "cms_headers": true,
     "rootCAs": ["/path/certificates/CA.crt", "/path/certificates/CA1.crt"],
     "verbose": false,
+    "log_file": "/tmp/access.log",
     "port": 8181
 }
 EOF
