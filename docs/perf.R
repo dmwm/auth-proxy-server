@@ -22,6 +22,6 @@ df=read.csv("perf.csv", header=T)
 # use data of two replicas
 # ndf=subset(df, df$replicas==2)
 ggplot(df, aes(x=test, y=rps, fill=server)) + geom_bar(position="dodge", stat="identity") + labs(x = "test (n-calls/concurrent clients)", y = "Requests/sec")
-ggsave("perf-rps2.pdf")
+ggsave("perf-rps.png")
 ggplot(df, aes(x=test, y=100*(failures/(failures+responses)), fill=server)) + geom_bar(position="dodge", stat="identity") + labs(x = "test (n-calls/concurrent clients)", y = "failure rate (%)")
-ggsave("perf-failure2.pdf")
+ggsave("perf-failure.png")
