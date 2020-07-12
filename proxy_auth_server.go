@@ -234,7 +234,7 @@ func printHTTPRequest(r *http.Request, msg string) {
 }
 
 // helper function to log every single user request
-func logRequest(start time.Time, w http.ResponseWriter, r *http.Request) {
+func logRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth string) {
 	// our apache configuration
 	// CustomLog "||@APACHE2_ROOT@/bin/rotatelogs -f @LOGDIR@/access_log_%Y%m%d.txt 86400" \
 	//   "%t %v [client: %a] [backend: %h] \"%r\" %>s [data: %I in %O out %b body %D us ] [auth: %{SSL_PROTOCOL}x %{SSL_CIPHER}x \"%{SSL_CLIENT_S_DN}x\" \"%{cms-auth}C\" ] [ref: \"%{Referer}i\" \"%{User-Agent}i\" ]"
@@ -254,7 +254,9 @@ func logRequest(start time.Time, w http.ResponseWriter, r *http.Request) {
 		aproto = fmt.Sprintf("TLS version: %+v\n", r.TLS.Version)
 	}
 	cipher := tls.CipherSuiteName(r.TLS.CipherSuite)
-	cauth := r.Header["Cms-Authn-Method"]
+	if cauth == "" {
+		cauth = fmt.Sprintf("%v", r.Header.Get("Cms-Authn-Method"))
+	}
 	authMsg := fmt.Sprintf("[auth: %v %v \"%v\" %v]", aproto, cipher, r.Header.Get("Cms-Auth-Cert"), cauth)
 	respHeader := w.Header()
 	dataMsg := fmt.Sprintf("[data: %v in %v out]", r.ContentLength, respHeader.Get("Content-Length"))
@@ -587,7 +589,7 @@ func serverCallbackHandler(w http.ResponseWriter, r *http.Request) {
 func serverRequestHandler(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	userData := make(map[string]interface{})
-	defer logRequest(start, w, r)
+	defer logRequest(w, r, start, "CERN-SSO-OAuth2-OICD")
 	sess := globalSessions.SessionStart(w, r)
 	if Config.Verbose > 0 {
 		msg := fmt.Sprintf("call from '/', r.URL %s, sess.Path %v", r.URL, sess.Get("path"))
@@ -809,7 +811,7 @@ func findUser(subjects []string) (cmsauth.CricEntry, error) {
 func x509RequestHandler(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	userData := make(map[string]interface{})
-	defer logRequest(start, w, r)
+	defer logRequest(w, r, start, "x509")
 	// get client CAs
 	if r.TLS != nil {
 		certs := r.TLS.PeerCertificates
