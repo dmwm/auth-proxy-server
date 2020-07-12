@@ -73,3 +73,17 @@ Go-based server has uncompressed size of 12.4MB/5.18MB (for uncompressed/compres
 while cmsweb frontend image is 1.97GB/707MB, respectively. The average memory
 usage of srv2 tests was 20MB for Go-based server, and 400MB for apache one.
 And, CPU usage was 237 millicore for Go-based server and 462 millicore.
+
+### Test with DBS service
+We also performed more realistics tests using frontend (apache or Go-based) and
+DBS services with different queries. As before, srvN correspond to number of
+fronends used in tests. Here we confirmed a low memory footprint of Go-based
+server at the level of 15MB and high core usage around 800 millicores per
+Go server, while for apache we observed high memory footprint around 1GB and
+low usage of cores at the level of 50 millicores per apache server.
+
+#### throughput measurements
+![Throughput](https://github.com/vkuznet/auth-proxy-server/raw/master/docs/perf-rps-dbs.png)
+
+#### failure rate measurements
+![Failure-rate](https://github.com/vkuznet/auth-proxy-server/raw/master/docs/perf-failure-dbs.png)
