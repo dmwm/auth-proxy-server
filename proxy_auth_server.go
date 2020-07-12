@@ -135,6 +135,19 @@ func (t *TokenInfo) String() string {
 	return s
 }
 
+// custom rotate logger
+type rotateLogWriter struct {
+	RotateLogs *rotatelogs.RotateLogs
+}
+
+func (w rotateLogWriter) Write(bytes []byte) (int, error) {
+	msg := fmt.Sprintf("[" + time.Now().String() + "] " + string(bytes))
+	if Config.UTC {
+		msg = fmt.Sprintf("[" + time.Now().UTC().String() + "] " + string(bytes))
+	}
+	return w.RotateLogs.Write([]byte(msg))
+}
+
 // custom logger
 type logWriter struct {
 }
@@ -965,7 +978,8 @@ func main() {
 	if Config.LogFile != "" {
 		rl, err := rotatelogs.New(Config.LogFile + "-%Y%m%d")
 		if err == nil {
-			log.SetOutput(rl)
+			rotlogs := rotateLogWriter{RotateLogs: rl}
+			log.SetOutput(rotlogs)
 		}
 	}
 
