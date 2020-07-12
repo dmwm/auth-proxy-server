@@ -82,6 +82,9 @@ server at the level of 15MB and high core usage around 800 millicores per
 Go server, while for apache we observed high memory footprint around 1GB and
 low usage of cores at the level of 50 millicores per apache server.
 
+In these tests we used services of DBS datasets queries with different dataset
+names.
+
 #### throughput measurements
 ![Throughput](https://github.com/vkuznet/auth-proxy-server/raw/master/docs/perf-rps-dbs.png)
 
