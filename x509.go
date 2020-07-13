@@ -103,11 +103,11 @@ func x509ProxyServer(serverCrt, serverKey string) {
 	for _, fname := range Config.RootCAs {
 		caCert, err := ioutil.ReadFile(fname)
 		if err != nil {
-			log.Fatal("Unable to read RootCA, %s\n", fname)
+			log.Fatalf("Unable to read RootCA, %s\n", fname)
 		}
 		log.Println("Load", fname)
 		if ok := rootCAs.AppendCertsFromPEM(caCert); !ok {
-			log.Fatal("invalid PEM format while importing trust-chain: %q", fname)
+			log.Fatalf("invalid PEM format while importing trust-chain: %q", fname)
 		}
 	}
 
