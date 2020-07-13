@@ -8,7 +8,7 @@ install:
   - go get github.com/divan/expvarmon
   - go get github.com/lestrrat-go/file-rotatelogs
   - go get github.com/thomasdarimont/go-kc-example/session_memory
-  - go get github.com/thomasdarimont/go-kc-example/session"
+  - go get github.com/thomasdarimont/go-kc-example/session
   - go get github.com/coreos/go-oidc
   - go get github.com/google/uuid
   - go get golang.org/x/oauth2
