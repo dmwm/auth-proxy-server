@@ -52,11 +52,13 @@ import (
 	"net/url"
 	"os"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 
 	oidc "github.com/coreos/go-oidc"
 	"github.com/dmwm/cmsauth"
+	"github.com/go-stomp/stomp"
 	"github.com/google/uuid"
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
 	"github.com/thomasdarimont/go-kc-example/session"
@@ -74,29 +76,65 @@ type Ingress struct {
 
 // Configuration stores server configuration parameters
 type Configuration struct {
-	Port                int       `json:"port"`                   // server port number
-	RootCAs             []string  `json:"rootCAs"`                // server Root CA
-	Base                string    `json:"base"`                   // base URL
-	LogFile             string    `json:"log_file"`               // server log file
-	ClientID            string    `json:"client_id"`              // OICD client id
-	ClientSecret        string    `json:"client_secret"`          // OICD client secret
-	TargetUrl           string    `json:"target_url"`             // proxy target url (where requests will go)
-	XForwardedHost      string    `json:"X-Forwarded-Host"`       // X-Forwarded-Host field of HTTP request
-	XContentTypeOptions string    `json:"X-Content-Type-Options"` // X-Content-Type-Options option
-	DocumentRoot        string    `json:"document_root"`          // root directory for the server
-	OAuthUrl            string    `json:"oauth_url"`              // CERN SSO OAuth2 realm url
-	AuthTokenUrl        string    `json:"auth_token_url"`         // CERN SSO OAuth2 OICD Token url
-	CMSHeaders          bool      `json:"cms_headers"`            // set CMS headers
-	RedirectUrl         string    `json:"redirect_url"`           // redirect auth url for proxy server
-	Verbose             int       `json:"verbose"`                // verbose output
-	Ingress             []Ingress `json:"ingress"`                // incress section
-	ServerCrt           string    `json:"server_cert"`            // server certificate
-	ServerKey           string    `json:"server_key"`             // server certificate
-	Hmac                string    `json:"hmac"`                   // cmsweb hmac file
-	CricUrl             string    `json:"cric_url"`               // CRIC URL
-	CricFile            string    `json:"cric_file"`              // name of the CRIC file
-	UpdateCricInterval  int64     `json:"update_cric"`            // interval (in sec) to update cric records
-	UTC                 bool      `json:utc`                      // report logger time in UTC
+	Port                int         `json:"port"`                   // server port number
+	RootCAs             []string    `json:"rootCAs"`                // server Root CA
+	Base                string      `json:"base"`                   // base URL
+	LogFile             string      `json:"log_file"`               // server log file
+	ClientID            string      `json:"client_id"`              // OICD client id
+	ClientSecret        string      `json:"client_secret"`          // OICD client secret
+	TargetUrl           string      `json:"target_url"`             // proxy target url (where requests will go)
+	XForwardedHost      string      `json:"X-Forwarded-Host"`       // X-Forwarded-Host field of HTTP request
+	XContentTypeOptions string      `json:"X-Content-Type-Options"` // X-Content-Type-Options option
+	DocumentRoot        string      `json:"document_root"`          // root directory for the server
+	OAuthUrl            string      `json:"oauth_url"`              // CERN SSO OAuth2 realm url
+	AuthTokenUrl        string      `json:"auth_token_url"`         // CERN SSO OAuth2 OICD Token url
+	CMSHeaders          bool        `json:"cms_headers"`            // set CMS headers
+	RedirectUrl         string      `json:"redirect_url"`           // redirect auth url for proxy server
+	Verbose             int         `json:"verbose"`                // verbose output
+	Ingress             []Ingress   `json:"ingress"`                // incress section
+	ServerCrt           string      `json:"server_cert"`            // server certificate
+	ServerKey           string      `json:"server_key"`             // server certificate
+	Hmac                string      `json:"hmac"`                   // cmsweb hmac file
+	CricUrl             string      `json:"cric_url"`               // CRIC URL
+	CricFile            string      `json:"cric_file"`              // name of the CRIC file
+	UpdateCricInterval  int64       `json:"update_cric"`            // interval (in sec) to update cric records
+	UTC                 bool        `json:utc`                      // report logger time in UTC
+	StompConfig         StompConfig `json:"stomp_config"`           // Stomp Configuration
+}
+
+// global pointer to Stomp connection
+var stompConn *stomp.Conn
+
+// Configuration stores server configuration parameters
+type StompConfig struct {
+	BufSize    int    `json:"bufSize"`    // buffer size
+	URI        string `json:"uri"`        // StompAMQ URI
+	Login      string `json:"login"`      // StompAQM login name
+	Password   string `json:"password"`   // StompAQM password
+	Iterations int    `json:"iterations"` // Stomp iterations
+	Endpoint   string `json:"endpoint"`   // StompAMQ endpoint
+	Verbose    bool   `json:"verbose"`    // verbose output
+}
+
+// StompRecord represents data we can send to StompAMQ endpoint
+type StompRecord struct {
+	Addr           string
+	Method         string
+	Uri            string
+	Proto          string
+	Status         int64
+	ContentLength  int64
+	AuthProto      string
+	Cipher         string
+	CmsAuthCert    string
+	CmsAuth        string
+	Referer        string
+	UserAgent      string
+	XForwardedHost string
+	RemoteAddr     string
+	ResponseStatus string
+	ResponseTime   float64
+	RequestTime    float64
 }
 
 // ServerSettings controls server parameters
@@ -190,6 +228,71 @@ func init() {
 	go globalSessions.GC()
 }
 
+// StompConnection returns Stomp connection
+func StompConnection() (*stomp.Conn, error) {
+	if Config.StompConfig.URI == "" {
+		err := errors.New("Unable to connect to Stomp, no URI")
+		return nil, err
+	}
+	if Config.StompConfig.Login == "" {
+		err := errors.New("Unable to connect to Stomp, no login")
+		return nil, err
+	}
+	if Config.StompConfig.Password == "" {
+		err := errors.New("Unable to connect to Stomp, no password")
+		return nil, err
+	}
+	conn, err := stomp.Dial("tcp",
+		Config.StompConfig.URI,
+		stomp.ConnOpt.Login(Config.StompConfig.Login, Config.StompConfig.Password))
+	if err != nil {
+		err := errors.New(fmt.Sprintf("Unable to connect to %s, error %v", Config.StompConfig.URI, err))
+		return nil, err
+	}
+	if Config.StompConfig.Verbose {
+		log.Printf("connected to StompAMQ server %s %v", Config.StompConfig.URI, conn)
+	}
+	return conn, err
+}
+
+// helper function to send dat to StompAMQ end-point
+func sendToStomp(data []byte) {
+	var err error
+	stompConn, err = StompConnection()
+	// defer stomp connection if it exists
+	if stompConn != nil {
+		defer stompConn.Disconnect()
+	}
+	if err != nil {
+		log.Printf("Fail to get StompConnection, error %v\n", err)
+		return
+	}
+	contentType := "application/json"
+	nIter := 3 // default
+	if Config.StompConfig.Iterations > 0 {
+		nIter = Config.StompConfig.Iterations
+	}
+	for i := 0; i < nIter; i++ {
+		err := stompConn.Send(Config.StompConfig.Endpoint, contentType, data)
+		if err != nil {
+			if i == Config.StompConfig.Iterations-1 {
+				log.Printf("unable to send data to %s, data %s, error %v, iteration %d", Config.StompConfig.Endpoint, string(data), err, i)
+			} else {
+				log.Printf("unable to send data to %s, error %v, iteration %d", Config.StompConfig.Endpoint, err, i)
+			}
+			if stompConn != nil {
+				stompConn.Disconnect()
+			}
+			stompConn, err = StompConnection()
+		} else {
+			if Config.StompConfig.Verbose {
+				log.Printf("send data to StompAMQ endpoint %s", Config.StompConfig.Endpoint)
+			}
+			return
+		}
+	}
+}
+
 // helper function to parse server configuration file
 func parseConfig(configFile string) error {
 	data, err := ioutil.ReadFile(configFile)
@@ -249,11 +352,11 @@ func printHTTPRequest(r *http.Request, msg string) {
 }
 
 // helper function to log every single user request
-func logRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth string) {
+func logRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth string, status int) {
 	// our apache configuration
 	// CustomLog "||@APACHE2_ROOT@/bin/rotatelogs -f @LOGDIR@/access_log_%Y%m%d.txt 86400" \
 	//   "%t %v [client: %a] [backend: %h] \"%r\" %>s [data: %I in %O out %b body %D us ] [auth: %{SSL_PROTOCOL}x %{SSL_CIPHER}x \"%{SSL_CLIENT_S_DN}x\" \"%{cms-auth}C\" ] [ref: \"%{Referer}i\" \"%{User-Agent}i\" ]"
-	status := http.StatusOK
+	//     status := http.StatusOK
 	var aproto string
 	if r.TLS.Version == tls.VersionTLS10 {
 		aproto = "TLS10"
@@ -281,11 +384,42 @@ func logRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 	}
 	addr := fmt.Sprintf("[client: %v] [backend: %v]", r.Header.Get("X-Forwarded-Host"), r.RemoteAddr)
 	refMsg := fmt.Sprintf("[ref: \"%s\" \"%v\"]", referer, r.Header.Get("User-Agent"))
-	log.Printf("%s %s %s %s %d %s %s %s %v\n", addr, r.Method, r.RequestURI, r.Proto, status, dataMsg, authMsg, refMsg, time.Since(start))
+	respMsg := fmt.Sprintf("[req: %v, resp: %s, %v]", time.Since(start), respHeader.Get("Response-Status"), respHeader.Get("Response-Time"))
+	log.Printf("%s %s %s %s %d %s %s %s %s\n", addr, r.Method, r.RequestURI, r.Proto, status, dataMsg, authMsg, refMsg, respMsg)
+	if Config.StompConfig.Endpoint != "" {
+		rTime, _ := strconv.ParseFloat(respHeader.Get("Response-Time-Seconds"), 10)
+		rec := StompRecord{
+			Addr:           addr,
+			Method:         r.Method,
+			Uri:            r.RequestURI,
+			Proto:          r.Proto,
+			Status:         int64(status),
+			ContentLength:  r.ContentLength,
+			AuthProto:      aproto,
+			Cipher:         cipher,
+			CmsAuthCert:    r.Header.Get("Cms-Auth-Cert"),
+			CmsAuth:        cauth,
+			Referer:        referer,
+			UserAgent:      r.Header.Get("User-Agent"),
+			XForwardedHost: r.Header.Get("X-Forwarded-Host"),
+			RemoteAddr:     r.RemoteAddr,
+			ResponseStatus: respHeader.Get("Response-Status"),
+			ResponseTime:   rTime,
+			RequestTime:    time.Since(start).Seconds(),
+		}
+		data, err := json.Marshal(rec)
+		if err == nil {
+			go sendToStomp(data)
+		} else {
+			log.Printf("unable to send data to stomp, error: %v\n", err)
+		}
+	}
 }
 
 // Serve a reverse proxy for a given url
-func serveReverseProxy(targetUrl string, res http.ResponseWriter, req *http.Request) {
+func reverseProxy(targetUrl string, w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+
 	// parse the url
 	url, _ := url.Parse(targetUrl)
 
@@ -293,9 +427,9 @@ func serveReverseProxy(targetUrl string, res http.ResponseWriter, req *http.Requ
 	proxy := httputil.NewSingleHostReverseProxy(url)
 
 	// Update the headers to allow for SSL redirection
-	req.URL.Host = url.Host
-	req.URL.Scheme = url.Scheme
-	reqHost := req.Header.Get("Host")
+	r.URL.Host = url.Host
+	r.URL.Scheme = url.Scheme
+	reqHost := r.Header.Get("Host")
 	if reqHost == "" {
 		name, err := os.Hostname()
 		if err == nil {
@@ -303,13 +437,13 @@ func serveReverseProxy(targetUrl string, res http.ResponseWriter, req *http.Requ
 		}
 	}
 	if Config.XForwardedHost != "" {
-		req.Header.Set("X-Forwarded-Host", Config.XForwardedHost)
+		r.Header.Set("X-Forwarded-Host", Config.XForwardedHost)
 	} else {
-		req.Header.Set("X-Forwarded-Host", reqHost)
+		r.Header.Set("X-Forwarded-Host", reqHost)
 	}
-	req.Host = url.Host
+	r.Host = url.Host
 	if Config.Verbose > 0 {
-		log.Printf("### proxy request: %+v\n", req)
+		log.Printf("### proxy request: %+v\n", r)
 	}
 
 	// use custom modify response function to setup response headers
@@ -317,11 +451,16 @@ func serveReverseProxy(targetUrl string, res http.ResponseWriter, req *http.Requ
 		if Config.XContentTypeOptions != "" {
 			resp.Header.Set("X-Content-Type-Options", Config.XContentTypeOptions)
 		}
+		resp.Header.Set("Response-Status", resp.Status)
+		resp.Header.Set("Response-Status-Code", fmt.Sprintf("%d", resp.StatusCode))
+		resp.Header.Set("Response-Proto", resp.Proto)
+		resp.Header.Set("Response-Time", time.Since(start).String())
+		resp.Header.Set("Response-Time-Seconds", fmt.Sprintf("%v", time.Since(start).Seconds()))
 		return nil
 	}
 
-	// Note that ServeHttp is non blocking and uses a go routine under the hood
-	proxy.ServeHTTP(res, req)
+	// ServeHttp is non blocking and uses a go routine under the hood
+	proxy.ServeHTTP(w, r)
 }
 
 // helper function to redirect HTTP request
@@ -348,14 +487,14 @@ func redirect(w http.ResponseWriter, r *http.Request) {
 					log.Printf("service url %s, new request path %s\n", url, r.URL.Path)
 				}
 			}
-			serveReverseProxy(url, w, r)
+			reverseProxy(url, w, r)
 			return
 		}
 	}
 	// if no redirection was done, then we'll use either TargetURL
 	// or return Hello reply
 	if Config.TargetUrl != "" {
-		serveReverseProxy(Config.TargetUrl, w, r)
+		reverseProxy(Config.TargetUrl, w, r)
 	} else {
 		if Config.DocumentRoot != "" {
 			fname := fmt.Sprintf("%s%s", Config.DocumentRoot, r.URL.Path)
@@ -603,8 +742,9 @@ func serverCallbackHandler(w http.ResponseWriter, r *http.Request) {
 // to display or renew user tokens, respectively
 func serverRequestHandler(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
+	status := http.StatusOK
 	userData := make(map[string]interface{})
-	defer logRequest(w, r, start, "CERN-SSO-OAuth2-OICD")
+	defer logRequest(w, r, start, "CERN-SSO-OAuth2-OICD", status)
 	sess := globalSessions.SessionStart(w, r)
 	if Config.Verbose > 0 {
 		msg := fmt.Sprintf("call from '/', r.URL %s, sess.Path %v", r.URL, sess.Get("path"))
@@ -627,7 +767,8 @@ func serverRequestHandler(w http.ResponseWriter, r *http.Request) {
 			err := json.Unmarshal(*t, &userData)
 			if err != nil {
 				msg := fmt.Sprintf("unable to decode user data, %v", err)
-				http.Error(w, msg, http.StatusInternalServerError)
+				status = http.StatusInternalServerError
+				http.Error(w, msg, status)
 				return
 			}
 		}
@@ -685,7 +826,8 @@ func serverRequestHandler(w http.ResponseWriter, r *http.Request) {
 			data, err := json.Marshal(tokenInfo)
 			if err != nil {
 				msg := fmt.Sprintf("unable to marshal token info, %v", err)
-				http.Error(w, msg, http.StatusInternalServerError)
+				status = http.StatusInternalServerError
+				http.Error(w, msg, status)
 				return
 			}
 			w.Write(data)
@@ -707,7 +849,8 @@ func serverRequestHandler(w http.ResponseWriter, r *http.Request) {
 			tokenInfo, err := renewToken(token, r)
 			if err != nil {
 				msg := fmt.Sprintf("unable to refresh access token, %v", err)
-				http.Error(w, msg, http.StatusInternalServerError)
+				status = http.StatusInternalServerError
+				http.Error(w, msg, status)
 				return
 			}
 			if Config.Verbose > 2 {
@@ -720,7 +863,8 @@ func serverRequestHandler(w http.ResponseWriter, r *http.Request) {
 			data, err := json.Marshal(tokenInfo)
 			if err != nil {
 				msg := fmt.Sprintf("unable to marshal token info, %v", err)
-				http.Error(w, msg, http.StatusInternalServerError)
+				status = http.StatusInternalServerError
+				http.Error(w, msg, status)
 				return
 			}
 			w.Write(data)
@@ -734,7 +878,8 @@ func serverRequestHandler(w http.ResponseWriter, r *http.Request) {
 	if Config.Verbose > 0 {
 		log.Println("auth redirect to", aurl)
 	}
-	http.Redirect(w, r, aurl, http.StatusFound)
+	status = http.StatusFound
+	http.Redirect(w, r, aurl, status)
 	return
 }
 
@@ -825,8 +970,9 @@ func findUser(subjects []string) (cmsauth.CricEntry, error) {
 // x509RequestHandler handle requests for x509 clients
 func x509RequestHandler(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
+	status := http.StatusOK
 	userData := make(map[string]interface{})
-	defer logRequest(w, r, start, "x509")
+	defer logRequest(w, r, start, "x509", status)
 	// get client CAs
 	if r.TLS != nil {
 		certs := r.TLS.PeerCertificates
@@ -851,7 +997,8 @@ func x509RequestHandler(w http.ResponseWriter, r *http.Request) {
 				userData["email"] = cert.EmailAddresses
 			} else {
 				log.Println("unauthorized access", err)
-				w.WriteHeader(http.StatusUnauthorized)
+				status = http.StatusUnauthorized
+				w.WriteHeader(status)
 				return
 			}
 		}
@@ -863,15 +1010,16 @@ func x509RequestHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	// check CMS headers
-	status := CMSAuth.CheckAuthnAuthz(r.Header)
+	authStatus := CMSAuth.CheckAuthnAuthz(r.Header)
 	if Config.Verbose > 0 {
-		log.Println("x509RequestHandler", r.Header, status)
+		log.Println("x509RequestHandler", r.Header, authStatus)
 	}
-	if status {
+	if authStatus {
 		redirect(w, r)
 		return
 	}
-	w.WriteHeader(http.StatusUnauthorized)
+	status = http.StatusUnauthorized
+	w.WriteHeader(status)
 }
 
 // helper function to start x509 proxy server
