@@ -41,9 +41,11 @@ import (
 	"strings"
 	"time"
 
+	_ "expvar"         // to be used for monitoring, see https://github.com/divan/expvarmon
+	_ "net/http/pprof" // profiler, see https://golang.org/pkg/net/http/pprof/
+
 	"github.com/dmwm/cmsauth"
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
-	_ "github.com/thomasdarimont/go-kc-example/session_memory"
 )
 
 // CMSAuth structure to create CMS Auth headers
