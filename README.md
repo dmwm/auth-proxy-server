@@ -1,4 +1,8 @@
 ### auth-proxy-server
+
+[![Build Status](https://travis-ci.org/vkuznet/auth-proxy-serverproxy.svg?branch=master)](https://travis-ci.org/vkuznet/auth-proxy-serverproxy)
+[![Go Report Card](https://goreportcard.com/badge/github.com/vkuznet/auth-proxy-serverproxy)](https://goreportcard.com/report/github.com/vkuznet/auth-proxy-serverproxy)
+
 Go implementation of reverse proxy server with with OAuth OIDC or x509 authentication.
 It provides CMS authentication headers based on CRIC information, has optional
 ability to send asynchrounously request information to StompAMQ endpoint, and
