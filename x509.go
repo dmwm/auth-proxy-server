@@ -41,6 +41,7 @@ func x509RequestHandler(w http.ResponseWriter, r *http.Request) {
 	userData := make(map[string]interface{})
 	defer logRequest(w, r, start, "x509", status)
 	// get client CAs
+	validUser := false
 	if r.TLS != nil {
 		certs := r.TLS.PeerCertificates
 		for _, asn1Data := range certs {
@@ -65,12 +66,21 @@ func x509RequestHandler(w http.ResponseWriter, r *http.Request) {
 				userData["auth_time"] = time.Now().Unix()
 				userData["exp"] = cert.NotAfter.Unix()
 				userData["email"] = cert.EmailAddresses
+				validUser = true
 			} else {
-				log.Println("unauthorized access", err)
-				status = http.StatusUnauthorized
-				w.WriteHeader(status)
-				return
+				log.Println(err)
+				continue
+				//                 log.Println("unauthorized access", err)
+				//                 status = http.StatusUnauthorized
+				//                 w.WriteHeader(status)
+				//                 return
 			}
+		}
+		if !validUser {
+			log.Println("unauthorized access, user not found in CRIC DB")
+			status = http.StatusUnauthorized
+			w.WriteHeader(status)
+			return
 		}
 		// set CMS headers based on provided user certificate
 		if Config.Verbose > 3 {
