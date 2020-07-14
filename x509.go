@@ -48,6 +48,9 @@ func x509RequestHandler(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				log.Println("x509RequestHandler tls: failed to parse certificate from server: " + err.Error())
 			}
+			if len(cert.UnhandledCriticalExtensions) > 0 {
+				continue
+			}
 			start := time.Now()
 			rec, err := findUser(strings.Split(cert.Subject.String(), ","))
 			if Config.Verbose > 0 {
