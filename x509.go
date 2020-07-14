@@ -100,15 +100,25 @@ func x509ProxyServer(serverCrt, serverKey string) {
 
 	// start HTTP or HTTPs server based on provided configuration
 	rootCAs := x509.NewCertPool()
-	for _, fname := range Config.RootCAs {
+	files, err := ioutil.ReadDir(Config.RootCAs)
+	if err != nil {
+		log.Printf("Unable to list files in '%s', error: %v\n", Config.RootCAs, err)
+		return
+	}
+	for _, finfo := range files {
+		fname := fmt.Sprintf("%s/%s", Config.RootCAs, finfo.Name())
 		caCert, err := ioutil.ReadFile(fname)
 		if err != nil {
-			log.Fatalf("Unable to read RootCA, %s\n", fname)
+			if Config.Verbose > 1 {
+				log.Printf("Unable to read %s\n", fname)
+			}
 		}
-		log.Println("Load", fname)
 		if ok := rootCAs.AppendCertsFromPEM(caCert); !ok {
-			log.Fatalf("invalid PEM format while importing trust-chain: %q", fname)
+			if Config.Verbose > 1 {
+				log.Printf("invalid PEM format while importing trust-chain: %q", fname)
+			}
 		}
+		log.Println("Load CA file", fname)
 	}
 
 	tlsConfig := &tls.Config{
@@ -143,18 +153,46 @@ func x509ProxyServer(serverCrt, serverKey string) {
 				msg := fmt.Sprintf("Expired user certificate, valid from %v to %v\n", cert.NotBefore, cert.NotAfter)
 				return errors.New(msg)
 			}
-			certs[i] = cert
+			// dump cert UnhandledCriticalExtensions
+			for _, ext := range cert.UnhandledCriticalExtensions {
+				if Config.Verbose > 1 {
+					log.Printf("Cetificate extension: %+v\n", ext)
+				}
+				continue
+			}
+			if len(cert.UnhandledCriticalExtensions) == 0 && cert != nil {
+				certs[i] = cert
+			}
+		}
+		if Config.Verbose > 1 {
+			log.Println("### number of certs", len(certs))
+			for _, cert := range certs {
+				log.Println("### cert", cert)
+			}
 		}
 		opts := x509.VerifyOptions{
 			Roots:         rootCAs,
 			Intermediates: x509.NewCertPool(),
 			KeyUsages:     []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
 		}
-		for _, cert := range certs[1:] {
-			opts.Intermediates.AddCert(cert)
+		if certs[0] != nil {
+			for _, cert := range certs[1:] {
+				opts.Intermediates.AddCert(cert)
+			}
+			_, err := certs[0].Verify(opts)
+			return err
+		} else {
+			for _, cert := range certs {
+				if cert == nil {
+					continue
+				}
+				_, err := cert.Verify(opts)
+				if err != nil {
+					return err
+				}
+			}
 		}
-		_, err := certs[0].Verify(opts)
-		return err
+		return nil
 	}
 	addr := fmt.Sprintf(":%d", Config.Port)
 	if serverCrt != "" && serverKey != "" {
