@@ -21,12 +21,32 @@ import (
 	_ "github.com/thomasdarimont/go-kc-example/session_memory"
 )
 
+// helper function to extract CN from given subject
+func findCN(subject string) (string, error) {
+	parts := strings.Split(subject, " ")
+	for i, s := range parts {
+		if strings.HasPrefix(s, "CN=") && len(parts) > i {
+			cn := s
+			for _, ss := range parts[i+1:] {
+				if strings.Contains(ss, "=") {
+					break
+				}
+				cn = fmt.Sprintf("%s %s", cn, ss)
+			}
+			return cn, nil
+		}
+	}
+	return "", errors.New("no user CN is found in subject: " + subject)
+}
+
 // helper function to find user info in cric records for given cert subject
 func findUser(subjects []string) (cmsauth.CricEntry, error) {
 	for _, r := range CricRecords {
 		for _, s := range subjects {
-			if strings.HasSuffix(r.DN, s) {
-				return r, nil
+			if cn, e := findCN(s); e == nil {
+				if strings.HasSuffix(r.DN, cn) {
+					return r, nil
+				}
 			}
 		}
 	}
