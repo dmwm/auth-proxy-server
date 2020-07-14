@@ -42,10 +42,14 @@ func findCN(subject string) (string, error) {
 // helper function to find user info in cric records for given cert subject
 func findUser(subjects []string) (cmsauth.CricEntry, error) {
 	for _, r := range CricRecords {
+		// loop over subjects is tiny, we may have only few subjects in certificates
 		for _, s := range subjects {
 			if cn, e := findCN(s); e == nil {
-				if strings.HasSuffix(r.DN, cn) {
-					return r, nil
+				// loop over record DNs is tiny, we only have one or two DNs per user
+				for _, dn := range r.DNs {
+					if strings.HasSuffix(dn, cn) {
+						return r, nil
+					}
 				}
 			}
 		}
