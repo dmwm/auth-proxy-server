@@ -20,7 +20,7 @@ type Ingress struct {
 // Configuration stores server configuration parameters
 type Configuration struct {
 	Port                int         `json:"port"`                   // server port number
-	RootCAs             []string    `json:"rootCAs"`                // server Root CA
+	RootCAs             string      `json:"rootCAs"`                // server Root CAs path
 	Base                string      `json:"base"`                   // base URL
 	LogFile             string      `json:"log_file"`               // server log file
 	ClientID            string      `json:"client_id"`              // OICD client id
