@@ -82,7 +82,8 @@ reverse proxy which only return HTTP requests headers.
 Here are the results of our tests using 1000 requests and different set of
 concurrent clients (100, 200, 300, 400, 500). Each time we measured average
 requests/second throughput as well as count number of successfull and failed
-responses.
+responses. For tests below we disabled keep-alive to simulate load from
+distributed clients.
 
 #### throughput measurements
 The following plots shows throughput performance of Go-based and apache based
@@ -98,20 +99,16 @@ setup, i.e. srv4 means we run 4 replicas of that server in k8s cluster.
 We also want to point out that k8s image sizes are quite different, the
 Go-based server has uncompressed size of 12.4MB/5.18MB (for uncompressed/compressed),
 while cmsweb frontend image is 1.97GB/707MB, respectively. The average memory
-usage of srv2 tests was 20MB for Go-based server, and 400MB for apache one.
-And, CPU usage was 237 millicore for Go-based server and 462 millicore for
+usage of srv4 tests was 20MB for Go-based server, and 1GB or more for apache one.
+And, CPU usage was about 900 millicore for Go-based server and 400 millicore for
 apache one.
 
 ### Test with DBS service
 We also performed more realistics tests using frontend (apache or Go-based) and
 DBS services with different queries. As before, srvN correspond to number of
-fronends used in tests. Here we confirmed a low memory footprint of Go-based
-server at the level of 15MB and high core usage around 800 millicores per
-Go server, while for apache we observed high memory footprint around 1GB and
-low usage of cores at the level of 50 millicores per apache server.
+fronends used in tests, and keep-alive option was disabled in tests.
 
-In these tests we used services of DBS datasets queries with different dataset
-names.
+In these tests we used DBS datasets queries with different dataset names.
 
 #### throughput measurements
 ![Throughput](https://github.com/vkuznet/auth-proxy-server/raw/master/docs/perf-rps-dbs.png)
