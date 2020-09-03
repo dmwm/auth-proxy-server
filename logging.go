@@ -52,21 +52,26 @@ func logRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 	// CustomLog "||@APACHE2_ROOT@/bin/rotatelogs -f @LOGDIR@/access_log_%Y%m%d.txt 86400" \
 	//   "%t %v [client: %a] [backend: %h] \"%r\" %>s [data: %I in %O out %b body %D us ] [auth: %{SSL_PROTOCOL}x %{SSL_CIPHER}x \"%{SSL_CLIENT_S_DN}x\" \"%{cms-auth}C\" ] [ref: \"%{Referer}i\" \"%{User-Agent}i\" ]"
 	//     status := http.StatusOK
-	var aproto string
-	if r.TLS.Version == tls.VersionTLS10 {
-		aproto = "TLS10"
-	} else if r.TLS.Version == tls.VersionTLS11 {
-		aproto = "TLS11"
-	} else if r.TLS.Version == tls.VersionTLS12 {
-		aproto = "TLS12"
-	} else if r.TLS.Version == tls.VersionTLS13 {
-		aproto = "TLS13"
-	} else if r.TLS.Version == tls.VersionSSL30 {
-		aproto = "SSL30"
+	var aproto, cipher string
+	if r != nil && r.TLS != nil {
+		if r.TLS.Version == tls.VersionTLS10 {
+			aproto = "TLS10"
+		} else if r.TLS.Version == tls.VersionTLS11 {
+			aproto = "TLS11"
+		} else if r.TLS.Version == tls.VersionTLS12 {
+			aproto = "TLS12"
+		} else if r.TLS.Version == tls.VersionTLS13 {
+			aproto = "TLS13"
+		} else if r.TLS.Version == tls.VersionSSL30 {
+			aproto = "SSL30"
+		} else {
+			aproto = fmt.Sprintf("TLS version: %+v\n", r.TLS.Version)
+		}
+		cipher = tls.CipherSuiteName(r.TLS.CipherSuite)
 	} else {
-		aproto = fmt.Sprintf("TLS version: %+v\n", r.TLS.Version)
+		aproto = fmt.Sprintf("No TLS\n")
+		cipher = "None"
 	}
-	cipher := tls.CipherSuiteName(r.TLS.CipherSuite)
 	if cauth == "" {
 		cauth = fmt.Sprintf("%v", r.Header.Get("Cms-Authn-Method"))
 	}
