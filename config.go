@@ -39,5 +39,8 @@ func parseConfig(configFile string) error {
 	if Config.OAuthUrl == "" {
 		Config.OAuthUrl = "https://auth.cern.ch/auth/realms/cern"
 	}
+	if Config.Static == "" {
+		Config.Static = "/www"
+	}
 	return nil
 }

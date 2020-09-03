@@ -451,6 +451,9 @@ func oauthProxyServer(serverCrt, serverKey string) {
 	oidcConfig := &oidc.Config{ClientID: Config.ClientID}
 	Verifier = provider.Verifier(oidcConfig)
 
+	// static content
+	http.Handle(Config.Base+"/static", http.StripPrefix(Config.Base+"/static", http.FileServer(http.Dir(Config.Static))))
+
 	// the server settings handler
 	http.HandleFunc(fmt.Sprintf("%s/server", Config.Base), settingsHandler)
 
