@@ -1,0 +1,39 @@
+<html>
+<head>
+<style>
+.container { 
+  height: 200px;
+  position: relative;
+}
+
+.vertical-center {
+  margin: 0;
+  position: absolute;
+  top: 50%;
+  -ms-transform: translateY(-50%);
+  transform: translateY(-50%);
+}
+
+.center {
+  margin: 0 auto;
+  width: 400px;
+}
+
+</style>
+</head>
+<body>
+<div class="container center">
+  <div class="vertical-center">
+    <h3>Welcome to CMS Monitoring page</h3>
+    <ul>
+        <li><a href="/karma">CMS Monitoring alerts</a></li>
+        <li><a href="/alertmanager">CMS Alertmanager</a></li>
+        <li><a href="/prometheus">CMS Promeetheus</a></li>
+        <li><a href="/victoria-metrics">CMS Victoria-Metrics</a></li>
+        <li><a href="/token">Access token</a></li>
+        <li><a href="/renew">Renew token</a></li>
+    </ul>
+  </div>
+</div>
+</body>
+</html>
