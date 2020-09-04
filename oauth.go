@@ -29,9 +29,12 @@ CERN SSO OAuth2 OICD
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/httputil"
@@ -467,8 +470,40 @@ func oauthProxyServer(serverCrt, serverKey string) {
 	addr := fmt.Sprintf(":%d", Config.Port)
 	if serverCrt != "" && serverKey != "" {
 		// start HTTPs server
+		rootCAs := x509.NewCertPool()
+		files, err := ioutil.ReadDir(Config.RootCAs)
+		if err != nil {
+			log.Printf("Unable to list files in '%s', error: %v\n", Config.RootCAs, err)
+			return
+		}
+		for _, finfo := range files {
+			fname := fmt.Sprintf("%s/%s", Config.RootCAs, finfo.Name())
+			caCert, err := ioutil.ReadFile(fname)
+			if err != nil {
+				if Config.Verbose > 1 {
+					log.Printf("Unable to read %s\n", fname)
+				}
+			}
+			if ok := rootCAs.AppendCertsFromPEM(caCert); !ok {
+				if Config.Verbose > 1 {
+					log.Printf("invalid PEM format while importing trust-chain: %q", fname)
+				}
+			}
+			log.Println("Load CA file", fname)
+		}
+		cert, err := tls.LoadX509KeyPair(serverCrt, serverKey)
+		if err != nil {
+			log.Fatalf("server loadkeys: %s", err)
+
+		}
+
+		tlsConfig := &tls.Config{
+			RootCAs:      rootCAs,
+			Certificates: []tls.Certificate{cert},
+		}
 		server := &http.Server{
 			Addr:           addr,
+			TLSConfig:      tlsConfig,
 			ReadTimeout:    300 * time.Second,
 			WriteTimeout:   300 * time.Second,
 			MaxHeaderBytes: 1 << 20,
