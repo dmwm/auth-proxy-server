@@ -22,7 +22,7 @@ type Configuration struct {
 	Port                int         `json:"port"`                   // server port number
 	RootCAs             string      `json:"rootCAs"`                // server Root CAs path
 	Base                string      `json:"base"`                   // base URL
-	Static              string      `json:"static"`                 // static area
+	StaticPage          string      `json:"static_page"`            // static file to use
 	LogFile             string      `json:"log_file"`               // server log file
 	ClientID            string      `json:"client_id"`              // OICD client id
 	ClientSecret        string      `json:"client_secret"`          // OICD client secret

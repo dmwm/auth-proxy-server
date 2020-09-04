@@ -32,6 +32,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"html/template"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -150,6 +151,13 @@ func redirect(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 		}
+		// use static page content if provided in configuration
+		if Config.StaticPage != "" {
+			tmpl := template.Must(template.ParseFiles(Config.StaticPage))
+			tmpl.Execute(w, "")
+			return
+		}
+
 		msg := fmt.Sprintf("Hello %s", r.URL.Path)
 		data := []byte(msg)
 		w.Write(data)
