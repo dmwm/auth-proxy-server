@@ -1,39 +1,109 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
+<title>CMS Monitoring</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-.container { 
-  height: 200px;
-  position: relative;
+* {
+  box-sizing: border-box;
 }
 
-.vertical-center {
-  margin: 0;
-  position: absolute;
-  top: 50%;
-  -ms-transform: translateY(-50%);
-  transform: translateY(-50%);
+body {
+  font-family: Arial, Helvetica, sans-serif;
 }
 
-.center {
-  margin: 0 auto;
-  width: 400px;
+/* Style the header */
+header {
+  background-color: #666;
+  padding: 30px;
+  text-align: center;
+  font-size: 35px;
+  color: white;
 }
 
+/* Create two columns/boxes that floats next to each other */
+nav {
+  float: left;
+  width: 30%;
+  height: 300px; /* only for demonstration, should be removed */
+  background: #ccc;
+  padding: 20px;
+}
+
+/* Style the list inside the menu */
+nav ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+article {
+  float: left;
+  padding: 20px;
+  width: 70%;
+  background-color: #f1f1f1;
+  height: 300px; /* only for demonstration, should be removed */
+}
+
+/* Clear floats after the columns */
+section:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+/* Style the footer */
+footer {
+  background-color: #777;
+  padding: 10px;
+  text-align: center;
+  color: white;
+}
+
+/* Responsive layout - makes the two columns/boxes stack on top of each other instead of next to each other, on small screens */
+@media (max-width: 600px) {
+  nav, article {
+    width: 100%;
+    height: auto;
+  }
+}
 </style>
 </head>
 <body>
-<div class="container center">
-  <div class="vertical-center">
-    <h3>Welcome to CMS Monitoring page</h3>
+
+
+<header>
+  <h2>CMS Monitoring</h2>
+</header>
+
+<section>
+  <nav>
     <ul>
-        <li><a href="/karma">CMS Monitoring alerts</a></li>
-        <li><a href="/alertmanager">CMS Alertmanager</a></li>
-        <li><a href="/prometheus">CMS Promeetheus</a></li>
-        <li><a href="/victoria-metrics">CMS Victoria-Metrics</a></li>
-        <li><a href="/token">Access token</a></li>
-        <li><a href="/renew">Renew token</a></li>
+      <li><a href="https://monit-grafana.cern.ch/d/000000530/cms-monitoring-project?orgId=11">Dashboards</a></li>
+      <li><a href="/karma">Alerts dashboardxs</a></li>
+      <li><a href="/alertmanager">Alertmanager</a></li>
+      <li><a href="/prometheus">Prometheus</a></li>
+      <li><a href="https://its.cern.ch/jira/projects/CMSMONIT">Support</a></li>
+      <li><a href="https://monit-grafana.cern.ch/d/cU_crlhik/cms-monitoring-contacts?orgId=11">Contact Us</a></li>
+	  <li><a href="https://arxiv.org/abs/2007.03630">CMS Monitoring paper</a></li>
     </ul>
-  </div>
-</div>
+  </nav>
+
+  <article>
+    <h1>Welcome</h1>
+    <p>CMS Monitoring page provides comprehensive information about
+    CMS services. We provide full support for Data Injection,
+	Data Storage and Data Access into CERN MONIT infrastructure.</p>
+	<p>CMS Monitoring applications includes:
+    CMS alert dashboard, the Alert Manager and Prometheus, NATS,
+    Pushgateway, HDFS+Spark, and pletora CLI tools.</p>
+  </article>
+</section>
+
+<footer>
+  <p>CMS collaboration &#169;</p>
+</footer>
+
 </body>
 </html>
+
