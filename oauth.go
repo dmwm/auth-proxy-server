@@ -470,7 +470,7 @@ func oauthProxyServer(serverCrt, serverKey string) {
 		rootCAs := x509.NewCertPool()
 		files, err := ioutil.ReadDir(Config.RootCAs)
 		if err != nil {
-			log.Printf("Unable to list files in '%s', error: %v\n", Config.RootCAs, err)
+			log.Printf("Unable to list files root CAs area Config.RootCA='%s', error: %v\n", Config.RootCAs, err)
 			return
 		}
 		for _, finfo := range files {
