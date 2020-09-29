@@ -35,6 +35,7 @@ import (
 	"html/template"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -103,6 +104,17 @@ func reverseProxy(targetUrl string, w http.ResponseWriter, r *http.Request) {
 	proxy.ServeHTTP(w, r)
 }
 
+// helper function to get random service url
+func srvUrl(surl string) string {
+	// if we are given comma separated service urls we'll use random one
+	if strings.Contains(surl, ",") {
+		arr := strings.Split(surl, ",")
+		idx := rand.Intn(len(arr))
+		return strings.Trim(arr[idx], " ") // remove empty spaces around the string
+	}
+	return surl
+}
+
 // helper function to redirect HTTP requests based on configuration ingress rules
 func redirect(w http.ResponseWriter, r *http.Request) {
 	// if Configuration provides Ingress rules we'll use them
@@ -112,7 +124,7 @@ func redirect(w http.ResponseWriter, r *http.Request) {
 			if Config.Verbose > 0 {
 				log.Printf("ingress request path %s, record path %s, service url %s, old path %s, new path %s\n", r.URL.Path, rec.Path, rec.ServiceUrl, rec.OldPath, rec.NewPath)
 			}
-			url := rec.ServiceUrl
+			url := srvUrl(rec.ServiceUrl)
 			if rec.OldPath != "" {
 				// replace old path to new one, e.g. /couchdb/_all_dbs => /_all_dbs
 				r.URL.Path = strings.Replace(r.URL.Path, rec.OldPath, rec.NewPath, 1)
