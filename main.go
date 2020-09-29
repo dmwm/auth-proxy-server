@@ -40,6 +40,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"os"
+	"runtime"
 	"strings"
 	"time"
 
@@ -56,6 +57,9 @@ var CMSAuth cmsauth.CMSAuth
 
 // global stomp manager
 var stompMgr *stomp.StompManager
+
+// version of the code
+var version string
 
 // Serve a reverse proxy for a given url
 func reverseProxy(targetUrl string, w http.ResponseWriter, r *http.Request) {
@@ -184,8 +188,9 @@ func redirect(w http.ResponseWriter, r *http.Request) {
 
 // setting handler function, i.e. it can be used to change server settings
 func settingsHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST" {
-		w.WriteHeader(http.StatusMethodNotAllowed)
+	if r.Method == "GET" {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(info()))
 		return
 	}
 	defer r.Body.Close()
@@ -202,12 +207,24 @@ func settingsHandler(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+func info() string {
+	goVersion := runtime.Version()
+	tstamp := time.Now().Format("2006-02-01")
+	return fmt.Sprintf("WArchive server based on git=%s go=%s date=%s", version, goVersion, tstamp)
+}
+
 func main() {
 	var config string
 	flag.StringVar(&config, "config", "", "configuration file")
 	var useX509 bool
 	flag.BoolVar(&useX509, "useX509", false, "use X509 auth server")
+	var version bool
+	flag.BoolVar(&version, "version", false, "use X509 auth server")
 	flag.Parse()
+	if version {
+		fmt.Println(info())
+		os.Exit(0)
+	}
 	err := parseConfig(config)
 	// log time, filename, and line number
 	log.SetFlags(0)
