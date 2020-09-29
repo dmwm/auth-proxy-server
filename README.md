@@ -58,7 +58,9 @@ fetching new CRIC map.
 The code can be build as following:
 ```
 # to build
-go build proxy_auth_server.go
+make
+# or use go build command
+go build -ldflags="-X main.version=`git rev-parse --short HEAD`"
 ```
 
 To run the service we can choose either between CERN SSO OAuth2 OICD
