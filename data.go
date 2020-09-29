@@ -48,13 +48,15 @@ type Configuration struct {
 
 // Configuration stores server configuration parameters
 type StompConfig struct {
-	BufSize    int    `json:"bufSize"`    // buffer size
-	URI        string `json:"uri"`        // StompAMQ URI
-	Login      string `json:"login"`      // StompAQM login name
-	Password   string `json:"password"`   // StompAQM password
-	Iterations int    `json:"iterations"` // Stomp iterations
-	Endpoint   string `json:"endpoint"`   // StompAMQ endpoint
-	Verbose    bool   `json:"verbose"`    // verbose output
+	URI         string `json:"uri"`              // StompAMQ URI
+	Login       string `json:"login"`            // StompAQM login name
+	Password    string `json:"password"`         // StompAQM password
+	SendTimeout int    `json:"stompSendTimeout"` // heartbeat send timeout
+	RecvTimeout int    `json:"stompRecvTimeout"` // heartbeat recv timeout
+	Iterations  int    `json:"iterations"`       // Stomp iterations
+	Endpoint    string `json:"endpoint"`         // StompAMQ endpoint
+	ContentType string `json:"contentType"`      // content type of stomp message\w
+	Verbose     int    `json:"verbose"`          // verbose output
 }
 
 // StompRecord represents data we can send to StompAMQ endpoint

@@ -108,7 +108,7 @@ func logRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 		}
 		data, err := json.Marshal(rec)
 		if err == nil {
-			go sendToStomp(data)
+			go stompMgr.Send(data)
 		} else {
 			log.Printf("unable to send data to stomp, error: %v\n", err)
 		}

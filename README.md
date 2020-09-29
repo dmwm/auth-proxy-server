@@ -34,7 +34,6 @@ cat > config.json << EOF
     "verbose": false,
     "log_file": "/tmp/access.log",
     "stomp_config": {
-        "bufSize": 1024,
         "uri": "URI",
         "login": "bla",
         "password": "bla",

@@ -5,6 +5,7 @@ go:
 install:
   - go get github.com/dmwm/cmsauth
   - go get github.com/vkuznet/x509proxy
+  - go get github.com/vkuznet/lb-stomp
   - go get github.com/divan/expvarmon
   - go get github.com/lestrrat-go/file-rotatelogs
   - go get github.com/thomasdarimont/go-kc-example/session_memory

@@ -47,10 +47,14 @@ import (
 
 	"github.com/dmwm/cmsauth"
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
+	stomp "github.com/vkuznet/lb-stomp"
 )
 
 // CMSAuth structure to create CMS Auth headers
 var CMSAuth cmsauth.CMSAuth
+
+// global stomp manager
+var stompMgr *stomp.StompManager
 
 // Serve a reverse proxy for a given url
 func reverseProxy(targetUrl string, w http.ResponseWriter, r *http.Request) {
@@ -211,6 +215,21 @@ func main() {
 			log.SetOutput(rotlogs)
 		}
 	}
+
+	// init stomp manager
+	c := stomp.Config{
+		URI:         Config.StompConfig.URI,
+		Login:       Config.StompConfig.Login,
+		Password:    Config.StompConfig.Password,
+		Iterations:  Config.StompConfig.Iterations,
+		SendTimeout: Config.StompConfig.SendTimeout,
+		RecvTimeout: Config.StompConfig.RecvTimeout,
+		Endpoint:    Config.StompConfig.Endpoint,
+		ContentType: Config.StompConfig.ContentType,
+		Verbose:     Config.StompConfig.Verbose,
+	}
+	stompMgr = stomp.New(c)
+	log.Println(stompMgr.String())
 
 	if err == nil {
 		CMSAuth.Init(Config.Hmac)
