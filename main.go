@@ -49,11 +49,15 @@ import (
 
 	"github.com/dmwm/cmsauth"
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
+	"github.com/shirou/gopsutil/cpu"
 	stomp "github.com/vkuznet/lb-stomp"
 )
 
 // StartTime of the server
 var StartTime time.Time
+
+// NumCores represents number of cores in our node
+var NumCores int
 
 // CMSAuth structure to create CMS Auth headers
 var CMSAuth cmsauth.CMSAuth
@@ -241,6 +245,10 @@ func main() {
 		os.Exit(0)
 	}
 	err := parseConfig(config)
+	if err != nil {
+		log.Fatalf("unable to parse config %s, error %v\n", config, err)
+	}
+
 	// log time, filename, and line number
 	log.SetFlags(0)
 	if Config.Verbose > 0 {
@@ -278,21 +286,20 @@ func main() {
 	// setup StartTime and metrics last update time
 	StartTime = time.Now()
 	MetricsLastUpdateTime = time.Now()
+	NumCores, err = cpu.Counts(true)
 
-	if err == nil {
-		CMSAuth.Init(Config.Hmac)
-		go updateCricRecords()
-		_, e1 := os.Stat(Config.ServerCrt)
-		_, e2 := os.Stat(Config.ServerKey)
-		var crt, key string
-		if e1 == nil && e2 == nil {
-			crt = Config.ServerCrt
-			key = Config.ServerKey
-		}
-		if useX509 {
-			x509ProxyServer(crt, key)
-			return
-		}
-		oauthProxyServer(crt, key)
+	CMSAuth.Init(Config.Hmac)
+	go updateCricRecords()
+	_, e1 := os.Stat(Config.ServerCrt)
+	_, e2 := os.Stat(Config.ServerKey)
+	var crt, key string
+	if e1 == nil && e2 == nil {
+		crt = Config.ServerCrt
+		key = Config.ServerKey
 	}
+	if useX509 {
+		x509ProxyServer(crt, key)
+		return
+	}
+	oauthProxyServer(crt, key)
 }

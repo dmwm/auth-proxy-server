@@ -67,6 +67,7 @@ func findUser(subjects []string) (cmsauth.CricEntry, error) {
 
 // x509RequestHandler handle requests for x509 clients
 func x509RequestHandler(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
 	// increment GET/POST counters
 	if r.Method == "GET" {
 		atomic.AddUint64(&TotalX509GetRequests, 1)
@@ -74,8 +75,8 @@ func x509RequestHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		atomic.AddUint64(&TotalX509PostRequests, 1)
 	}
+	defer getRPS(start, (TotalX509GetRequests + TotalX509PostRequests))
 
-	start := time.Now()
 	status := http.StatusOK
 	userData := make(map[string]interface{})
 	defer logRequest(w, r, start, "x509", status)

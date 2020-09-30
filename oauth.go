@@ -275,6 +275,7 @@ func oauthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 // struct. The only exceptions are /token and /renew end-points which used internally
 // to display or renew user tokens, respectively
 func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
 	// increment GET/POST counters
 	if r.Method == "GET" {
 		atomic.AddUint64(&TotalOAuthGetRequests, 1)
@@ -282,7 +283,8 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		atomic.AddUint64(&TotalOAuthPostRequests, 1)
 	}
-	start := time.Now()
+	defer getRPS(start, (TotalOAuthGetRequests + TotalOAuthPostRequests))
+
 	status := http.StatusOK
 	userData := make(map[string]interface{})
 	defer logRequest(w, r, start, "CERN-SSO-OAuth2-OICD", status)

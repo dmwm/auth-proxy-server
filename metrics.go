@@ -25,6 +25,9 @@ var TotalPostRequests uint64
 // MetricsLastUpdateTime
 var MetricsLastUpdateTime time.Time
 
+// RPS represents requests per second for a given server
+var RPS float64
+
 func metrics() Metrics {
 
 	// get cpu and mem profiles
@@ -59,9 +62,7 @@ func metrics() Metrics {
 	metrics.PostOAuthRequests = TotalOAuthPostRequests
 	metrics.GetRequests = metrics.GetX509Requests + metrics.GetOAuthRequests
 	metrics.PostRequests = metrics.PostX509Requests + metrics.PostOAuthRequests
-	totRequests := metrics.GetRequests + metrics.PostRequests
-	totSeconds := time.Since(MetricsLastUpdateTime).Seconds()
-	metrics.RequestsPerSecond = float64(totRequests) / float64(totSeconds)
+	metrics.RequestsPerSecond = RPS
 
 	// update time stamp
 	MetricsLastUpdateTime = time.Now()
@@ -187,4 +188,11 @@ func promMetrics() string {
 	out += fmt.Sprintf("%s_request_per_second %v\n", prefix, data.RequestsPerSecond)
 
 	return out
+}
+
+// rps returns request per second
+func getRPS(time0 time.Time, totalRequests uint64) {
+	// RPS = Num. cores * (1 /Task time)
+	// here we set average RPS across all received requests
+	RPS = float64(NumCores) / time.Since(time0).Seconds() / float64(totalRequests)
 }
