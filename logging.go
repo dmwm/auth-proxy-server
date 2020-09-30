@@ -84,7 +84,7 @@ func logRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 	}
 	addr := fmt.Sprintf("[client: %v] [backend: %v]", r.Header.Get("X-Forwarded-Host"), r.RemoteAddr)
 	refMsg := fmt.Sprintf("[ref: \"%s\" \"%v\"]", referer, r.Header.Get("User-Agent"))
-	respMsg := fmt.Sprintf("[req: %v resp: %s %v]", time.Since(start), respHeader.Get("Response-Status"), respHeader.Get("Response-Time"))
+	respMsg := fmt.Sprintf("[req: %v resp: %v]", time.Since(start), respHeader.Get("Response-Time"))
 	log.Printf("%s %s %s %s %d %s %s %s %s\n", addr, r.Method, r.RequestURI, r.Proto, status, dataMsg, authMsg, refMsg, respMsg)
 	if Config.StompConfig.Endpoint != "" {
 		rTime, _ := strconv.ParseFloat(respHeader.Get("Response-Time-Seconds"), 10)
