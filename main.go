@@ -56,8 +56,11 @@ import (
 // StartTime of the server
 var StartTime time.Time
 
-// NumCores represents number of cores in our node
-var NumCores int
+// NumPhysicalCores represents number of cores in our node
+var NumPhysicalCores int
+
+// NumLogicalCores represents number of cores in our node
+var NumLogicalCores int
 
 // CMSAuth structure to create CMS Auth headers
 var CMSAuth cmsauth.CMSAuth
@@ -286,7 +289,8 @@ func main() {
 	// setup StartTime and metrics last update time
 	StartTime = time.Now()
 	MetricsLastUpdateTime = time.Now()
-	NumCores, err = cpu.Counts(true)
+	NumPhysicalCores, err = cpu.Counts(false)
+	NumLogicalCores, err = cpu.Counts(true)
 
 	CMSAuth.Init(Config.Hmac)
 	go updateCricRecords()

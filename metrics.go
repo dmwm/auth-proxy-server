@@ -28,6 +28,12 @@ var MetricsLastUpdateTime time.Time
 // RPS represents requests per second for a given server
 var RPS float64
 
+// RPS represents requests per second for a given server times number of physical CPU cores
+var RPSPhysical float64
+
+// RPSLogical represents requests per second for a given server times number of logical CPU cores
+var RPSLogical float64
+
 func metrics() Metrics {
 
 	// get cpu and mem profiles
@@ -62,7 +68,9 @@ func metrics() Metrics {
 	metrics.PostOAuthRequests = TotalOAuthPostRequests
 	metrics.GetRequests = metrics.GetX509Requests + metrics.GetOAuthRequests
 	metrics.PostRequests = metrics.PostX509Requests + metrics.PostOAuthRequests
-	metrics.RequestsPerSecond = RPS
+	metrics.RPS = RPS / float64(metrics.GetRequests+metrics.PostRequests)
+	metrics.RPSPhysical = RPSPhysical / float64(metrics.GetRequests+metrics.PostRequests)
+	metrics.RPSLogical = RPSLogical / float64(metrics.GetRequests+metrics.PostRequests)
 
 	// update time stamp
 	MetricsLastUpdateTime = time.Now()
@@ -166,6 +174,7 @@ func promMetrics() string {
 	out += fmt.Sprintf("# HELP %s_post_x509_requests\n", prefix)
 	out += fmt.Sprintf("# TYPE %s_post_x509_requests counter\n", prefix)
 	out += fmt.Sprintf("%s_post_x509_requests %v\n", prefix, data.PostX509Requests)
+
 	// oauth requests
 	out += fmt.Sprintf("# HELP %s_get_oauth_requests\n", prefix)
 	out += fmt.Sprintf("# TYPE %s_get_oauth_requests counter\n", prefix)
@@ -182,17 +191,25 @@ func promMetrics() string {
 	out += fmt.Sprintf("# TYPE %s_post_requests counter\n", prefix)
 	out += fmt.Sprintf("%s_post_requests %v\n", prefix, data.PostRequests)
 
-	// throughput
-	out += fmt.Sprintf("# HELP %s_request_per_second\n", prefix)
-	out += fmt.Sprintf("# TYPE %s_request_per_second counter\n", prefix)
-	out += fmt.Sprintf("%s_request_per_second %v\n", prefix, data.RequestsPerSecond)
+	// throughput, rps, rps physical cpu, rps logical cpu
+	out += fmt.Sprintf("# HELP %s_rps\n", prefix)
+	out += fmt.Sprintf("# TYPE %s_rps gauge\n", prefix)
+	out += fmt.Sprintf("%s_rps %v\n", prefix, data.RPS)
+
+	out += fmt.Sprintf("# HELP %s_rps_physical_cpu\n", prefix)
+	out += fmt.Sprintf("# TYPE %s_rps_physical_cpu gauge\n", prefix)
+	out += fmt.Sprintf("%s_rps_physical_cpu %v\n", prefix, data.RPSPhysical)
+
+	out += fmt.Sprintf("# HELP %s_rps_logical_cpu\n", prefix)
+	out += fmt.Sprintf("# TYPE %s_rps_logical_cpu gauge\n", prefix)
+	out += fmt.Sprintf("%s_rps_logical_cpu %v\n", prefix, data.RPSLogical)
 
 	return out
 }
 
-// rps returns request per second
-func getRPS(time0 time.Time, totalRequests uint64) {
-	// RPS = Num. cores * (1 /Task time)
-	// here we set average RPS across all received requests
-	RPS = float64(NumCores) / time.Since(time0).Seconds() / float64(totalRequests)
+// helper function that calculates request per second metrics
+func getRPS(time0 time.Time) {
+	RPS += 1. / time.Since(time0).Seconds()
+	RPSLogical += float64(NumLogicalCores) / time.Since(time0).Seconds()
+	RPSPhysical += float64(NumPhysicalCores) / time.Since(time0).Seconds()
 }

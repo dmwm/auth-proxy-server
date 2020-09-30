@@ -283,7 +283,7 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		atomic.AddUint64(&TotalOAuthPostRequests, 1)
 	}
-	defer getRPS(start, (TotalOAuthGetRequests + TotalOAuthPostRequests))
+	defer getRPS(start)
 
 	status := http.StatusOK
 	userData := make(map[string]interface{})

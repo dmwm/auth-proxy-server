@@ -75,7 +75,7 @@ func x509RequestHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		atomic.AddUint64(&TotalX509PostRequests, 1)
 	}
-	defer getRPS(start, (TotalX509GetRequests + TotalX509PostRequests))
+	defer getRPS(start)
 
 	status := http.StatusOK
 	userData := make(map[string]interface{})

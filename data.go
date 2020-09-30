@@ -148,5 +148,7 @@ type Metrics struct {
 	PostOAuthRequests uint64                  `json:"oAuthPostRequests"` // total number of post requests from OAuth server
 	GetRequests       uint64                  `json:"getRequests"`       // total number of get requests across all services
 	PostRequests      uint64                  `json:"postRequests"`      // total number of post requests across all services
-	RequestsPerSecond float64                 `json:"requestsPerSecond"` // throughput req/sec
+	RPS               float64                 `json:"rps"`               // throughput req/sec
+	RPSPhysical       float64                 `json:"rpsPhysical"`       // throughput req/sec using physical cpu
+	RPSLogical        float64                 `json:"rpsLogical"`        // throughput req/sec using logical cpu
 }
