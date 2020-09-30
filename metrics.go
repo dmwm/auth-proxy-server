@@ -85,7 +85,7 @@ func promMetrics() string {
 	prefix := "proxy_server"
 
 	// cpu info
-	out += fmt.Sprintf("# HELP %s_cpu\n", prefix)
+	out += fmt.Sprintf("# HELP %s_cpu percentage of cpu used per CPU\n", prefix)
 	out += fmt.Sprintf("# TYPE %s_cpu gauge\n", prefix)
 	for i, v := range data.CPU {
 		out += fmt.Sprintf("%s_cpu{core=%d} %v\n", prefix, i, v)
@@ -125,82 +125,82 @@ func promMetrics() string {
 	out += fmt.Sprintf("%s_load15 gauge %v\n", prefix, data.Load.Load15)
 
 	// memory virtual
-	out += fmt.Sprintf("# HELP %s_mem_virt_total\n", prefix)
+	out += fmt.Sprintf("# HELP %s_mem_virt_total reports total virtual memory in bytes\n", prefix)
 	out += fmt.Sprintf("# TYPE %s_mem_virt_total gauge\n", prefix)
 	out += fmt.Sprintf("%s_mem_virt_total %v\n", prefix, data.Memory.Virtual.Total)
-	out += fmt.Sprintf("# HELP %s_mem_virt_free\n", prefix)
+	out += fmt.Sprintf("# HELP %s_mem_virt_free reports free virtual memory in bytes\n", prefix)
 	out += fmt.Sprintf("# TYPE %s_mem_virt_free gauge\n", prefix)
 	out += fmt.Sprintf("%s_mem_virt_free %v\n", prefix, data.Memory.Virtual.Free)
-	out += fmt.Sprintf("# HELP %s_mem_virt_used\n", prefix)
+	out += fmt.Sprintf("# HELP %s_mem_virt_used reports used virtual memory in bytes\n", prefix)
 	out += fmt.Sprintf("# TYPE %s_mem_virt_used gauge\n", prefix)
 	out += fmt.Sprintf("%s_mem_virt_used %v\n", prefix, data.Memory.Virtual.Used)
-	out += fmt.Sprintf("# HELP %s_mem_virt_pct\n", prefix)
+	out += fmt.Sprintf("# HELP %s_mem_virt_pct reports percentage of virtual memory\n", prefix)
 	out += fmt.Sprintf("# TYPE %s_mem_virt_pct gauge\n", prefix)
 	out += fmt.Sprintf("%s_mem_virt_pct %v\n", prefix, data.Memory.Virtual.UsedPercent)
 
 	// memory swap
-	out += fmt.Sprintf("# HELP %s_mem_swap_total\n", prefix)
+	out += fmt.Sprintf("# HELP %s_mem_swap_total reports total swap memory in bytes\n", prefix)
 	out += fmt.Sprintf("# TYPE %s_mem_swap_total gauge\n", prefix)
 	out += fmt.Sprintf("%s_mem_swap_total %v\n", prefix, data.Memory.Swap.Total)
-	out += fmt.Sprintf("# HELP %s_mem_swap_free\n", prefix)
+	out += fmt.Sprintf("# HELP %s_mem_swap_free reports free swap memory in bytes\n", prefix)
 	out += fmt.Sprintf("# TYPE %s_mem_swap_free gauge\n", prefix)
 	out += fmt.Sprintf("%s_mem_swap_free %v\n", prefix, data.Memory.Swap.Free)
-	out += fmt.Sprintf("# HELP %s_mem_swap_used\n", prefix)
+	out += fmt.Sprintf("# HELP %s_mem_swap_used reports used swap memory in bytes\n", prefix)
 	out += fmt.Sprintf("# TYPE %s_mem_swap_used gauge\n", prefix)
 	out += fmt.Sprintf("%s_mem_swap_used %v\n", prefix, data.Memory.Swap.Used)
-	out += fmt.Sprintf("# HELP %s_mem_swap_pct\n", prefix)
+	out += fmt.Sprintf("# HELP %s_mem_swap_pct reports percentage swap memory\n", prefix)
 	out += fmt.Sprintf("# TYPE %s_mem_swap_pct gauge\n", prefix)
 	out += fmt.Sprintf("%s_mem_swap_pct %v\n", prefix, data.Memory.Swap.UsedPercent)
 
 	// open files
-	out += fmt.Sprintf("# HELP %s_open_files\n", prefix)
+	out += fmt.Sprintf("# HELP %s_open_files reports total number of open file descriptors\n", prefix)
 	out += fmt.Sprintf("# TYPE %s_open_files gauge\n", prefix)
 	out += fmt.Sprintf("%s_open_files %v\n", prefix, len(data.OpenFiles))
 
 	// go routines
-	out += fmt.Sprintf("# HELP %s_goroutines\n", prefix)
+	out += fmt.Sprintf("# HELP %s_goroutines reports total number of go routines\n", prefix)
 	out += fmt.Sprintf("# TYPE %s_goroutines counter\n", prefix)
 	out += fmt.Sprintf("%s_goroutines %v\n", prefix, data.GoRoutines)
 
 	// uptime
-	out += fmt.Sprintf("# HELP %s_uptime\n", prefix)
+	out += fmt.Sprintf("# HELP %s_uptime reports server uptime in seconds\n", prefix)
 	out += fmt.Sprintf("# TYPE %s_uptime counter\n", prefix)
 	out += fmt.Sprintf("%s_uptime %v\n", prefix, data.Uptime)
 
 	// x509 requests
-	out += fmt.Sprintf("# HELP %s_get_x509_requests\n", prefix)
+	out += fmt.Sprintf("# HELP %s_get_x509_requests reports total number of X509 HTTP GET requests\n", prefix)
 	out += fmt.Sprintf("# TYPE %s_get_x509_requests counter\n", prefix)
 	out += fmt.Sprintf("%s_get_x509_requests %v\n", prefix, data.GetX509Requests)
-	out += fmt.Sprintf("# HELP %s_post_x509_requests\n", prefix)
+	out += fmt.Sprintf("# HELP %s_post_x509_requests reports total number of X509 HTTP POST requests\n", prefix)
 	out += fmt.Sprintf("# TYPE %s_post_x509_requests counter\n", prefix)
 	out += fmt.Sprintf("%s_post_x509_requests %v\n", prefix, data.PostX509Requests)
 
 	// oauth requests
-	out += fmt.Sprintf("# HELP %s_get_oauth_requests\n", prefix)
+	out += fmt.Sprintf("# HELP %s_get_oauth_requests reports total number of OAuth HTTP GET requests\n", prefix)
 	out += fmt.Sprintf("# TYPE %s_get_oauth_requests counter\n", prefix)
 	out += fmt.Sprintf("%s_get_oauth_requests %v\n", prefix, data.GetOAuthRequests)
-	out += fmt.Sprintf("# HELP %s_post_oauth_requests\n", prefix)
+	out += fmt.Sprintf("# HELP %s_post_oauth_requests reports total number of OAuth HTTP POST requests\n", prefix)
 	out += fmt.Sprintf("# TYPE %s_post_oauth_requests counter\n", prefix)
 	out += fmt.Sprintf("%s_post_oauth_requests %v\n", prefix, data.PostOAuthRequests)
 
 	// total requests
-	out += fmt.Sprintf("# HELP %s_get_requests\n", prefix)
+	out += fmt.Sprintf("# HELP %s_get_requests reports total number of HTTP GET requests\n", prefix)
 	out += fmt.Sprintf("# TYPE %s_get_requests counter\n", prefix)
 	out += fmt.Sprintf("%s_get_requests %v\n", prefix, data.GetRequests)
-	out += fmt.Sprintf("# HELP %s_post_requests\n", prefix)
+	out += fmt.Sprintf("# HELP %s_post_requests reports total number of HTTP POST requests\n", prefix)
 	out += fmt.Sprintf("# TYPE %s_post_requests counter\n", prefix)
 	out += fmt.Sprintf("%s_post_requests %v\n", prefix, data.PostRequests)
 
 	// throughput, rps, rps physical cpu, rps logical cpu
-	out += fmt.Sprintf("# HELP %s_rps\n", prefix)
+	out += fmt.Sprintf("# HELP %s_rps reports request per second average\n", prefix)
 	out += fmt.Sprintf("# TYPE %s_rps gauge\n", prefix)
 	out += fmt.Sprintf("%s_rps %v\n", prefix, data.RPS)
 
-	out += fmt.Sprintf("# HELP %s_rps_physical_cpu\n", prefix)
+	out += fmt.Sprintf("# HELP %s_rps_physical_cpu reports request per second average weighted by physical CPU cores\n", prefix)
 	out += fmt.Sprintf("# TYPE %s_rps_physical_cpu gauge\n", prefix)
 	out += fmt.Sprintf("%s_rps_physical_cpu %v\n", prefix, data.RPSPhysical)
 
-	out += fmt.Sprintf("# HELP %s_rps_logical_cpu\n", prefix)
+	out += fmt.Sprintf("# HELP %s_rps_logical_cpu reports request per second average weighted by logical CPU cures\n", prefix)
 	out += fmt.Sprintf("# TYPE %s_rps_logical_cpu gauge\n", prefix)
 	out += fmt.Sprintf("%s_rps_logical_cpu %v\n", prefix, data.RPSLogical)
 

@@ -29,6 +29,7 @@ This codebase is based on different examples taken from:
 */
 
 import (
+	"bytes"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -41,6 +42,7 @@ import (
 	"net/url"
 	"os"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
@@ -71,6 +73,31 @@ var stompMgr *stomp.StompManager
 // version of the code
 var version string
 
+type transport struct {
+	http.RoundTripper
+}
+
+func (t *transport) RoundTrip(req *http.Request) (resp *http.Response, err error) {
+	resp, err = t.RoundTripper.RoundTrip(req)
+	if err != nil {
+		return nil, err
+	}
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	err = resp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+	b = bytes.Replace(b, []byte("server"), []byte("schmerver"), -1)
+	body := ioutil.NopCloser(bytes.NewReader(b))
+	resp.Body = body
+	resp.ContentLength = int64(len(b))
+	resp.Header.Set("Content-Length", strconv.Itoa(len(b)))
+	return resp, nil
+}
+
 // Serve a reverse proxy for a given url
 func reverseProxy(targetUrl string, w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
@@ -80,6 +107,9 @@ func reverseProxy(targetUrl string, w http.ResponseWriter, r *http.Request) {
 
 	// create the reverse proxy
 	proxy := httputil.NewSingleHostReverseProxy(url)
+
+	// set custom transport to capture size of response body
+	//     proxy.Transport = &transport{http.DefaultTransport}
 
 	// Update the headers to allow for SSL redirection
 	r.URL.Host = url.Host
@@ -103,6 +133,9 @@ func reverseProxy(targetUrl string, w http.ResponseWriter, r *http.Request) {
 
 	// use custom modify response function to setup response headers
 	proxy.ModifyResponse = func(resp *http.Response) error {
+		if Config.Verbose > 0 {
+			log.Println("proxy ModifyResponse")
+		}
 		if Config.XContentTypeOptions != "" {
 			resp.Header.Set("X-Content-Type-Options", Config.XContentTypeOptions)
 		}
@@ -112,6 +145,18 @@ func reverseProxy(targetUrl string, w http.ResponseWriter, r *http.Request) {
 		resp.Header.Set("Response-Time", time.Since(start).String())
 		resp.Header.Set("Response-Time-Seconds", fmt.Sprintf("%v", time.Since(start).Seconds()))
 		return nil
+	}
+	proxy.ErrorHandler = func(rw http.ResponseWriter, r *http.Request, err error) {
+		if Config.Verbose > 0 {
+			log.Printf("proxy ErrorHandler error was: %+v", err)
+		}
+		header := rw.Header()
+		header.Set("Response-Status", fmt.Sprintf("%d", http.StatusBadGateway))
+		header.Set("Response-Status-Code", fmt.Sprintf("%d", http.StatusBadGateway))
+		header.Set("Response-Time", time.Since(start).String())
+		header.Set("Response-Time-Seconds", fmt.Sprintf("%v", time.Since(start).Seconds()))
+		rw.WriteHeader(http.StatusInternalServerError)
+		rw.Write([]byte(err.Error()))
 	}
 
 	// ServeHttp is non blocking and uses a go routine under the hood
