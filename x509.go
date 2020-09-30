@@ -15,11 +15,18 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/dmwm/cmsauth"
 	_ "github.com/thomasdarimont/go-kc-example/session_memory"
 )
+
+// TotalX509GetRequests counts total number of GET requests received by the server
+var TotalX509GetRequests uint64
+
+// TotalX509PostRequests counts total number of POST requests received by the server
+var TotalX509PostRequests uint64
 
 // helper function to extract CN from given subject
 func findCN(subject string) (string, error) {
@@ -60,6 +67,14 @@ func findUser(subjects []string) (cmsauth.CricEntry, error) {
 
 // x509RequestHandler handle requests for x509 clients
 func x509RequestHandler(w http.ResponseWriter, r *http.Request) {
+	// increment GET/POST counters
+	if r.Method == "GET" {
+		atomic.AddUint64(&TotalX509GetRequests, 1)
+	}
+	if r.Method == "POST" {
+		atomic.AddUint64(&TotalX509PostRequests, 1)
+	}
+
 	start := time.Now()
 	status := http.StatusOK
 	userData := make(map[string]interface{})
@@ -131,6 +146,8 @@ func x509ProxyServer(serverCrt, serverKey string) {
 
 	// the server settings handler
 	http.HandleFunc(fmt.Sprintf("%s/server", Config.Base), settingsHandler)
+	// metrics handler
+	http.HandleFunc(fmt.Sprintf("%s/metrics", Config.Base), metricsHandler)
 
 	// the request handler
 	http.HandleFunc("/", x509RequestHandler)

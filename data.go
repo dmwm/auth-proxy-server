@@ -7,6 +7,10 @@ package main
 
 import (
 	"fmt"
+
+	"github.com/shirou/gopsutil/load"
+	"github.com/shirou/gopsutil/net"
+	"github.com/shirou/gopsutil/process"
 )
 
 // Ingress part of server configuration
@@ -113,4 +117,36 @@ func (t *TokenInfo) String() string {
 	s = fmt.Sprintf("%s\nRefreshToken:\n%s", s, t.RefreshToken)
 	s = fmt.Sprintf("%s\nRefreshExpire: %d", s, t.RefreshExpire)
 	return s
+}
+
+// Memory structure keeps track of server memory
+type Memory struct {
+	Total       uint64  `json:"total"`
+	Free        uint64  `json:"free"`
+	Used        uint64  `json:"used"`
+	UsedPercent float64 `json:"usedPercent"`
+}
+
+// Mem structure keeps track of virtual/swap memory of the server
+type Mem struct {
+	Virtual Memory `json:"virtual"` // virtual memory metrics from gopsutils
+	Swap    Memory `json:"swap"`    // swap memory metrics from gopsutils
+}
+
+// Metrics provide various metrics about our server
+type Metrics struct {
+	CPU               []float64               `json:"cpu"`               // cpu metrics from gopsutils
+	Connections       []net.ConnectionStat    `json:"conenctions"`       // connections metrics from gopsutils
+	Load              load.AvgStat            `json:"load"`              // load metrics from gopsutils
+	Memory            Mem                     `json:"memory"`            // memory metrics from gopsutils
+	OpenFiles         []process.OpenFilesStat `json:"openFiles"`         // open files metrics from gopsutils
+	GoRoutines        uint64                  `json:"goroutines"`        // total number of go routines at run-time
+	Uptime            float64                 `json:"uptime"`            // uptime of the server
+	GetX509Requests   uint64                  `json:"x509GetRequests"`   // total number of get x509 requests
+	PostX509Requests  uint64                  `json:"x509PostRequests"`  // total number of post X509 requests
+	GetOAuthRequests  uint64                  `json:"oAuthGetRequests"`  // total number of get requests form OAuth server
+	PostOAuthRequests uint64                  `json:"oAuthPostRequests"` // total number of post requests from OAuth server
+	GetRequests       uint64                  `json:"getRequests"`       // total number of get requests across all services
+	PostRequests      uint64                  `json:"postRequests"`      // total number of post requests across all services
+	RequestsPerSecond float64                 `json:"requestsPerSecond"` // throughput req/sec
 }

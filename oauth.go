@@ -40,6 +40,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	oidc "github.com/coreos/go-oidc"
@@ -48,6 +49,12 @@ import (
 	_ "github.com/thomasdarimont/go-kc-example/session_memory"
 	"golang.org/x/oauth2"
 )
+
+// TotalOAuthGetRequests counts total number of GET requests received by the server
+var TotalOAuthGetRequests uint64
+
+// TotalOAuthPostRequests counts total number of POST requests received by the server
+var TotalOAuthPostRequests uint64
 
 // AuthTokenUrl holds url for token authentication
 var AuthTokenUrl string
@@ -268,6 +275,13 @@ func oauthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 // struct. The only exceptions are /token and /renew end-points which used internally
 // to display or renew user tokens, respectively
 func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
+	// increment GET/POST counters
+	if r.Method == "GET" {
+		atomic.AddUint64(&TotalOAuthGetRequests, 1)
+	}
+	if r.Method == "POST" {
+		atomic.AddUint64(&TotalOAuthPostRequests, 1)
+	}
 	start := time.Now()
 	status := http.StatusOK
 	userData := make(map[string]interface{})
@@ -456,6 +470,9 @@ func oauthProxyServer(serverCrt, serverKey string) {
 
 	// the server settings handler
 	http.HandleFunc(fmt.Sprintf("%s/server", Config.Base), settingsHandler)
+
+	// metrics handler
+	http.HandleFunc(fmt.Sprintf("%s/metrics", Config.Base), metricsHandler)
 
 	// the callback authentication handler
 	http.HandleFunc(fmt.Sprintf("%s/callback", Config.Base), oauthCallbackHandler)

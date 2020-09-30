@@ -52,6 +52,9 @@ import (
 	stomp "github.com/vkuznet/lb-stomp"
 )
 
+// StartTime of the server
+var StartTime time.Time
+
 // CMSAuth structure to create CMS Auth headers
 var CMSAuth cmsauth.CMSAuth
 
@@ -207,6 +210,18 @@ func settingsHandler(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+// metrics handler function to provide metrics about the server
+func metricsHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(promMetrics()))
+	return
+}
+
+// helper function to return version string of the server
 func info() string {
 	goVersion := runtime.Version()
 	tstamp := time.Now().Format("2006-02-01")
@@ -259,6 +274,10 @@ func main() {
 	}
 	stompMgr = stomp.New(c)
 	log.Println(stompMgr.String())
+
+	// setup StartTime and metrics last update time
+	StartTime = time.Now()
+	MetricsLastUpdateTime = time.Now()
 
 	if err == nil {
 		CMSAuth.Init(Config.Hmac)
