@@ -36,8 +36,8 @@ func parseConfig(configFile string) error {
 	if Config.Port == 0 {
 		Config.Port = 8181
 	}
-	if Config.OAuthUrl == "" {
-		Config.OAuthUrl = "https://auth.cern.ch/auth/realms/cern"
+	if Config.OAuthURL == "" {
+		Config.OAuthURL = "https://auth.cern.ch/auth/realms/cern"
 	}
 	return nil
 }

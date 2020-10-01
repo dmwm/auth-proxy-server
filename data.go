@@ -16,45 +16,50 @@ import (
 // Ingress part of server configuration
 type Ingress struct {
 	Path       string `json:"path"`        // url path to the service
-	ServiceUrl string `json:"service_url"` // service url
+	ServiceURL string `json:"service_url"` // service url
 	OldPath    string `json:"old_path"`    // path from url to be replaced with new_path
 	NewPath    string `json:"new_path"`    // path from url to replace old_path
 }
 
 // Configuration stores server configuration parameters
 type Configuration struct {
-	Port                int         `json:"port"`                   // server port number
-	RootCAs             string      `json:"rootCAs"`                // server Root CAs path
-	Base                string      `json:"base"`                   // base URL
-	StaticPage          string      `json:"static_page"`            // static file to use
-	LogFile             string      `json:"log_file"`               // server log file
-	ClientID            string      `json:"client_id"`              // OICD client id
-	ClientSecret        string      `json:"client_secret"`          // OICD client secret
-	TargetUrl           string      `json:"target_url"`             // proxy target url (where requests will go)
-	XForwardedHost      string      `json:"X-Forwarded-Host"`       // X-Forwarded-Host field of HTTP request
-	XContentTypeOptions string      `json:"X-Content-Type-Options"` // X-Content-Type-Options option
-	DocumentRoot        string      `json:"document_root"`          // root directory for the server
-	OAuthUrl            string      `json:"oauth_url"`              // CERN SSO OAuth2 realm url
-	AuthTokenUrl        string      `json:"auth_token_url"`         // CERN SSO OAuth2 OICD Token url
-	CMSHeaders          bool        `json:"cms_headers"`            // set CMS headers
-	RedirectUrl         string      `json:"redirect_url"`           // redirect auth url for proxy server
-	Verbose             int         `json:"verbose"`                // verbose output
-	Ingress             []Ingress   `json:"ingress"`                // incress section
-	ServerCrt           string      `json:"server_cert"`            // server certificate
-	ServerKey           string      `json:"server_key"`             // server certificate
-	Hmac                string      `json:"hmac"`                   // cmsweb hmac file
-	CricUrl             string      `json:"cric_url"`               // CRIC URL
-	CricFile            string      `json:"cric_file"`              // name of the CRIC file
-	UpdateCricInterval  int64       `json:"update_cric"`            // interval (in sec) to update cric records
-	UTC                 bool        `json:utc`                      // report logger time in UTC
-	StompConfig         StompConfig `json:"stomp_config"`           // Stomp Configuration (optional)
-	LogsHTTPEndpoint    string      `json:"logsHTTPEndpoint"`       // logs http end-point to use (optional)
-	LogsHTTPProducer    string      `json:"logsHTTPProducer"`       // name of producer to use in logs (used by HTTP endpoint)
-	LogsHTTPType        string      `json:"logsHTTPType"`           // type name for logs (used by HTTP endpoint)
-	LogsHTTPTypePrefix  string      `json:"logsHTTPTypePrefix"`     // type prefix for logs (used by HTTP endpoint)
+	Port                int          `json:"port"`                   // server port number
+	RootCAs             string       `json:"rootCAs"`                // server Root CAs path
+	Base                string       `json:"base"`                   // base URL
+	StaticPage          string       `json:"static_page"`            // static file to use
+	LogFile             string       `json:"log_file"`               // server log file
+	ClientID            string       `json:"client_id"`              // OICD client id
+	ClientSecret        string       `json:"client_secret"`          // OICD client secret
+	TargetURL           string       `json:"target_url"`             // proxy target url (where requests will go)
+	XForwardedHost      string       `json:"X-Forwarded-Host"`       // X-Forwarded-Host field of HTTP request
+	XContentTypeOptions string       `json:"X-Content-Type-Options"` // X-Content-Type-Options option
+	DocumentRoot        string       `json:"document_root"`          // root directory for the server
+	OAuthURL            string       `json:"oauth_url"`              // CERN SSO OAuth2 realm url
+	AuthTokenURL        string       `json:"auth_token_url"`         // CERN SSO OAuth2 OICD Token url
+	CMSHeaders          bool         `json:"cms_headers"`            // set CMS headers
+	RedirectURL         string       `json:"redirect_url"`           // redirect auth url for proxy server
+	Verbose             int          `json:"verbose"`                // verbose output
+	Ingress             []Ingress    `json:"ingress"`                // incress section
+	ServerCrt           string       `json:"server_cert"`            // server certificate
+	ServerKey           string       `json:"server_key"`             // server certificate
+	Hmac                string       `json:"hmac"`                   // cmsweb hmac file
+	CricURL             string       `json:"cric_url"`               // CRIC URL
+	CricFile            string       `json:"cric_file"`              // name of the CRIC file
+	UpdateCricInterval  int64        `json:"update_cric"`            // interval (in sec) to update cric records
+	UTC                 bool         `json:"utc"`                    // report logger time in UTC
+	StompConfig         StompConfig  `json:"stomp_config"`           // Stomp Configuration (optional)
+	LogsEndpoint        LogsEndpoint `json:"logs_endpoint"`          // logs endpoint configuration (optional)
 }
 
-// Configuration stores server configuration parameters
+// LogsEndpoint keeps information about HTTP logs end-point
+type LogsEndpoint struct {
+	URI      string `json:"uri"`      // logs http end-point to use
+	Producer string `json:"producer"` // name of producer to use in logs
+	Type     string `json:"type"`     // type name for logs
+	Prefix   string `json:"prefix"`   // type prefix for logs
+}
+
+// StompConfig stores server configuration parameters
 type StompConfig struct {
 	URI         string `json:"uri"`              // StompAMQ URI
 	Login       string `json:"login"`            // StompAQM login name
@@ -67,7 +72,7 @@ type StompConfig struct {
 	Verbose     int    `json:"verbose"`          // verbose output
 }
 
-// HTTPRecord
+// HTTPRecord provides http record we send to logs endpoint
 type HTTPRecord struct {
 	Producer   string    `json:"producer"`    // name of the producer
 	Type       string    `json:"type"`        // type of metric
@@ -80,7 +85,7 @@ type HTTPRecord struct {
 // LogRecord represents data we can send to StompAMQ or HTTP endpoint
 type LogRecord struct {
 	Method         string  // http.Request HTTP method
-	Uri            string  // http.RequestURI
+	URI            string  // http.RequestURI
 	Proto          string  // http.Request protocol
 	Status         int64   // http.Request status code
 	ContentLength  int64   // http.Request content-length
@@ -120,7 +125,7 @@ type TokenInfo struct {
 	AccessExpire  int64  `json:"expires_in"`         // access token expiration
 	RefreshToken  string `json:"refresh_token"`      // refresh token
 	RefreshExpire int64  `json:"refresh_expires_in"` // refresh token expireation
-	IdToken       string `json:"id_token"`           // id token
+	IDToken       string `json:"id_token"`           // id token
 }
 
 // String convert TokenInfo into html snippet

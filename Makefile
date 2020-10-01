@@ -1,7 +1,10 @@
 VERSION=`git rev-parse --short HEAD`
 flags=-ldflags="-s -w -X main.version=${VERSION}"
 
-all: build
+all: vet build
+
+vet:
+	go vet .
 
 build:
 	go clean; rm -rf pkg; go build -o auth-proxy-server ${flags}

@@ -22,13 +22,13 @@ var TotalGetRequests uint64
 // TotalPostRequests counts total number of POST requests received by the server
 var TotalPostRequests uint64
 
-// MetricsLastUpdateTime
+// MetricsLastUpdateTime keeps track of last update time of the metrics
 var MetricsLastUpdateTime time.Time
 
 // RPS represents requests per second for a given server
 var RPS float64
 
-// RPS represents requests per second for a given server times number of physical CPU cores
+// RPSPhysical represents requests per second for a given server times number of physical CPU cores
 var RPSPhysical float64
 
 // RPSLogical represents requests per second for a given server times number of logical CPU cores
@@ -97,9 +97,9 @@ func promMetrics() string {
 		v := c.Status
 		switch v {
 		case "ESTABLISHED":
-			estCon += 1
+			estCon++
 		case "LISTEN":
-			lisCon += 1
+			lisCon++
 		}
 	}
 	totCon = uint64(len(data.Connections))

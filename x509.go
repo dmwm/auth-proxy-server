@@ -236,15 +236,14 @@ func x509ProxyServer(serverCrt, serverKey string) {
 			}
 			_, err := certs[0].Verify(opts)
 			return err
-		} else {
-			for _, cert := range certs {
-				if cert == nil {
-					continue
-				}
-				_, err := cert.Verify(opts)
-				if err != nil {
-					return err
-				}
+		}
+		for _, cert := range certs {
+			if cert == nil {
+				continue
+			}
+			_, err := cert.Verify(opts)
+			if err != nil {
+				return err
 			}
 		}
 		return nil

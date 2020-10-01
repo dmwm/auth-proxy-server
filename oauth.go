@@ -56,8 +56,8 @@ var TotalOAuthGetRequests uint64
 // TotalOAuthPostRequests counts total number of POST requests received by the server
 var TotalOAuthPostRequests uint64
 
-// AuthTokenUrl holds url for token authentication
-var AuthTokenUrl string
+// AuthTokenURL holds url for token authentication
+var AuthTokenURL string
 
 // OAuth2Config holds OAuth2 configuration
 var OAuth2Config oauth2.Config
@@ -79,14 +79,14 @@ func init() {
 
 // helper function to verify/validate given token
 func introspectToken(token string) (TokenAttributes, error) {
-	verifyUrl := fmt.Sprintf("%s/introspect", AuthTokenUrl)
+	verifyURL := fmt.Sprintf("%s/introspect", AuthTokenURL)
 	form := url.Values{}
 	form.Add("token", token)
 	form.Add("client_id", Config.ClientID)
 	form.Add("client_secret", Config.ClientSecret)
-	r, err := http.NewRequest("POST", verifyUrl, strings.NewReader(form.Encode()))
+	r, err := http.NewRequest("POST", verifyURL, strings.NewReader(form.Encode()))
 	if err != nil {
-		msg := fmt.Sprintf("unable to POST request to %s, %v", verifyUrl, err)
+		msg := fmt.Sprintf("unable to POST request to %s, %v", verifyURL, err)
 		return TokenAttributes{}, errors.New(msg)
 	}
 	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
@@ -127,9 +127,9 @@ func renewToken(token string, r *http.Request) (TokenInfo, error) {
 	form.Add("grant_type", "refresh_token")
 	form.Add("client_id", Config.ClientID)
 	form.Add("client_secret", Config.ClientSecret)
-	r, err := http.NewRequest("POST", AuthTokenUrl, strings.NewReader(form.Encode()))
+	r, err := http.NewRequest("POST", AuthTokenURL, strings.NewReader(form.Encode()))
 	if err != nil {
-		msg := fmt.Sprintf("unable to POST request to %s, %v", AuthTokenUrl, err)
+		msg := fmt.Sprintf("unable to POST request to %s, %v", AuthTokenURL, err)
 		return TokenInfo{}, errors.New(msg)
 	}
 	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
@@ -361,7 +361,7 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 			if sess.Get("refreshExpire") != nil {
 				rtexp = sess.Get("refreshExpire").(int64)
 			}
-			tokenInfo := TokenInfo{AccessToken: token, RefreshToken: rtoken, AccessExpire: texp, RefreshExpire: rtexp, IdToken: token}
+			tokenInfo := TokenInfo{AccessToken: token, RefreshToken: rtoken, AccessExpire: texp, RefreshExpire: rtexp, IDToken: token}
 			if !strings.Contains(strings.ToLower(accept), "json") {
 				w.Write([]byte(tokenInfo.String()))
 				return
@@ -434,25 +434,25 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 // simple hello page.
 func oauthProxyServer(serverCrt, serverKey string) {
 
-	// redirectUrl defines where incoming requests will be redirected for authentication
-	redirectUrl := fmt.Sprintf("http://localhost:%d/callback", Config.Port)
+	// redirectURL defines where incoming requests will be redirected for authentication
+	redirectURL := fmt.Sprintf("http://localhost:%d/callback", Config.Port)
 	if serverCrt != "" {
-		redirectUrl = fmt.Sprintf("https://localhost:%d/callback", Config.Port)
+		redirectURL = fmt.Sprintf("https://localhost:%d/callback", Config.Port)
 	}
-	if Config.RedirectUrl != "" {
-		redirectUrl = Config.RedirectUrl
+	if Config.RedirectURL != "" {
+		redirectURL = Config.RedirectURL
 	}
 
 	// authTokenUrl defines where token can be obtained
-	AuthTokenUrl = fmt.Sprintf("%s/protocol/openid-connect/token", Config.OAuthUrl)
-	if Config.AuthTokenUrl != "" {
-		AuthTokenUrl = Config.AuthTokenUrl
+	AuthTokenURL = fmt.Sprintf("%s/protocol/openid-connect/token", Config.OAuthURL)
+	if Config.AuthTokenURL != "" {
+		AuthTokenURL = Config.AuthTokenURL
 	}
 
 	// Provider is a struct in oidc package that represents
 	// an OpenID Connect server's configuration.
 	Context = context.Background()
-	provider, err := oidc.NewProvider(Context, Config.OAuthUrl)
+	provider, err := oidc.NewProvider(Context, Config.OAuthURL)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -461,7 +461,7 @@ func oauthProxyServer(serverCrt, serverKey string) {
 	OAuth2Config = oauth2.Config{
 		ClientID:     Config.ClientID,
 		ClientSecret: Config.ClientSecret,
-		RedirectURL:  redirectUrl,
+		RedirectURL:  redirectURL,
 		Endpoint:     provider.Endpoint(),
 		Scopes:       []string{oidc.ScopeOpenID, "profile", "email"},
 	}

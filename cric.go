@@ -44,9 +44,9 @@ func updateCricRecords() {
 			interval = 3600
 		}
 		// parse cric records
-		if Config.CricUrl != "" {
-			cricRecords, err = cmsauth.GetCricData(Config.CricUrl, verbose)
-			log.Printf("obtain CRIC records from %s, %v", Config.CricUrl, err)
+		if Config.CricURL != "" {
+			cricRecords, err = cmsauth.GetCricData(Config.CricURL, verbose)
+			log.Printf("obtain CRIC records from %s, %v", Config.CricURL, err)
 		} else if Config.CricFile != "" {
 			cricRecords, err = cmsauth.ParseCric(Config.CricFile, verbose)
 			log.Printf("obtain CRIC records from %s, %v", Config.CricFile, err)

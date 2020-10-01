@@ -99,11 +99,11 @@ func (t *transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 }
 
 // Serve a reverse proxy for a given url
-func reverseProxy(targetUrl string, w http.ResponseWriter, r *http.Request) {
+func reverseProxy(targetURL string, w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 
 	// parse the url
-	url, _ := url.Parse(targetUrl)
+	url, _ := url.Parse(targetURL)
 
 	// create the reverse proxy
 	proxy := httputil.NewSingleHostReverseProxy(url)
@@ -164,7 +164,7 @@ func reverseProxy(targetUrl string, w http.ResponseWriter, r *http.Request) {
 }
 
 // helper function to get random service url
-func srvUrl(surl string) string {
+func srvURL(surl string) string {
 	// if we are given comma separated service urls we'll use random one
 	if strings.Contains(surl, ",") {
 		arr := strings.Split(surl, ",")
@@ -181,9 +181,9 @@ func redirect(w http.ResponseWriter, r *http.Request) {
 	for _, rec := range Config.Ingress {
 		if strings.Contains(r.URL.Path, rec.Path) {
 			if Config.Verbose > 0 {
-				log.Printf("ingress request path %s, record path %s, service url %s, old path %s, new path %s\n", r.URL.Path, rec.Path, rec.ServiceUrl, rec.OldPath, rec.NewPath)
+				log.Printf("ingress request path %s, record path %s, service url %s, old path %s, new path %s\n", r.URL.Path, rec.Path, rec.ServiceURL, rec.OldPath, rec.NewPath)
 			}
-			url := srvUrl(rec.ServiceUrl)
+			url := srvURL(rec.ServiceURL)
 			if rec.OldPath != "" {
 				// replace old path to new one, e.g. /couchdb/_all_dbs => /_all_dbs
 				r.URL.Path = strings.Replace(r.URL.Path, rec.OldPath, rec.NewPath, 1)
@@ -204,8 +204,8 @@ func redirect(w http.ResponseWriter, r *http.Request) {
 	}
 	// if no redirection was done, then we'll use either TargetURL
 	// or return Hello reply
-	if Config.TargetUrl != "" {
-		reverseProxy(Config.TargetUrl, w, r)
+	if Config.TargetURL != "" {
+		reverseProxy(Config.TargetURL, w, r)
 	} else {
 		if Config.DocumentRoot != "" {
 			fname := fmt.Sprintf("%s%s", Config.DocumentRoot, r.URL.Path)

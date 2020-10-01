@@ -91,7 +91,7 @@ func logRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 	rTime, _ := strconv.ParseFloat(respHeader.Get("Response-Time-Seconds"), 10)
 	rec := LogRecord{
 		Method:         r.Method,
-		Uri:            r.RequestURI,
+		URI:            r.RequestURI,
 		Proto:          r.Proto,
 		Status:         int64(status),
 		ContentLength:  r.ContentLength,
@@ -109,20 +109,20 @@ func logRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 	}
 	var data []byte
 	var err error
-	if Config.LogsHTTPEndpoint != "" {
+	if Config.LogsEndpoint.URI != "" {
 		hostname, err := os.Hostname()
 		if err != nil {
 			log.Println("Unable to get hostname", err)
 		}
-		ltype := Config.LogsHTTPType
+		ltype := Config.LogsEndpoint.Type
 		if ltype == "" {
 			ltype = "cms"
 		}
-		producer := Config.LogsHTTPProducer
+		producer := Config.LogsEndpoint.Producer
 		if producer == "" {
 			producer = "auth"
 		}
-		prefix := Config.LogsHTTPTypePrefix
+		prefix := Config.LogsEndpoint.Prefix
 		if prefix == "" {
 			prefix = "raw"
 		}
@@ -140,7 +140,8 @@ func logRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 		} else {
 			log.Printf("unable to marshal the data, error %v\n", err)
 		}
-	} else if Config.StompConfig.URI != "" {
+	}
+	if Config.StompConfig.URI != "" {
 		data, err = json.Marshal(rec)
 		if err == nil {
 			go stompMgr.Send(data)
@@ -152,7 +153,7 @@ func logRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 
 // helper function to send our logs to http logs end-point
 func send(data []byte) {
-	rurl := Config.LogsHTTPEndpoint
+	rurl := Config.LogsEndpoint.URI
 	ctype := "application/json"
 	resp, err := http.Post(rurl, ctype, bytes.NewBuffer(data))
 	if err != nil {
