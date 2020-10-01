@@ -6,11 +6,13 @@ package main
 //
 
 import (
+	"bytes"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
@@ -88,7 +90,7 @@ func logRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 	log.Printf("%s %s %s %s %d %s %s %s %s\n", addr, r.Method, r.RequestURI, r.Proto, status, dataMsg, authMsg, refMsg, respMsg)
 	if Config.StompConfig.Endpoint != "" {
 		rTime, _ := strconv.ParseFloat(respHeader.Get("Response-Time-Seconds"), 10)
-		rec := StompRecord{
+		rec := LogRecord{
 			Method:         r.Method,
 			Uri:            r.RequestURI,
 			Proto:          r.Proto,
@@ -106,11 +108,59 @@ func logRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 			ResponseTime:   rTime,
 			RequestTime:    time.Since(start).Seconds(),
 		}
-		data, err := json.Marshal(rec)
-		if err == nil {
-			go stompMgr.Send(data)
-		} else {
-			log.Printf("unable to send data to stomp, error: %v\n", err)
+		var data []byte
+		var err error
+		if Config.LogsHTTPEndpoint != "" {
+			hostname, err := os.Hostname()
+			if err != nil {
+				log.Println("Unable to get hostname", err)
+			}
+			ltype := Config.LogsHTTPType
+			if ltype == "" {
+				ltype = "cms"
+			}
+			producer := Config.LogsHTTPProducer
+			if producer == "" {
+				producer = "auth"
+			}
+			prefix := Config.LogsHTTPTypePrefix
+			if prefix == "" {
+				prefix = "raw"
+			}
+			r := HTTPRecord{
+				Producer:   producer,
+				Type:       ltype,
+				TypePrefix: prefix,
+				Timestamp:  time.Now().Unix(),
+				Host:       hostname,
+				Data:       rec,
+			}
+			data, err = json.Marshal(r)
+			if err == nil {
+				go send(data)
+			} else {
+				log.Printf("unable to marshal the data, error %v\n", err)
+			}
+		} else if Config.StompConfig.URI != "" {
+			data, err = json.Marshal(rec)
+			if err == nil {
+				go stompMgr.Send(data)
+			} else {
+				log.Printf("unable to marshal the data, error %v\n", err)
+			}
 		}
+	}
+}
+
+// helper function to send our logs to http logs end-point
+func send(data []byte) {
+	rurl := Config.LogsHTTPEndpoint
+	ctype := "application/json"
+	resp, err := http.Post(rurl, ctype, bytes.NewBuffer(data))
+	if err != nil {
+		log.Printf("unable to send data to %s, error %v\n", rurl, err)
+	}
+	if Config.Verbose > 0 {
+		log.Println(rurl, resp.Proto, resp.Status)
 	}
 }

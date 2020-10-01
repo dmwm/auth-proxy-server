@@ -47,7 +47,11 @@ type Configuration struct {
 	CricFile            string      `json:"cric_file"`              // name of the CRIC file
 	UpdateCricInterval  int64       `json:"update_cric"`            // interval (in sec) to update cric records
 	UTC                 bool        `json:utc`                      // report logger time in UTC
-	StompConfig         StompConfig `json:"stomp_config"`           // Stomp Configuration
+	StompConfig         StompConfig `json:"stomp_config"`           // Stomp Configuration (optional)
+	LogsHTTPEndpoint    string      `json:"logsHTTPEndpoint"`       // logs http end-point to use (optional)
+	LogsHTTPProducer    string      `json:"logsHTTPProducer"`       // name of producer to use in logs (used by HTTP endpoint)
+	LogsHTTPType        string      `json:"logsHTTPType"`           // type name for logs (used by HTTP endpoint)
+	LogsHTTPTypePrefix  string      `json:"logsHTTPTypePrefix"`     // type prefix for logs (used by HTTP endpoint)
 }
 
 // Configuration stores server configuration parameters
@@ -63,8 +67,18 @@ type StompConfig struct {
 	Verbose     int    `json:"verbose"`          // verbose output
 }
 
-// StompRecord represents data we can send to StompAMQ endpoint
-type StompRecord struct {
+// HTTPRecord
+type HTTPRecord struct {
+	Producer   string    `json:"producer"`    // name of the producer
+	Type       string    `json:"type"`        // type of metric
+	TypePrefix string    `json:"type_prefix"` // used to categorise your metrics, possible values are raw|agg|enr
+	Timestamp  int64     `json:"timestamp"`   // UTC seconds
+	Host       string    `json:"host"`        // used to add extra information about the node submitting your data
+	Data       LogRecord // log record data
+}
+
+// LogRecord represents data we can send to StompAMQ or HTTP endpoint
+type LogRecord struct {
 	Method         string  // http.Request HTTP method
 	Uri            string  // http.RequestURI
 	Proto          string  // http.Request protocol
