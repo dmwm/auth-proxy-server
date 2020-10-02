@@ -79,27 +79,27 @@ type HTTPRecord struct {
 	TypePrefix string    `json:"type_prefix"` // used to categorise your metrics, possible values are raw|agg|enr
 	Timestamp  int64     `json:"timestamp"`   // UTC seconds
 	Host       string    `json:"host"`        // used to add extra information about the node submitting your data
-	Data       LogRecord // log record data
+	Data       LogRecord `json:"data"`        // log record data
 }
 
 // LogRecord represents data we can send to StompAMQ or HTTP endpoint
 type LogRecord struct {
-	Method         string  // http.Request HTTP method
-	URI            string  // http.RequestURI
-	Proto          string  // http.Request protocol
-	Status         int64   // http.Request status code
-	ContentLength  int64   // http.Request content-length
-	AuthProto      string  // authentication protocol
-	Cipher         string  // TLS cipher name
-	CmsAuthCert    string  // cms auth certificate, user DN
-	CmsAuth        string  // cms auth method
-	Referer        string  // http referer
-	UserAgent      string  // http user-agent field
-	XForwardedHost string  // http.Request X-Forwarded-Host
-	RemoteAddr     string  // http.Request remote address
-	ResponseStatus string  // http.Response status
-	ResponseTime   float64 // http response time
-	RequestTime    float64 // http request time
+	Method         string  `json:"method"`           // http.Request HTTP method
+	URI            string  `json:"uri"`              // http.RequestURI
+	Proto          string  `json:"proto"`            // http.Request protocol
+	Status         int64   `json:"status"`           // http.Request status code
+	ContentLength  int64   `json:"content_length"`   // http.Request content-length
+	AuthProto      string  `json:"auth_proto"`       // authentication protocol
+	Cipher         string  `json:"cipher"`           // TLS cipher name
+	CmsAuthCert    string  `json:"cms_auth_cert"`    // cms auth certificate, user DN
+	CmsAuth        string  `json:"cms_auth"`         // cms auth method
+	Referer        string  `json:"referer"`          // http referer
+	UserAgent      string  `json:"user_agent"`       // http user-agent field
+	XForwardedHost string  `json:"x_forwarded_host"` // http.Request X-Forwarded-Host
+	RemoteAddr     string  `json:"remote_addr"`      // http.Request remote address
+	ResponseStatus string  `json:"response_status"`  // http.Response status
+	ResponseTime   float64 `json:"response_time"`    // http response time
+	RequestTime    float64 `json:"request_time"`     // http request time
 }
 
 // ServerSettings controls server parameters
