@@ -159,7 +159,9 @@ func send(data []byte) {
 	if err != nil {
 		log.Printf("unable to send data to %s, error %v\n", rurl, err)
 	}
-	if Config.Verbose > 0 {
+	if Config.Verbose == 1 {
 		log.Println(rurl, resp.Proto, resp.Status)
+	} else if Config.Verbose > 1 {
+		log.Println(rurl, resp.Proto, resp.Status, string(data))
 	}
 }
