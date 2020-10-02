@@ -183,12 +183,15 @@ func scitokensServer() {
 	serverKey := checkFile(Config.ServerKey)
 
 	// the server settings handler
-	http.HandleFunc(fmt.Sprintf("%s/server", Config.Base), settingsHandler)
+	base := Config.Base
+	http.HandleFunc(fmt.Sprintf("%s/server", base), settingsHandler)
 	// metrics handler
-	http.HandleFunc(fmt.Sprintf("%s/metrics", Config.Base), metricsHandler)
+	http.HandleFunc(fmt.Sprintf("%s/metrics", base), metricsHandler)
+	// static content
+	http.Handle(fmt.Sprintf("%s/.well-known/", base), http.StripPrefix(base+"/.well-known/", http.FileServer(http.Dir(Config.WellKnown))))
 
 	// the request handler
-	http.HandleFunc("/token", scitokensHandler)
+	http.HandleFunc(fmt.Sprintf("%s/token", base), scitokensHandler)
 
 	// start HTTPS server
 	server, err := getServer(serverCrt, serverKey, true)

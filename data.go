@@ -51,6 +51,7 @@ type Configuration struct {
 	WriteTimeout        int          `json:"write_timeout"`          // server write timeout in sec
 	StompConfig         StompConfig  `json:"stomp_config"`           // Stomp Configuration (optional)
 	LogsEndpoint        LogsEndpoint `json:"logs_endpoint"`          // logs endpoint configuration (optional)
+	WellKnown           string       `json:"well_known"`             // location of well-known area
 }
 
 // LogsEndpoint keeps information about HTTP logs end-point
