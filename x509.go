@@ -7,11 +7,9 @@ package main
 //
 
 import (
-	"crypto/tls"
 	"crypto/x509"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"strings"
@@ -143,7 +141,10 @@ func x509RequestHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // helper function to start x509 proxy server
-func x509ProxyServer(serverCrt, serverKey string) {
+func x509ProxyServer() {
+	// check if provided crt/key files exists
+	serverCrt := checkFile(Config.ServerCrt)
+	serverKey := checkFile(Config.ServerKey)
 
 	// the server settings handler
 	http.HandleFunc(fmt.Sprintf("%s/server", Config.Base), settingsHandler)
@@ -153,116 +154,10 @@ func x509ProxyServer(serverCrt, serverKey string) {
 	// the request handler
 	http.HandleFunc("/", x509RequestHandler)
 
-	// start HTTP or HTTPs server based on provided configuration
-	rootCAs := x509.NewCertPool()
-	files, err := ioutil.ReadDir(Config.RootCAs)
+	// start HTTPS server
+	server, err := getServer(serverCrt, serverKey, true)
 	if err != nil {
-		log.Printf("Unable to list files in '%s', error: %v\n", Config.RootCAs, err)
-		return
+		log.Fatalf("unable to start x509 server, error %v\n", err)
 	}
-	for _, finfo := range files {
-		fname := fmt.Sprintf("%s/%s", Config.RootCAs, finfo.Name())
-		caCert, err := ioutil.ReadFile(fname)
-		if err != nil {
-			if Config.Verbose > 1 {
-				log.Printf("Unable to read %s\n", fname)
-			}
-		}
-		if ok := rootCAs.AppendCertsFromPEM(caCert); !ok {
-			if Config.Verbose > 1 {
-				log.Printf("invalid PEM format while importing trust-chain: %q", fname)
-			}
-		}
-		log.Println("Load CA file", fname)
-	}
-
-	tlsConfig := &tls.Config{
-		// Set InsecureSkipVerify to skip the default validation we are
-		// replacing. This will not disable VerifyPeerCertificate.
-		InsecureSkipVerify: true,
-		ClientAuth:         tls.RequestClientCert,
-		RootCAs:            rootCAs,
-	}
-	// see concrete example here:
-	// https://golang.org/pkg/crypto/tls/#example_Config_verifyPeerCertificate
-	// https://www.example-code.com/golang/cert.asp
-	// https://golang.org/pkg/crypto/x509/pkix/#Extension
-	tlsConfig.VerifyPeerCertificate = func(certificates [][]byte, _ [][]*x509.Certificate) error {
-		if Config.Verbose > 1 {
-			log.Println("call custom tlsConfig.VerifyPeerCertificate")
-		}
-		certs := make([]*x509.Certificate, len(certificates))
-		for i, asn1Data := range certificates {
-			cert, err := x509.ParseCertificate(asn1Data)
-			if err != nil {
-				return errors.New("tls: failed to parse certificate from server: " + err.Error())
-			}
-			if Config.Verbose > 1 {
-				log.Println("Issuer", cert.Issuer)
-				log.Println("Subject", cert.Subject)
-				log.Println("emails", cert.EmailAddresses)
-			}
-			// check validity of user certificate
-			tstamp := time.Now().Unix()
-			if cert.NotBefore.Unix() > tstamp || cert.NotAfter.Unix() < tstamp {
-				msg := fmt.Sprintf("Expired user certificate, valid from %v to %v\n", cert.NotBefore, cert.NotAfter)
-				return errors.New(msg)
-			}
-			// dump cert UnhandledCriticalExtensions
-			for _, ext := range cert.UnhandledCriticalExtensions {
-				if Config.Verbose > 1 {
-					log.Printf("Cetificate extension: %+v\n", ext)
-				}
-				continue
-			}
-			if len(cert.UnhandledCriticalExtensions) == 0 && cert != nil {
-				certs[i] = cert
-			}
-		}
-		if Config.Verbose > 1 {
-			log.Println("### number of certs", len(certs))
-			for _, cert := range certs {
-				log.Println("### cert", cert)
-			}
-		}
-		opts := x509.VerifyOptions{
-			Roots:         rootCAs,
-			Intermediates: x509.NewCertPool(),
-			KeyUsages:     []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
-		}
-		if certs[0] != nil {
-			for _, cert := range certs[1:] {
-				opts.Intermediates.AddCert(cert)
-			}
-			_, err := certs[0].Verify(opts)
-			return err
-		}
-		for _, cert := range certs {
-			if cert == nil {
-				continue
-			}
-			_, err := cert.Verify(opts)
-			if err != nil {
-				return err
-			}
-		}
-		return nil
-	}
-	addr := fmt.Sprintf(":%d", Config.Port)
-	if serverCrt != "" && serverKey != "" {
-		//start HTTPS server which require user certificates
-		server := &http.Server{
-			Addr:           addr,
-			TLSConfig:      tlsConfig,
-			ReadTimeout:    300 * time.Second,
-			WriteTimeout:   300 * time.Second,
-			MaxHeaderBytes: 1 << 20,
-		}
-		log.Printf("Starting x509 HTTPs server on %s", addr)
-		log.Fatal(server.ListenAndServeTLS(serverCrt, serverKey))
-	} else {
-		// Start server without user certificates
-		log.Printf("Starting x509 HTTP server on %s", addr)
-		log.Fatal(http.ListenAndServe(addr, nil))
-	}
+	log.Fatal(server.ListenAndServeTLS(serverCrt, serverKey))
 }

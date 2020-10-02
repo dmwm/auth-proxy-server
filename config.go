@@ -39,5 +39,11 @@ func parseConfig(configFile string) error {
 	if Config.OAuthURL == "" {
 		Config.OAuthURL = "https://auth.cern.ch/auth/realms/cern"
 	}
+	if Config.ReadTimeout == 0 {
+		Config.ReadTimeout = 300
+	}
+	if Config.WriteTimeout == 0 {
+		Config.WriteTimeout = 300
+	}
 	return nil
 }

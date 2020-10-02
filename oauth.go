@@ -29,12 +29,9 @@ CERN SSO OAuth2 OICD
 
 import (
 	"context"
-	"crypto/tls"
-	"crypto/x509"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/httputil"
@@ -432,7 +429,10 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 // and redirects their requests to targetUrl of reverse proxy.
 // If targetUrl is empty string it will redirect all request to
 // simple hello page.
-func oauthProxyServer(serverCrt, serverKey string) {
+func oauthProxyServer() {
+	// check if provided crt/key files exists
+	serverCrt := checkFile(Config.ServerCrt)
+	serverKey := checkFile(Config.ServerKey)
 
 	// redirectURL defines where incoming requests will be redirected for authentication
 	redirectURL := fmt.Sprintf("http://localhost:%d/callback", Config.Port)
@@ -482,53 +482,10 @@ func oauthProxyServer(serverCrt, serverKey string) {
 	// the request handler
 	http.HandleFunc("/", oauthRequestHandler)
 
-	// start HTTP or HTTPs server based on provided configuration
-	addr := fmt.Sprintf(":%d", Config.Port)
-	if serverCrt != "" && serverKey != "" {
-		// start HTTPs server
-		rootCAs := x509.NewCertPool()
-		files, err := ioutil.ReadDir(Config.RootCAs)
-		if err != nil {
-			log.Printf("Unable to list files root CAs area Config.RootCA='%s', error: %v\n", Config.RootCAs, err)
-			return
-		}
-		for _, finfo := range files {
-			fname := fmt.Sprintf("%s/%s", Config.RootCAs, finfo.Name())
-			caCert, err := ioutil.ReadFile(fname)
-			if err != nil {
-				if Config.Verbose > 1 {
-					log.Printf("Unable to read %s\n", fname)
-				}
-			}
-			if ok := rootCAs.AppendCertsFromPEM(caCert); !ok {
-				if Config.Verbose > 1 {
-					log.Printf("invalid PEM format while importing trust-chain: %q", fname)
-				}
-			}
-			log.Println("Load CA file", fname)
-		}
-		cert, err := tls.LoadX509KeyPair(serverCrt, serverKey)
-		if err != nil {
-			log.Fatalf("server loadkeys: %s", err)
-
-		}
-
-		tlsConfig := &tls.Config{
-			RootCAs:      rootCAs,
-			Certificates: []tls.Certificate{cert},
-		}
-		server := &http.Server{
-			Addr:           addr,
-			TLSConfig:      tlsConfig,
-			ReadTimeout:    300 * time.Second,
-			WriteTimeout:   300 * time.Second,
-			MaxHeaderBytes: 1 << 20,
-		}
-		log.Printf("Starting HTTPs server on %s", addr)
-		log.Fatal(server.ListenAndServeTLS(serverCrt, serverKey))
-	} else {
-		// Start HTTP server
-		log.Printf("Starting HTTP server on %s", addr)
-		log.Fatal(http.ListenAndServe(addr, nil))
+	// start HTTPs server
+	server, err := getServer(serverCrt, serverKey, false)
+	if err != nil {
+		log.Fatalf("unable to start oauth server, error %v\n", err)
 	}
+	log.Fatal(server.ListenAndServeTLS(serverCrt, serverKey))
 }

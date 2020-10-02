@@ -284,9 +284,11 @@ func main() {
 	var config string
 	flag.StringVar(&config, "config", "", "configuration file")
 	var useX509 bool
-	flag.BoolVar(&useX509, "useX509", false, "use X509 auth server")
+	flag.BoolVar(&useX509, "useX509", false, "start X509 auth server")
+	var scitokens bool
+	flag.BoolVar(&scitokens, "scitokens", false, "start scitokens server")
 	var version bool
-	flag.BoolVar(&version, "version", false, "use X509 auth server")
+	flag.BoolVar(&version, "version", false, "print version information about the server")
 	flag.Parse()
 	if version {
 		fmt.Println(info())
@@ -339,16 +341,12 @@ func main() {
 
 	CMSAuth.Init(Config.Hmac)
 	go updateCricRecords()
-	_, e1 := os.Stat(Config.ServerCrt)
-	_, e2 := os.Stat(Config.ServerKey)
-	var crt, key string
-	if e1 == nil && e2 == nil {
-		crt = Config.ServerCrt
-		key = Config.ServerKey
-	}
 	if useX509 {
-		x509ProxyServer(crt, key)
+		x509ProxyServer()
+		return
+	} else if scitokens {
+		scitokensServer()
 		return
 	}
-	oauthProxyServer(crt, key)
+	oauthProxyServer()
 }

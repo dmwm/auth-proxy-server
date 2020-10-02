@@ -47,6 +47,8 @@ type Configuration struct {
 	CricFile            string       `json:"cric_file"`              // name of the CRIC file
 	UpdateCricInterval  int64        `json:"update_cric"`            // interval (in sec) to update cric records
 	UTC                 bool         `json:"utc"`                    // report logger time in UTC
+	ReadTimeout         int          `json:"read_timeout"`           // server read timeout in sec
+	WriteTimeout        int          `json:"write_timeout"`          // server write timeout in sec
 	StompConfig         StompConfig  `json:"stomp_config"`           // Stomp Configuration (optional)
 	LogsEndpoint        LogsEndpoint `json:"logs_endpoint"`          // logs endpoint configuration (optional)
 }

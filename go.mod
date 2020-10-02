@@ -4,6 +4,7 @@ go 1.14
 
 require (
 	github.com/coreos/go-oidc v2.2.1+incompatible
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/dmwm/cmsauth v0.0.0-20200227183320-1e78c9119730
 	github.com/fastly/go-utils v0.0.0-20180712184237-d95a45783239 // indirect
 	github.com/google/go-cmp v0.5.2 // indirect
