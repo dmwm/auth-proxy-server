@@ -40,12 +40,11 @@ type TokenResponse struct {
 	AccessToken string `json:"access_token"` // access token string
 	TokenType   string `json:"token_type"`   // token type string
 	Expires     int64  `json:"expires_in"`   // token expiration
-	Scopes      string `json:"scopes"`       // specific scopes
-	Sub         string `json:"sub"`          // either user name or DN
 }
 
 // helper function to handle http server errors
 func handleError(w http.ResponseWriter, r *http.Request, rec map[string]string) {
+	log.Println(Stack())
 	log.Printf("error %+v\n", rec)
 	data, err := json.Marshal(rec)
 	if err != nil {
@@ -84,51 +83,52 @@ func scitokensHandler(w http.ResponseWriter, r *http.Request) {
 		scopes = append(scopes, strings.Trim(s, " "))
 	}
 	// defaults
-	creds := make(map[string]string)
+	//     creds := make(map[string]string)
 	// TODO: fill out creds with dn, username, fqan obtained from x509 call
 
-	dn := ""
-	//     pattern := "GRST_CRED_AURI_"
-	//     if scitokensConfig.CMS {
-	//         pattern = "HTTP_CMS_AUTH"
-	//     }
-	// entries should be read from server environment, e.g. in apache we have
-	// HTTP_CMS_AUTH, CMS_LOGIN, CMS_DN headers
-	var entries []string
-	if dn == "" {
-		errRecord["error"] = fmt.Sprintf("No client certificate or proxy used for TLS authentication")
+	userData := getUserData(r)
+	if Config.Verbose > 0 {
+		log.Printf("user data %+v\n", userData)
+	}
+	var sub string
+	if v, ok := userData["name"]; ok {
+		sub = v.(string)
+	} else {
+		errRecord["error"] = fmt.Sprintf("No CMS credentials found in TLS authentication")
 		handleError(w, r, errRecord)
 		return
 	}
-	scopes, user := generateScopesUser(entries)
-	if scitokensConfig.Verbose {
-		log.Printf("creds %+v", creds)
-		log.Printf("entries %+v", entries)
-		log.Printf("scopes %+v", scopes)
-		log.Printf("user %+v", user)
-	}
 	// Compare the generated scopes against the requested scopes (if given)
 	// If we don't give the user everything they want, then we
-	// TODO: parse scopes
+	// TODO: parse roles and creat scopes
+	if roles, ok := userData["roles"]; ok {
+		rmap := roles.(map[string][]string)
+		for k, _ := range rmap {
+			scopes = append(scopes, k)
+		}
+	} else {
+		errRecord["error"] = "No applicable roles found"
+		handleError(w, r, errRecord)
+		return
+	}
 
 	if len(scopes) == 0 {
 		errRecord["error"] = "No applicable scopes for this user"
 		handleError(w, r, errRecord)
 		return
 	}
-	// generate new token and return it back to user
-	sub := dn
-	if user != "" {
-		sub = user
-	}
-	expires := time.Now().Add(time.Minute * time.Duration(scitokensConfig.Lifetime)).Unix()
 	var issuer, kid string
-	token, err := getSciToken(issuer, kid, sub)
+	if v, ok := userData["issuer"]; ok {
+		issuer = v.(string)
+	}
+	// generate new token and return it back to user
+	expires := time.Now().Add(time.Minute * time.Duration(scitokensConfig.Lifetime)).Unix()
+	token, err := getSciToken(issuer, kid, sub, strings.Join(scopes, " "))
 	if err != nil {
 		w.Write([]byte(fmt.Sprintf("unable to get token, error=%v", err)))
 		return
 	}
-	resp := TokenResponse{AccessToken: token, TokenType: "bearer", Expires: expires, Scopes: strings.Join(scopes, " ")}
+	resp := TokenResponse{AccessToken: token, TokenType: "bearer", Expires: expires}
 	data, err := json.Marshal(resp)
 	if err != nil {
 		w.Write([]byte(fmt.Sprintf("unable to marshal data, error=%v", err)))
@@ -142,16 +142,17 @@ func scitokensHandler(w http.ResponseWriter, r *http.Request) {
 
 // ScitokensClaims represent structure of scitokens claims
 type ScitokensClaims struct {
-	Foo string `json:"foo"` // TODO: replace with scitokens claim attributes
+	Scopes string `json:"scopes"` // user's scopes
+	Sub    string `json:"sub"`    // user name or DN
 	jwt.StandardClaims
 }
 
 // helper function to get scitoken
-func getSciToken(issuer, kid, sub string) (string, error) {
+func getSciToken(issuer, kid, sub, scopes string) (string, error) {
 	// Create a new token object, specifying signing method and the claims
 	expires := time.Now().Add(time.Minute * time.Duration(scitokensConfig.Lifetime)).Unix()
 	claims := ScitokensClaims{
-		"bar",
+		scopes, sub,
 		jwt.StandardClaims{
 			ExpiresAt: expires,
 			Issuer:    issuer,

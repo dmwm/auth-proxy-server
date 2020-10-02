@@ -15,7 +15,11 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"runtime"
+	"strings"
 	"time"
+
+	"github.com/dmwm/cmsauth"
 )
 
 // helper function to check if given file name exists
@@ -179,4 +183,83 @@ func getServer(serverCrt, serverKey string, customVerify bool) (*http.Server, er
 	}
 	log.Printf("Starting HTTPs server on %s", addr)
 	return server, nil
+}
+
+// Stack retuns string representation of the stack function calls
+func Stack() string {
+	trace := make([]byte, 2048)
+	count := runtime.Stack(trace, false)
+	return fmt.Sprintf("\nStack of %d bytes: %s\n", count, trace)
+}
+
+// helper function to extract CN from given subject
+func findCN(subject string) (string, error) {
+	parts := strings.Split(subject, " ")
+	for i, s := range parts {
+		if strings.HasPrefix(s, "CN=") && len(parts) > i {
+			cn := s
+			for _, ss := range parts[i+1:] {
+				if strings.Contains(ss, "=") {
+					break
+				}
+				cn = fmt.Sprintf("%s %s", cn, ss)
+			}
+			return cn, nil
+		}
+	}
+	return "", errors.New("no user CN is found in subject: " + subject)
+}
+
+// helper function to find user info in cric records for given cert subject
+func findUser(subjects []string) (cmsauth.CricEntry, error) {
+	for _, r := range CricRecords {
+		// loop over subjects is tiny, we may have only few subjects in certificates
+		for _, s := range subjects {
+			if cn, e := findCN(s); e == nil {
+				// loop over record DNs is tiny, we only have one or two DNs per user
+				for _, dn := range r.DNs {
+					if strings.HasSuffix(dn, cn) {
+						return r, nil
+					}
+				}
+			}
+		}
+	}
+	msg := fmt.Sprintf("user not found: %v\n", subjects)
+	return cmsauth.CricEntry{}, errors.New(msg)
+}
+
+// helper function to get user data from TLS request
+func getUserData(r *http.Request) map[string]interface{} {
+	userData := make(map[string]interface{})
+	certs := r.TLS.PeerCertificates
+	for _, asn1Data := range certs {
+		cert, err := x509.ParseCertificate(asn1Data.Raw)
+		if err != nil {
+			log.Println("x509RequestHandler tls: failed to parse certificate from server: " + err.Error())
+		}
+		if len(cert.UnhandledCriticalExtensions) > 0 {
+			continue
+		}
+		start := time.Now()
+		rec, err := findUser(strings.Split(cert.Subject.String(), ","))
+		if Config.Verbose > 0 {
+			log.Printf("found user %+v error=%v elapsed time %v\n", rec, err, time.Since(start))
+		}
+		if err == nil {
+			userData["issuer"] = strings.Split(cert.Issuer.String(), ",")[0]
+			userData["Subject"] = strings.Split(cert.Subject.String(), ",")[0]
+			userData["name"] = rec.Name
+			userData["cern_upn"] = rec.Login
+			userData["cern_person_id"] = rec.ID
+			userData["auth_time"] = time.Now().Unix()
+			userData["exp"] = cert.NotAfter.Unix()
+			userData["email"] = cert.EmailAddresses
+			userData["roles"] = rec.Roles
+		} else {
+			log.Println(err)
+			continue
+		}
+	}
+	return userData
 }
