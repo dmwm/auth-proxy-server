@@ -10,14 +10,19 @@ package main
 // https://github.com/scitokens/scitokens
 
 import (
+	"crypto/rand"
+	"crypto/rsa"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
+	// jwt "github.com/cristalhq/jwt/v3"
 	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/google/uuid"
 )
 
 // SciTokensSconfig represents configuration of scitokens service
@@ -55,6 +60,13 @@ func handleError(w http.ResponseWriter, r *http.Request, rec map[string]string) 
 	w.Write(data)
 }
 
+// helper function to generate UUID
+func genUUID() string {
+	uuidWithHyphen := uuid.New()
+	uuid := strings.Replace(uuidWithHyphen.String(), "-", "", -1)
+	return uuid
+}
+
 // helper function to generate scopes and user fields
 func generateScopesUser(entries []string) ([]string, string) {
 	var scopes []string
@@ -77,7 +89,7 @@ func scitokensHandler(w http.ResponseWriter, r *http.Request) {
 		handleError(w, r, errRecord)
 		return
 	}
-	// get scopes
+	// get scopes, should in a form of "write:/store/user/username read:/store"
 	var scopes []string
 	for _, s := range strings.Split(r.FormValue("scopes"), " ") {
 		scopes = append(scopes, strings.Trim(s, " "))
@@ -117,13 +129,16 @@ func scitokensHandler(w http.ResponseWriter, r *http.Request) {
 		handleError(w, r, errRecord)
 		return
 	}
-	var issuer, kid string
+	// issuer should be hostname of our server
+	var issuer string
 	if v, ok := userData["issuer"]; ok {
 		issuer = v.(string)
 	}
+	// jti is JWT ID
+	jti := genUUID()
 	// generate new token and return it back to user
 	expires := time.Now().Add(time.Minute * time.Duration(scitokensConfig.Lifetime)).Unix()
-	token, err := getSciToken(issuer, kid, sub, strings.Join(scopes, " "))
+	token, err := getSciToken(issuer, jti, sub, strings.Join(scopes, " "))
 	if err != nil {
 		w.Write([]byte(fmt.Sprintf("unable to get token, error=%v", err)))
 		return
@@ -142,38 +157,90 @@ func scitokensHandler(w http.ResponseWriter, r *http.Request) {
 
 // ScitokensClaims represent structure of scitokens claims
 type ScitokensClaims struct {
-	Scopes string `json:"scopes"` // user's scopes
-	Sub    string `json:"sub"`    // user name or DN
+	Scope string `json:"scope"` // user's scopes
 	jwt.StandardClaims
 }
 
-// helper function to get scitoken
-func getSciToken(issuer, kid, sub, scopes string) (string, error) {
+// helper function to generate RSA key
+func getRSAKey(fname string) (*rsa.PrivateKey, error) {
+	if fname == "" {
+		key, err := rsa.GenerateKey(rand.Reader, 2048)
+		return key, err
+	}
+	file, err := os.Open("/Users/vk/.ssh/id_rsa")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+	key, err := rsa.GenerateKey(file, 2048)
+	return key, err
+}
+
+/*
+// helper function to get scitoken, it is based on
+// github.com/cristalhq/jwt/v3
+func getSciToken(issuer, jti, sub, scopes string) (string, error) {
 	// Create a new token object, specifying signing method and the claims
-	expires := time.Now().Add(time.Minute * time.Duration(scitokensConfig.Lifetime)).Unix()
+	expires := jwt.NewNumericDate(time.Now().Add(time.Minute * time.Duration(scitokensConfig.Lifetime)))
+	now := jwt.NewNumericDate(time.Now())
+	iat := jwt.NewNumericDate(time.Now())
+	// for definitions see
+	// https://godoc.org/github.com/dgrijalva/jwt-go#StandardClaims
+	// https://tools.ietf.org/html/rfc7519#section-4.1
 	claims := ScitokensClaims{
-		scopes, sub,
+		scopes,
 		jwt.StandardClaims{
-			ExpiresAt: expires,
-			Issuer:    issuer,
-			Id:        kid,
-			Subject:   sub,
+			ExpiresAt: expires, // exp
+			Issuer:    issuer,  // iss
+			IssuedAt:  iat,     // iat
+			ID:        jti,     // jti
+			Subject:   sub,     // sub
+			NotBefore: now,     // nbf
 		},
 	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	//     fname := "/Users/vk/.ssh/id_rsa"
+	fname := ""
+	key, err := getRSAKey(fname)
+	signer, err := jwt.NewSignerRS(jwt.RS256, key)
+	if err != nil {
+		log.Fatal(err)
+	}
+	builder := jwt.NewBuilder(signer)
+	token, err := builder.Build(claims)
+	tokenString := token.String()
+	return tokenString, err
+}
+*/
 
-	//     token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-	//         "iss":    "admin",
-	//         "iat":    "",
-	//         "jti":    "",
-	//         "nbf":    time.Date(2015, 10, 10, 12, 0, 0, 0, time.UTC).Unix(),
-	//         "exp":    time.Now().Add(time.Minute * 20).Unix(),
-	//         "issuer": key,
-	//         "id":     kid,
-	//     })
+// helper function to get scitoken
+func getSciToken(issuer, jti, sub, scopes string) (string, error) {
+	// Create a new token object, specifying signing method and the claims
+	expires := time.Now().Add(time.Minute * time.Duration(scitokensConfig.Lifetime)).Unix()
+	now := time.Now().Unix()
+	iat := now
+	// for definitions see
+	// https://godoc.org/github.com/dgrijalva/jwt-go#StandardClaims
+	// https://tools.ietf.org/html/rfc7519#section-4.1
+	claims := ScitokensClaims{
+		scopes,
+		jwt.StandardClaims{
+			ExpiresAt: expires, // exp
+			Issuer:    issuer,  // iss
+			IssuedAt:  iat,     // iat
+			Id:        jti,     // jti
+			Subject:   sub,     // sub
+			NotBefore: now,     // nbf
+		},
+	}
+	//     fname := "/Users/vk/.ssh/id_rsa"
+	fname := ""
+	key, err := getRSAKey(fname)
 
-	secret := []byte(scitokensConfig.Secret)
-	tokenString, err := token.SignedString(secret)
+	//     token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	//     secret := []byte(scitokensConfig.Secret)
+	//     tokenString, err := token.SignedString(secret)
+	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
+	tokenString, err := token.SignedString(key)
 	return tokenString, err
 }
 
