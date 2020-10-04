@@ -12,8 +12,11 @@ package main
 import (
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/x509"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -27,16 +30,17 @@ import (
 
 // SciTokensSconfig represents configuration of scitokens service
 type ScitokensConfig struct {
-	FileGlog  string `json:"CONFIG_FILE_GLOB"`
-	Lifetime  int    `json:"LIFETIME"`
-	IssuerKey string `json:"ISSUER_KEY"`
-	Issuer    string `json:"ISSUER"`
-	Rules     string `json:"RULES"`
-	DNMapping string `json:"DN_MAPPING"`
-	CMS       bool   `json:"CMS"`
-	Verbose   bool   `json:"VERBOSE"`
-	Enabled   bool   `json:"ENABLED"`
-	Secret    string `json:"SECRET"`
+	FileGlog   string `json:"file_glob"`  // file glob
+	Lifetime   int    `json:"lifetime"`   // lifetime of token
+	IssuerKey  string `json:"issuer_key"` // issuer key
+	Issuer     string `json:"issuer"`     // issuer hostname
+	Rules      string `json:"rules"`      // rules file
+	DNMapping  string `json:"dn_mapping"` // dn mapping
+	CMS        bool   `json:"cms"`        // use cms
+	Verbose    bool   `json:"verbose"`    // verbosity mode
+	Enabled    bool   `json:"enabled"`    // enable
+	Secret     string `json:"secret"`     // secret
+	PrivateKey string `json:"rsa_key"`    // RSA private key to use
 }
 
 var scitokensConfig ScitokensConfig
@@ -177,17 +181,29 @@ type ScitokensClaims struct {
 }
 
 // helper function to generate RSA key
+// Generate RSA key as following
+// openssl genrsa 2048 | openssl pkcs8 -topk8 -nocrypt
 func getRSAKey(fname string) (*rsa.PrivateKey, error) {
-	if fname == "" {
-		key, err := rsa.GenerateKey(rand.Reader, 2048)
+	if fname != "" {
+		file, err := os.Open(fname)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer file.Close()
+		pemString, err := ioutil.ReadAll(file)
+		if err != nil {
+			log.Fatal(err)
+		}
+		// https://stackoverflow.com/questions/44230634/how-to-read-an-rsa-key-from-file
+		block, _ := pem.Decode([]byte(pemString))
+		// use RSA normal encoded key
+		//         key, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+		// use RSA PKCS#8 encoded key
+		parseResult, err := x509.ParsePKCS8PrivateKey(block.Bytes)
+		key := parseResult.(*rsa.PrivateKey)
 		return key, err
 	}
-	file, err := os.Open("/Users/vk/.ssh/id_rsa")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer file.Close()
-	key, err := rsa.GenerateKey(file, 2048)
+	key, err := rsa.GenerateKey(rand.Reader, 2048)
 	return key, err
 }
 
@@ -213,7 +229,7 @@ func getSciToken(issuer, jti, sub, scopes string) (string, error) {
 			NotBefore: now,     // nbf
 		},
 	}
-	//     fname := "/Users/vk/.ssh/id_rsa"
+	//     fname := "/some/path/id_rsa"
 	fname := ""
 	key, err := getRSAKey(fname)
 	signer, err := jwt.NewSignerRS(jwt.RS256, key)
@@ -248,9 +264,11 @@ func getSciToken(issuer, jti, sub, scopes string) (string, error) {
 			NotBefore: now,     // nbf
 		},
 	}
-	//     fname := "/Users/vk/.ssh/id_rsa"
-	fname := ""
+	fname := scitokensConfig.PrivateKey
 	key, err := getRSAKey(fname)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	//     token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	//     secret := []byte(scitokensConfig.Secret)
