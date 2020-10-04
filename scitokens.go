@@ -30,6 +30,7 @@ type ScitokensConfig struct {
 	FileGlog  string `json:"CONFIG_FILE_GLOB"`
 	Lifetime  int    `json:"LIFETIME"`
 	IssuerKey string `json:"ISSUER_KEY"`
+	Issuer    string `json:"ISSUER"`
 	Rules     string `json:"RULES"`
 	DNMapping string `json:"DN_MAPPING"`
 	CMS       bool   `json:"CMS"`
@@ -63,15 +64,51 @@ func handleError(w http.ResponseWriter, r *http.Request, rec map[string]string) 
 // helper function to generate UUID
 func genUUID() string {
 	uuidWithHyphen := uuid.New()
-	uuid := strings.Replace(uuidWithHyphen.String(), "-", "", -1)
-	return uuid
+	return uuidWithHyphen.String()
 }
 
-// helper function to generate scopes and user fields
-func generateScopesUser(entries []string) ([]string, string) {
+// helper function to get user scopes
+// should in a form of "write:/store/user/username read:/store"
+func getScopes(r *http.Request, userData map[string]interface{}) []string {
 	var scopes []string
-	var user string
-	return scopes, user
+	//     for _, s := range strings.Split(r.FormValue("scopes"), " ") {
+	//         scopes = append(scopes, strings.Trim(s, " "))
+	//     }
+	scopes = append(scopes, "read:/protected")
+	// Compare the generated scopes against the requested scopes (if given)
+	// If we don't give the user everything they want, then we
+	// TODO: parse roles and creat scopes
+	//     if roles, ok := userData["roles"]; ok {
+	//         rmap := roles.(map[string][]string)
+	//         for k, _ := range rmap {
+	//             scopes = append(scopes, k)
+	//         }
+	//     } else {
+	//         errRecord["error"] = "No applicable roles found"
+	//         handleError(w, r, errRecord)
+	//         return
+	//     }
+	return scopes
+}
+
+// helper function to get issuer
+func getIssuer(r *http.Request) string {
+	// get hostname from http Request if not provided use hostname
+	// or get issuer from userData
+	// issuer should be hostname of our server
+	//     var issuer string
+	//     if v, ok := userData["issuer"]; ok {
+	//         issuer = v.(string)
+	//     }
+	issuer := scitokensConfig.Issuer
+	if issuer == "" {
+		hostname, err := os.Hostname()
+		if err != nil {
+			log.Fatal(err)
+		}
+		return hostname
+	}
+	return issuer
 }
 
 // scitokensHandler handle requests for x509 clients
@@ -89,53 +126,30 @@ func scitokensHandler(w http.ResponseWriter, r *http.Request) {
 		handleError(w, r, errRecord)
 		return
 	}
-	// get scopes, should in a form of "write:/store/user/username read:/store"
-	var scopes []string
-	for _, s := range strings.Split(r.FormValue("scopes"), " ") {
-		scopes = append(scopes, strings.Trim(s, " "))
-	}
-	// defaults
-	//     creds := make(map[string]string)
-	// TODO: fill out creds with dn, username, fqan obtained from x509 call
-
+	// getch user data from our request
 	userData := getUserData(r)
 	if Config.Verbose > 0 {
 		log.Printf("user data %+v\n", userData)
 	}
+
+	// get token attribute values: issuer, jti, sub, scopes
+	issuer := getIssuer(r)
+	jti := genUUID()
+	scopes := getScopes(r, userData)
+	if len(scopes) == 0 {
+		errRecord["error"] = "No applicable scopes for this user"
+		handleError(w, r, errRecord)
+		return
+	}
 	var sub string
-	if v, ok := userData["name"]; ok {
+	if v, ok := userData["cern_upn"]; ok {
 		sub = v.(string)
 	} else {
 		errRecord["error"] = fmt.Sprintf("No CMS credentials found in TLS authentication")
 		handleError(w, r, errRecord)
 		return
 	}
-	// Compare the generated scopes against the requested scopes (if given)
-	// If we don't give the user everything they want, then we
-	// TODO: parse roles and creat scopes
-	if roles, ok := userData["roles"]; ok {
-		rmap := roles.(map[string][]string)
-		for k, _ := range rmap {
-			scopes = append(scopes, k)
-		}
-	} else {
-		errRecord["error"] = "No applicable roles found"
-		handleError(w, r, errRecord)
-		return
-	}
 
-	if len(scopes) == 0 {
-		errRecord["error"] = "No applicable scopes for this user"
-		handleError(w, r, errRecord)
-		return
-	}
-	// issuer should be hostname of our server
-	var issuer string
-	if v, ok := userData["issuer"]; ok {
-		issuer = v.(string)
-	}
-	// jti is JWT ID
-	jti := genUUID()
 	// generate new token and return it back to user
 	expires := time.Now().Add(time.Minute * time.Duration(scitokensConfig.Lifetime)).Unix()
 	token, err := getSciToken(issuer, jti, sub, strings.Join(scopes, " "))
@@ -157,7 +171,8 @@ func scitokensHandler(w http.ResponseWriter, r *http.Request) {
 
 // ScitokensClaims represent structure of scitokens claims
 type ScitokensClaims struct {
-	Scope string `json:"scope"` // user's scopes
+	Scope   string `json:"scope"` // user's scopes
+	Version string `json:"ver"`   // version string
 	jwt.StandardClaims
 }
 
@@ -218,11 +233,12 @@ func getSciToken(issuer, jti, sub, scopes string) (string, error) {
 	expires := time.Now().Add(time.Minute * time.Duration(scitokensConfig.Lifetime)).Unix()
 	now := time.Now().Unix()
 	iat := now
+	version := "scitoken:2.0"
 	// for definitions see
 	// https://godoc.org/github.com/dgrijalva/jwt-go#StandardClaims
 	// https://tools.ietf.org/html/rfc7519#section-4.1
 	claims := ScitokensClaims{
-		scopes,
+		scopes, version,
 		jwt.StandardClaims{
 			ExpiresAt: expires, // exp
 			Issuer:    issuer,  // iss
@@ -240,6 +256,9 @@ func getSciToken(issuer, jti, sub, scopes string) (string, error) {
 	//     secret := []byte(scitokensConfig.Secret)
 	//     tokenString, err := token.SignedString(secret)
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
+	if _, ok := token.Header["kid"]; !ok {
+		token.Header["kid"] = "key-rs256"
+	}
 	tokenString, err := token.SignedString(key)
 	return tokenString, err
 }
