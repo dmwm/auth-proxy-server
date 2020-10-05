@@ -122,17 +122,17 @@ func logRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 		if producer == "" {
 			producer = "auth"
 		}
-		prefix := Config.LogsEndpoint.Prefix
-		if prefix == "" {
-			prefix = "raw"
-		}
+		//         prefix := Config.LogsEndpoint.Prefix
+		//         if prefix == "" {
+		//             prefix = "raw"
+		//         }
 		r := HTTPRecord{
-			Producer:   producer,
-			Type:       ltype,
-			TypePrefix: prefix,
-			Timestamp:  time.Now().Unix(),
-			Host:       hostname,
-			Data:       rec,
+			Producer: producer,
+			Type:     ltype,
+			//             TypePrefix: prefix,
+			Timestamp: time.Now().Unix(),
+			Host:      hostname,
+			Data:      rec,
 		}
 		data, err = json.Marshal(r)
 		if err == nil {
