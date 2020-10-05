@@ -1,13 +1,21 @@
 package main
 
+// scitokens module provides CMS scitokens server implementation based on CRIC records
+//
+// Copyright (c) 2020 - Valentin Kuznetsov <vkuznet@gmail.com>
+//
+// List of supplemental materials
+// Scitokens docs:
+// https://scitokens.org/
+// https://demo.scitokens.org/
+// https://github.com/scitokens/x509-scitokens-issuer/blob/master/tools/cms-scitoken-init.go
+// https://github.com/scitokens/scitokens
+//
+// JWT docs:
 // https://gist.github.com/josemarjobs/23acc123b3cce1b251a5d5bafdca1140
 // https://www.thepolyglotdeveloper.com/2017/03/authenticate-a-golang-api-with-json-web-tokens/
 // https://github.com/dgrijalva/jwt-go
 // https://godoc.org/github.com/dgrijalva/jwt-go#example-NewWithClaims--CustomClaimsType
-// https://demo.scitokens.org/
-// https://scitokens.org/
-// https://github.com/scitokens/x509-scitokens-issuer/blob/master/tools/cms-scitoken-init.go
-// https://github.com/scitokens/scitokens
 
 import (
 	"crypto/rand"
@@ -28,33 +36,11 @@ import (
 	"github.com/google/uuid"
 )
 
-// SciTokensSconfig represents configuration of scitokens service
-type ScitokensConfig struct {
-	FileGlog   string `json:"file_glob"`  // file glob
-	Lifetime   int    `json:"lifetime"`   // lifetime of token
-	IssuerKey  string `json:"issuer_key"` // issuer key
-	Issuer     string `json:"issuer"`     // issuer hostname
-	Rules      string `json:"rules"`      // rules file
-	DNMapping  string `json:"dn_mapping"` // dn mapping
-	CMS        bool   `json:"cms"`        // use cms
-	Verbose    bool   `json:"verbose"`    // verbosity mode
-	Enabled    bool   `json:"enabled"`    // enable
-	Secret     string `json:"secret"`     // secret
-	PrivateKey string `json:"rsa_key"`    // RSA private key to use
-}
-
-var scitokensConfig ScitokensConfig
-
-// TokenResponse rerpresents structure of returned scitoken
-type TokenResponse struct {
-	AccessToken string `json:"access_token"` // access token string
-	TokenType   string `json:"token_type"`   // token type string
-	Expires     int64  `json:"expires_in"`   // token expiration
-}
-
 // helper function to handle http server errors
-func handleError(w http.ResponseWriter, r *http.Request, rec map[string]string) {
+func handleError(w http.ResponseWriter, r *http.Request, msg string) {
 	log.Println(Stack())
+	rec := ErrorRecord{Error: msg}
+	// TODO: we may introduce error codes at some point
 	log.Printf("error %+v\n", rec)
 	data, err := json.Marshal(rec)
 	if err != nil {
@@ -72,31 +58,51 @@ func genUUID() string {
 }
 
 // helper function to get user scopes
-// should in a form of "write:/store/user/username read:/store"
+// should in a form of "write:/store/user/<username> read:/store"
 func getScopes(r *http.Request, userData map[string]interface{}) []string {
 	var scopes []string
-	//     for _, s := range strings.Split(r.FormValue("scopes"), " ") {
-	//         scopes = append(scopes, strings.Trim(s, " "))
-	//     }
-	scopes = append(scopes, "read:/protected")
-	// Compare the generated scopes against the requested scopes (if given)
-	// If we don't give the user everything they want, then we
-	// TODO: parse roles and creat scopes
-	//     if roles, ok := userData["roles"]; ok {
-	//         rmap := roles.(map[string][]string)
-	//         for k, _ := range rmap {
-	//             scopes = append(scopes, k)
-	//         }
-	//     } else {
-	//         errRecord["error"] = "No applicable roles found"
-	//         handleError(w, r, errRecord)
-	//         return
-	//     }
+	var username string
+	if u, ok := userData["cern_upn"]; ok {
+		username = u.(string)
+	}
+	var userDN string
+	if u, ok := userData["dn"]; ok {
+		userDN = u.(string)
+	}
+
+	// loop over scitokens rules and construct user's scopes
+	for _, rule := range Config.Scitokens.Rules {
+		var rulesScopes []string
+		if strings.HasPrefix(rule.Match, "fqan:/cms") {
+			rulesScopes = rule.Scopes
+		} else if strings.HasPrefix(rule.Match, "dn:") {
+			userRuleDN := strings.Replace(rule.Match, "dn:", "", -1)
+			if userRuleDN == userDN {
+				rulesScopes = rule.Scopes
+			}
+		}
+		for _, s := range rulesScopes {
+			s = strings.Replace(strings.Trim(s, " "), "{username}", username, -1)
+			if !InList(s, scopes) {
+				scopes = append(scopes, s)
+			}
+		}
+	}
+	if len(scopes) == 0 {
+		scopes = append(scopes, "read:/protected")
+	}
 	return scopes
 }
 
 // helper function to get issuer
-func getIssuer(r *http.Request) string {
+func getIssuer(r *http.Request) (string, string) {
+	// from python code
+	// /Users/vk/CMS/DMWM/GIT/x509-scitokens-issuer/src/x509_scitokens_issuer/test_x509_scitokens_issuer.py
+	// with open(app.config['ISSUER_KEY'], 'r') as fd:
+	//      json_obj = json.load(fd)
+	// app.issuer_kid = json_obj['keys'][0]['kid']
+	// app.issuer_key = x509_utils.load_jwks(json_obj['keys'][0])
+
 	// get hostname from http Request if not provided use hostname
 	// or get issuer from userData
 	// issuer should be hostname of our server
@@ -104,15 +110,19 @@ func getIssuer(r *http.Request) string {
 	//     if v, ok := userData["issuer"]; ok {
 	//         issuer = v.(string)
 	//     }
-	issuer := scitokensConfig.Issuer
+
+	issuer := Config.Scitokens.Issuer
+	// TODO: read kid from issuer_key from issuer_key.jwks file
+	kid := ""
 	if issuer == "" {
 		hostname, err := os.Hostname()
 		if err != nil {
 			log.Fatal(err)
 		}
-		return hostname
+		kid := ""
+		return hostname, kid
 	}
-	return issuer
+	return issuer, kid
 }
 
 // scitokensHandler handle requests for x509 clients
@@ -122,7 +132,6 @@ func scitokensHandler(w http.ResponseWriter, r *http.Request, logChannel chan Lo
 	status := http.StatusOK
 	defer logRequest(w, r, start, "scitokens", status, logChannel)
 
-	errRecord := make(map[string]string)
 	err := r.ParseForm()
 	if err != nil {
 		log.Printf("could not parse http form, error %v\n", err)
@@ -131,8 +140,8 @@ func scitokensHandler(w http.ResponseWriter, r *http.Request, logChannel chan Lo
 	}
 	grantType := r.FormValue("grant_type")
 	if grantType != "client_credentials" {
-		errRecord["error"] = fmt.Sprintf("Incorrect grant_type %s", grantType)
-		handleError(w, r, errRecord)
+		msg := fmt.Sprintf("Incorrect grant_type %s", grantType)
+		handleError(w, r, msg)
 		return
 	}
 	// getch user data from our request
@@ -142,26 +151,26 @@ func scitokensHandler(w http.ResponseWriter, r *http.Request, logChannel chan Lo
 	}
 
 	// get token attribute values: issuer, jti, sub, scopes
-	issuer := getIssuer(r)
+	issuer, kid := getIssuer(r)
 	jti := genUUID()
 	scopes := getScopes(r, userData)
 	if len(scopes) == 0 {
-		errRecord["error"] = "No applicable scopes for this user"
-		handleError(w, r, errRecord)
+		msg := "No applicable scopes for this user"
+		handleError(w, r, msg)
 		return
 	}
 	var sub string
 	if v, ok := userData["cern_upn"]; ok {
 		sub = v.(string)
 	} else {
-		errRecord["error"] = fmt.Sprintf("No CMS credentials found in TLS authentication")
-		handleError(w, r, errRecord)
+		msg := fmt.Sprintf("No CMS credentials found in TLS authentication")
+		handleError(w, r, msg)
 		return
 	}
 
 	// generate new token and return it back to user
-	expires := time.Now().Add(time.Minute * time.Duration(scitokensConfig.Lifetime)).Unix()
-	token, err := getSciToken(issuer, jti, sub, strings.Join(scopes, " "))
+	expires := time.Now().Add(time.Minute * time.Duration(Config.Scitokens.Lifetime)).Unix()
+	token, err := getSciToken(issuer, kid, jti, sub, strings.Join(scopes, " "))
 	if err != nil {
 		w.Write([]byte(fmt.Sprintf("unable to get token, error=%v", err)))
 		return
@@ -187,7 +196,10 @@ type ScitokensClaims struct {
 
 // helper function to generate RSA key
 // Generate RSA key as following
-// openssl genrsa 2048 | openssl pkcs8 -topk8 -nocrypt
+// PKC8 key
+// openssl genrsa 2048 | openssl pkcs8 -topk8 -nocrypt > /tmp/issuer.pem
+// scitokens key
+// scitokens-admin-create-key --create-keys --pem-private --pem-public > /tmp/issuer.pem
 func getRSAKey(fname string) (*rsa.PrivateKey, error) {
 	if fname != "" {
 		file, err := os.Open(fname)
@@ -200,13 +212,25 @@ func getRSAKey(fname string) (*rsa.PrivateKey, error) {
 			log.Fatal(err)
 		}
 		// https://stackoverflow.com/questions/44230634/how-to-read-an-rsa-key-from-file
+		// read block of bytes related to the key but we are not interested in reminder of the input
 		block, _ := pem.Decode([]byte(pemString))
+		if err != nil {
+			log.Fatal(err)
+		}
 		// use RSA normal encoded key
-		//         key, err := x509.ParsePKCS1PrivateKey(block.Bytes)
-		// use RSA PKCS#8 encoded key
+		key, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+		if err == nil {
+			return key, err
+		}
+		log.Println("unable to ParsePKCS1PrivateKey", fname, err)
+		// try out RSA PKCS#8 encoded key
 		parseResult, err := x509.ParsePKCS8PrivateKey(block.Bytes)
-		key := parseResult.(*rsa.PrivateKey)
-		return key, err
+		if err == nil {
+			key = parseResult.(*rsa.PrivateKey)
+			return key, err
+		}
+		log.Println("unable to ParsePKCS8PrivateKey", fname, err)
+		log.Fatal(err)
 	}
 	key, err := rsa.GenerateKey(rand.Reader, 2048)
 	return key, err
@@ -217,7 +241,7 @@ func getRSAKey(fname string) (*rsa.PrivateKey, error) {
 // github.com/cristalhq/jwt/v3
 func getSciToken(issuer, jti, sub, scopes string) (string, error) {
 	// Create a new token object, specifying signing method and the claims
-	expires := jwt.NewNumericDate(time.Now().Add(time.Minute * time.Duration(scitokensConfig.Lifetime)))
+	expires := jwt.NewNumericDate(time.Now().Add(time.Minute * time.Duration(Config.Scitokens.Lifetime)))
 	now := jwt.NewNumericDate(time.Now())
 	iat := jwt.NewNumericDate(time.Now())
 	// for definitions see
@@ -234,7 +258,6 @@ func getSciToken(issuer, jti, sub, scopes string) (string, error) {
 			NotBefore: now,     // nbf
 		},
 	}
-	//     fname := "/some/path/id_rsa"
 	fname := ""
 	key, err := getRSAKey(fname)
 	signer, err := jwt.NewSignerRS(jwt.RS256, key)
@@ -249,9 +272,9 @@ func getSciToken(issuer, jti, sub, scopes string) (string, error) {
 */
 
 // helper function to get scitoken
-func getSciToken(issuer, jti, sub, scopes string) (string, error) {
+func getSciToken(issuer, kid, jti, sub, scopes string) (string, error) {
 	// Create a new token object, specifying signing method and the claims
-	expires := time.Now().Add(time.Minute * time.Duration(scitokensConfig.Lifetime)).Unix()
+	expires := time.Now().Add(time.Minute * time.Duration(Config.Scitokens.Lifetime)).Unix()
 	now := time.Now().Unix()
 	iat := now
 	version := "scitoken:2.0"
@@ -269,18 +292,22 @@ func getSciToken(issuer, jti, sub, scopes string) (string, error) {
 			NotBefore: now,     // nbf
 		},
 	}
-	fname := scitokensConfig.PrivateKey
+	fname := Config.Scitokens.PrivateKey
 	key, err := getRSAKey(fname)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	//     token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	//     secret := []byte(scitokensConfig.Secret)
+	//     secret := []byte(Config.Scitokens.Secret)
 	//     tokenString, err := token.SignedString(secret)
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
 	if _, ok := token.Header["kid"]; !ok {
-		token.Header["kid"] = "key-rs256"
+		if kid == "" {
+			token.Header["kid"] = "key-rs256"
+		} else {
+			token.Header["kid"] = kid
+		}
 	}
 	tokenString, err := token.SignedString(key)
 	return tokenString, err
