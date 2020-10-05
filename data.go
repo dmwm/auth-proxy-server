@@ -77,9 +77,8 @@ type StompConfig struct {
 
 // HTTPRecord provides http record we send to logs endpoint
 type HTTPRecord struct {
-	Producer string `json:"producer"` // name of the producer
-	Type     string `json:"type"`     // type of metric
-	//     TypePrefix string    `json:"type_prefix"` // used to categorise your metrics, possible values are raw|agg|enr
+	Producer  string    `json:"producer"`  // name of the producer
+	Type      string    `json:"type"`      // type of metric
 	Timestamp int64     `json:"timestamp"` // UTC seconds
 	Host      string    `json:"host"`      // used to add extra information about the node submitting your data
 	Data      LogRecord `json:"data"`      // log record data
@@ -103,6 +102,7 @@ type LogRecord struct {
 	ResponseStatus string  `json:"response_status"`  // http.Response status
 	ResponseTime   float64 `json:"response_time"`    // http response time
 	RequestTime    float64 `json:"request_time"`     // http request time
+	Timestamp      int64   `json:"timestamp"`        // record timestamp
 }
 
 // ServerSettings controls server parameters

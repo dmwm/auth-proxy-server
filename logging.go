@@ -106,6 +106,7 @@ func logRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 		ResponseStatus: respHeader.Get("Response-Status"),
 		ResponseTime:   rTime,
 		RequestTime:    time.Since(start).Seconds(),
+		Timestamp:      time.Now().Unix(),
 	}
 	var data []byte
 	var err error
@@ -122,14 +123,9 @@ func logRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 		if producer == "" {
 			producer = "auth"
 		}
-		//         prefix := Config.LogsEndpoint.Prefix
-		//         if prefix == "" {
-		//             prefix = "raw"
-		//         }
 		r := HTTPRecord{
-			Producer: producer,
-			Type:     ltype,
-			//             TypePrefix: prefix,
+			Producer:  producer,
+			Type:      ltype,
 			Timestamp: time.Now().Unix(),
 			Host:      hostname,
 			Data:      rec,
