@@ -49,7 +49,7 @@ func (writer logWriter) Write(data []byte) (int, error) {
 }
 
 // helper function to log every single user request
-func logRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth string, status int) {
+func logRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth string, status int, logChannel chan LogRecord) {
 	// our apache configuration
 	// CustomLog "||@APACHE2_ROOT@/bin/rotatelogs -f @LOGDIR@/access_log_%Y%m%d.txt 86400" \
 	//   "%t %v [client: %a] [backend: %h] \"%r\" %>s [data: %I in %O out %b body %D us ] [auth: %{SSL_PROTOCOL}x %{SSL_CIPHER}x \"%{SSL_CLIENT_S_DN}x\" \"%{cms-auth}C\" ] [ref: \"%{Referer}i\" \"%{User-Agent}i\" ]"
@@ -108,41 +108,55 @@ func logRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 		RequestTime:    time.Since(start).Seconds(),
 		Timestamp:      time.Now().Unix(),
 	}
-	var data []byte
-	var err error
-	if Config.LogsEndpoint.URI != "" {
-		hostname, err := os.Hostname()
-		if err != nil {
-			log.Println("Unable to get hostname", err)
-		}
-		ltype := Config.LogsEndpoint.Type
-		if ltype == "" {
-			ltype = "cms"
-		}
-		producer := Config.LogsEndpoint.Producer
-		if producer == "" {
-			producer = "auth"
-		}
-		r := HTTPRecord{
-			Producer:  producer,
-			Type:      ltype,
-			Timestamp: time.Now().Unix(),
-			Host:      hostname,
-			Data:      rec,
-		}
-		data, err = json.Marshal(r)
-		if err == nil {
-			go send(data)
-		} else {
-			log.Printf("unable to marshal the data, error %v\n", err)
-		}
+	logChannel <- rec
+}
+
+// logChannelLoop process log records send to channel
+func logChannelLoop(logChannel chan LogRecord) {
+	log.Println("start logChannelLoop with", logChannel)
+	hostname, err := os.Hostname()
+	if err != nil {
+		log.Println("Unable to get hostname", err)
 	}
-	if Config.StompConfig.URI != "" {
-		data, err = json.Marshal(rec)
-		if err == nil {
-			go stompMgr.Send(data)
-		} else {
-			log.Printf("unable to marshal the data, error %v\n", err)
+	ltype := Config.LogsEndpoint.Type
+	if ltype == "" {
+		ltype = "auth"
+	}
+	producer := Config.LogsEndpoint.Producer
+	if producer == "" {
+		producer = "cmsweb"
+	}
+	for {
+		select {
+		case rec := <-logChannel:
+			if Config.LogsEndpoint.URI != "" {
+				r := HTTPRecord{
+					Producer:  producer,
+					Type:      ltype,
+					Timestamp: time.Now().Unix(),
+					Host:      hostname,
+					Data:      rec,
+				}
+				data, err := json.Marshal(r)
+				if err == nil {
+					send(data)
+				} else {
+					log.Printf("unable to marshal record %+v, error %v\n", r, err)
+				}
+			}
+			if Config.StompConfig.URI != "" {
+				data, err := json.Marshal(rec)
+				if err == nil {
+					stompMgr.Send(data)
+				} else {
+					log.Printf("unable to marshal record %+v, error %v\n", rec, err)
+				}
+			}
+			if Config.TestLogChannel {
+				log.Printf("log channel record %+v\n", rec)
+			}
+		default:
+			time.Sleep(time.Duration(10) * time.Millisecond) // wait for response
 		}
 	}
 }

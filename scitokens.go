@@ -116,7 +116,12 @@ func getIssuer(r *http.Request) string {
 }
 
 // scitokensHandler handle requests for x509 clients
-func scitokensHandler(w http.ResponseWriter, r *http.Request) {
+func scitokensHandler(w http.ResponseWriter, r *http.Request, logChannel chan LogRecord) {
+	// record all events
+	start := time.Now()
+	status := http.StatusOK
+	defer logRequest(w, r, start, "scitokens", status, logChannel)
+
 	errRecord := make(map[string]string)
 	err := r.ParseForm()
 	if err != nil {
@@ -282,7 +287,7 @@ func getSciToken(issuer, jti, sub, scopes string) (string, error) {
 }
 
 // helper function to start scitokens server
-func scitokensServer() {
+func scitokensServer(logChannel chan LogRecord) {
 	// check if provided crt/key files exists
 	serverCrt := checkFile(Config.ServerCrt)
 	serverKey := checkFile(Config.ServerKey)
@@ -296,7 +301,10 @@ func scitokensServer() {
 	http.Handle(fmt.Sprintf("%s/.well-known/", base), http.StripPrefix(base+"/.well-known/", http.FileServer(http.Dir(Config.WellKnown))))
 
 	// the request handler
-	http.HandleFunc(fmt.Sprintf("%s/token", base), scitokensHandler)
+	//     http.HandleFunc(fmt.Sprintf("%s/token", base), scitokensHandler)
+	http.HandleFunc(fmt.Sprintf("%s/token", base), func(w http.ResponseWriter, r *http.Request) {
+		scitokensHandler(w, r, logChannel)
+	})
 
 	// start HTTPS server
 	server, err := getServer(serverCrt, serverKey, true)

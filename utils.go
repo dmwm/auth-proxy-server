@@ -154,7 +154,7 @@ func getServer(serverCrt, serverKey string, customVerify bool) (*http.Server, er
 				Intermediates: x509.NewCertPool(),
 				KeyUsages:     []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
 			}
-			if certs[0] != nil {
+			if len(certs) > 0 && certs[0] != nil {
 				for _, cert := range certs[1:] {
 					opts.Intermediates.AddCert(cert)
 				}

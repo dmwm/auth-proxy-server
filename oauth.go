@@ -271,7 +271,7 @@ func oauthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 // the proxy redirection is based on Config.Ingress dictionary, see Configuration
 // struct. The only exceptions are /token and /renew end-points which used internally
 // to display or renew user tokens, respectively
-func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
+func oauthRequestHandler(w http.ResponseWriter, r *http.Request, logChannel chan LogRecord) {
 	start := time.Now()
 	// increment GET/POST counters
 	if r.Method == "GET" {
@@ -284,7 +284,7 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 
 	status := http.StatusOK
 	userData := make(map[string]interface{})
-	defer logRequest(w, r, start, "CERN-SSO-OAuth2-OICD", status)
+	defer logRequest(w, r, start, "CERN-SSO-OAuth2-OICD", status, logChannel)
 	sess := globalSessions.SessionStart(w, r)
 	if Config.Verbose > 0 {
 		msg := fmt.Sprintf("call from '/', r.URL %s, sess.Path %v", r.URL, sess.Get("path"))
@@ -429,7 +429,7 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 // and redirects their requests to targetUrl of reverse proxy.
 // If targetUrl is empty string it will redirect all request to
 // simple hello page.
-func oauthProxyServer() {
+func oauthProxyServer(logChannel chan LogRecord) {
 	// check if provided crt/key files exists
 	serverCrt := checkFile(Config.ServerCrt)
 	serverKey := checkFile(Config.ServerKey)
@@ -480,7 +480,10 @@ func oauthProxyServer() {
 	http.HandleFunc(fmt.Sprintf("%s/callback", Config.Base), oauthCallbackHandler)
 
 	// the request handler
-	http.HandleFunc("/", oauthRequestHandler)
+	//     http.HandleFunc("/", oauthRequestHandler)
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		oauthRequestHandler(w, r, logChannel)
+	})
 
 	// start HTTPs server
 	server, err := getServer(serverCrt, serverKey, false)

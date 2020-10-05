@@ -299,23 +299,21 @@ func main() {
 		log.Fatalf("unable to parse config %s, error %v\n", config, err)
 	}
 
-	// log time, filename, and line number
+	// configure logger with log time, filename, and line number
 	log.SetFlags(0)
 	if Config.Verbose > 0 {
 		log.SetFlags(log.Lshortfile)
 	}
 	log.SetOutput(new(logWriter))
-
-	if Config.Verbose > 0 {
-		log.Printf("%+v\n", Config)
-	}
-
 	if Config.LogFile != "" {
 		rl, err := rotatelogs.New(Config.LogFile + "-%Y%m%d")
 		if err == nil {
 			rotlogs := rotateLogWriter{RotateLogs: rl}
 			log.SetOutput(rotlogs)
 		}
+	}
+	if Config.Verbose > 0 {
+		log.Printf("%+v\n", Config)
 	}
 
 	// init stomp manager
@@ -341,12 +339,19 @@ func main() {
 
 	CMSAuth.Init(Config.Hmac)
 	go updateCricRecords()
+
+	// create log channel, start log channel loop and pass channel to our servers
+	logChannel := make(chan LogRecord)
+	defer close(logChannel)
+	go logChannelLoop(logChannel)
+
+	// our servers
 	if useX509 {
-		x509ProxyServer()
+		x509ProxyServer(logChannel)
 		return
 	} else if scitokens {
-		scitokensServer()
+		scitokensServer(logChannel)
 		return
 	}
-	oauthProxyServer()
+	oauthProxyServer(logChannel)
 }
