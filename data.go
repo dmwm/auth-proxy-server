@@ -23,36 +23,37 @@ type Ingress struct {
 
 // Configuration stores server configuration parameters
 type Configuration struct {
-	Port                int          `json:"port"`                   // server port number
-	RootCAs             string       `json:"rootCAs"`                // server Root CAs path
-	Base                string       `json:"base"`                   // base URL
-	StaticPage          string       `json:"static_page"`            // static file to use
-	LogFile             string       `json:"log_file"`               // server log file
-	ClientID            string       `json:"client_id"`              // OICD client id
-	ClientSecret        string       `json:"client_secret"`          // OICD client secret
-	TargetURL           string       `json:"target_url"`             // proxy target url (where requests will go)
-	XForwardedHost      string       `json:"X-Forwarded-Host"`       // X-Forwarded-Host field of HTTP request
-	XContentTypeOptions string       `json:"X-Content-Type-Options"` // X-Content-Type-Options option
-	DocumentRoot        string       `json:"document_root"`          // root directory for the server
-	OAuthURL            string       `json:"oauth_url"`              // CERN SSO OAuth2 realm url
-	AuthTokenURL        string       `json:"auth_token_url"`         // CERN SSO OAuth2 OICD Token url
-	CMSHeaders          bool         `json:"cms_headers"`            // set CMS headers
-	RedirectURL         string       `json:"redirect_url"`           // redirect auth url for proxy server
-	Verbose             int          `json:"verbose"`                // verbose output
-	Ingress             []Ingress    `json:"ingress"`                // incress section
-	ServerCrt           string       `json:"server_cert"`            // server certificate
-	ServerKey           string       `json:"server_key"`             // server certificate
-	Hmac                string       `json:"hmac"`                   // cmsweb hmac file
-	CricURL             string       `json:"cric_url"`               // CRIC URL
-	CricFile            string       `json:"cric_file"`              // name of the CRIC file
-	UpdateCricInterval  int64        `json:"update_cric"`            // interval (in sec) to update cric records
-	UTC                 bool         `json:"utc"`                    // report logger time in UTC
-	ReadTimeout         int          `json:"read_timeout"`           // server read timeout in sec
-	WriteTimeout        int          `json:"write_timeout"`          // server write timeout in sec
-	TestLogChannel      bool         `json:"test_log_channel"`       // test log channel, i.e. print log records
-	StompConfig         StompConfig  `json:"stomp_config"`           // Stomp Configuration (optional)
-	LogsEndpoint        LogsEndpoint `json:"logs_endpoint"`          // logs endpoint configuration (optional)
-	WellKnown           string       `json:"well_known"`             // location of well-known area
+	Port                int             `json:"port"`                   // server port number
+	RootCAs             string          `json:"rootCAs"`                // server Root CAs path
+	Base                string          `json:"base"`                   // base URL
+	StaticPage          string          `json:"static_page"`            // static file to use
+	LogFile             string          `json:"log_file"`               // server log file
+	ClientID            string          `json:"client_id"`              // OICD client id
+	ClientSecret        string          `json:"client_secret"`          // OICD client secret
+	TargetURL           string          `json:"target_url"`             // proxy target url (where requests will go)
+	XForwardedHost      string          `json:"X-Forwarded-Host"`       // X-Forwarded-Host field of HTTP request
+	XContentTypeOptions string          `json:"X-Content-Type-Options"` // X-Content-Type-Options option
+	DocumentRoot        string          `json:"document_root"`          // root directory for the server
+	OAuthURL            string          `json:"oauth_url"`              // CERN SSO OAuth2 realm url
+	AuthTokenURL        string          `json:"auth_token_url"`         // CERN SSO OAuth2 OICD Token url
+	CMSHeaders          bool            `json:"cms_headers"`            // set CMS headers
+	RedirectURL         string          `json:"redirect_url"`           // redirect auth url for proxy server
+	Verbose             int             `json:"verbose"`                // verbose output
+	Ingress             []Ingress       `json:"ingress"`                // incress section
+	ServerCrt           string          `json:"server_cert"`            // server certificate
+	ServerKey           string          `json:"server_key"`             // server certificate
+	Hmac                string          `json:"hmac"`                   // cmsweb hmac file
+	CricURL             string          `json:"cric_url"`               // CRIC URL
+	CricFile            string          `json:"cric_file"`              // name of the CRIC file
+	UpdateCricInterval  int64           `json:"update_cric"`            // interval (in sec) to update cric records
+	UTC                 bool            `json:"utc"`                    // report logger time in UTC
+	ReadTimeout         int             `json:"read_timeout"`           // server read timeout in sec
+	WriteTimeout        int             `json:"write_timeout"`          // server write timeout in sec
+	TestLogChannel      bool            `json:"test_log_channel"`       // test log channel, i.e. print log records
+	StompConfig         StompConfig     `json:"stomp_config"`           // Stomp Configuration (optional)
+	LogsEndpoint        LogsEndpoint    `json:"logs_endpoint"`          // logs endpoint configuration (optional)
+	Scitokens           ScitokensConfig `json:"scitokens"`              // scitokens configuration
+	WellKnown           string          `json:"well_known"`             // location of well-known area
 }
 
 // LogsEndpoint keeps information about HTTP logs end-point
@@ -174,4 +175,36 @@ type Metrics struct {
 	RPS               float64                 `json:"rps"`               // throughput req/sec
 	RPSPhysical       float64                 `json:"rpsPhysical"`       // throughput req/sec using physical cpu
 	RPSLogical        float64                 `json:"rpsLogical"`        // throughput req/sec using logical cpu
+}
+
+// SciTokensConfig represents configuration of scitokens service
+type ScitokensConfig struct {
+	FileGlog   string `json:"file_glob"`  // file glob
+	Lifetime   int    `json:"lifetime"`   // lifetime of token
+	IssuerKey  string `json:"issuer_key"` // issuer key
+	Issuer     string `json:"issuer"`     // issuer hostname
+	Rules      []Rule `json:"rules"`      // rules
+	DNMapping  string `json:"dn_mapping"` // dn mapping
+	Verbose    bool   `json:"verbose"`    // verbosity mode
+	Secret     string `json:"secret"`     // secret
+	PrivateKey string `json:"rsa_key"`    // RSA private key to use
+}
+
+// Rule reperesents scitoken rule
+type Rule struct {
+	Match  string   `json:"match"`
+	Scopes []string `json:"scopes"`
+}
+
+// TokenResponse rerpresents structure of returned scitoken
+type TokenResponse struct {
+	AccessToken string `json:"access_token"` // access token string
+	TokenType   string `json:"token_type"`   // token type string
+	Expires     int64  `json:"expires_in"`   // token expiration
+}
+
+// Error Record represents our error
+type ErrorRecord struct {
+	Error string `json:"error"`      // error string
+	Code  int    `json:"error_code"` // error code
 }
