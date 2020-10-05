@@ -256,10 +256,25 @@ func getUserData(r *http.Request) map[string]interface{} {
 			userData["exp"] = cert.NotAfter.Unix()
 			userData["email"] = cert.EmailAddresses
 			userData["roles"] = rec.Roles
+			userData["dn"] = rec.DN
 		} else {
 			log.Println(err)
 			continue
 		}
 	}
 	return userData
+}
+
+// InList helper function to check item in a list
+func InList(a string, list []string) bool {
+	check := 0
+	for _, b := range list {
+		if b == a {
+			check += 1
+		}
+	}
+	if check != 0 {
+		return true
+	}
+	return false
 }
