@@ -133,7 +133,7 @@ func logChannelLoop(logChannel chan LogRecord) {
 				r := HTTPRecord{
 					Producer:  producer,
 					Type:      ltype,
-					Timestamp: time.Now().Unix(),
+					Timestamp: time.Now().Unix() * 1000, // usr milliseconds for MONIT
 					Host:      hostname,
 					Data:      rec,
 				}
