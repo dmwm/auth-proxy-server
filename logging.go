@@ -106,7 +106,7 @@ func logRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 		ResponseStatus: respHeader.Get("Response-Status"),
 		ResponseTime:   rTime,
 		RequestTime:    time.Since(start).Seconds(),
-		Timestamp:      time.Now().Unix(),
+		Timestamp:      time.Now().Unix() * 1000, // use milliseconds for MONIT
 	}
 	logChannel <- rec
 }

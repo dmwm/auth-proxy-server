@@ -81,7 +81,7 @@ type StompConfig struct {
 type HTTPRecord struct {
 	Producer  string    `json:"producer"`  // name of the producer
 	Type      string    `json:"type"`      // type of metric
-	Timestamp int64     `json:"timestamp"` // UTC seconds
+	Timestamp int64     `json:"timestamp"` // UTC milliseconds
 	Host      string    `json:"host"`      // used to add extra information about the node submitting your data
 	Data      LogRecord `json:"data"`      // log record data
 }
