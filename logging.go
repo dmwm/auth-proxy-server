@@ -150,6 +150,8 @@ func logChannelLoop(logChannel chan LogRecord) {
 					_, err := buf.Read(data)
 					if err == nil {
 						send(buf)
+					} else {
+						log.Println("unable to read data into buffer", err)
 					}
 				} else {
 					log.Printf("unable to marshal record %+v, error %v\n", r, err)
