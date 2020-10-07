@@ -70,10 +70,16 @@ func x509ProxyServer(logChannel chan LogRecord) {
 	serverCrt := checkFile(Config.ServerCrt)
 	serverKey := checkFile(Config.ServerKey)
 
-	// the server settings handler
-	http.HandleFunc(fmt.Sprintf("%s/server", Config.Base), settingsHandler)
 	// metrics handler
 	http.HandleFunc(fmt.Sprintf("%s/metrics", Config.Base), metricsHandler)
+
+	// start http server to serve metrics only
+	if Config.MetricsPort > 0 {
+		go http.ListenAndServe(fmt.Sprintf(":%d", Config.MetricsPort), nil)
+	}
+
+	// the server settings handler
+	http.HandleFunc(fmt.Sprintf("%s/server", Config.Base), settingsHandler)
 
 	// the request handler
 	//     http.HandleFunc("/", x509RequestHandler)

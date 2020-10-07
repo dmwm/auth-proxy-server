@@ -92,6 +92,9 @@ func logRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 	rec := LogRecord{
 		Method:         r.Method,
 		URI:            r.RequestURI,
+		API:            "",    // TODO
+		BytesSend:      12345, // TODO
+		BytesReceived:  12345, // TODO
 		Proto:          r.Proto,
 		Status:         int64(status),
 		ContentLength:  r.ContentLength,

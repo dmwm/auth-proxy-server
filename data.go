@@ -24,6 +24,7 @@ type Ingress struct {
 // Configuration stores server configuration parameters
 type Configuration struct {
 	Port                int             `json:"port"`                   // server port number
+	MetricsPort         int             `json:"metrics_port"`           // server metrics port number
 	RootCAs             string          `json:"rootCAs"`                // server Root CAs path
 	Base                string          `json:"base"`                   // base URL
 	StaticPage          string          `json:"static_page"`            // static file to use
@@ -90,6 +91,9 @@ type HTTPRecord struct {
 type LogRecord struct {
 	Method         string  `json:"method"`           // http.Request HTTP method
 	URI            string  `json:"uri"`              // http.RequestURI
+	API            string  `json:"api"`              // http service API being used
+	BytesSend      int64   `json:"bytes_send"`       // number of bytes send with HTTP request
+	BytesReceived  int64   `json:"bytes_received"`   // number of bytes received with HTTP request
 	Proto          string  `json:"proto"`            // http.Request protocol
 	Status         int64   `json:"status"`           // http.Request status code
 	ContentLength  int64   `json:"content_length"`   // http.Request content-length
