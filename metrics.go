@@ -68,9 +68,15 @@ func metrics() Metrics {
 	metrics.PostOAuthRequests = TotalOAuthPostRequests
 	metrics.GetRequests = metrics.GetX509Requests + metrics.GetOAuthRequests
 	metrics.PostRequests = metrics.PostX509Requests + metrics.PostOAuthRequests
-	metrics.RPS = RPS / float64(metrics.GetRequests+metrics.PostRequests)
-	metrics.RPSPhysical = RPSPhysical / float64(metrics.GetRequests+metrics.PostRequests)
-	metrics.RPSLogical = RPSLogical / float64(metrics.GetRequests+metrics.PostRequests)
+	if (metrics.GetRequests + metrics.PostRequests) > 0 {
+		metrics.RPS = RPS / float64(metrics.GetRequests+metrics.PostRequests)
+	}
+	if metrics.GetRequests+metrics.PostRequests > 0 {
+		metrics.RPSPhysical = RPSPhysical / float64(metrics.GetRequests+metrics.PostRequests)
+	}
+	if metrics.GetRequests+metrics.PostRequests > 0 {
+		metrics.RPSLogical = RPSLogical / float64(metrics.GetRequests+metrics.PostRequests)
+	}
 
 	// update time stamp
 	MetricsLastUpdateTime = time.Now()
@@ -88,7 +94,7 @@ func promMetrics() string {
 	out += fmt.Sprintf("# HELP %s_cpu percentage of cpu used per CPU\n", prefix)
 	out += fmt.Sprintf("# TYPE %s_cpu gauge\n", prefix)
 	for i, v := range data.CPU {
-		out += fmt.Sprintf("%s_cpu{core=%d} %v\n", prefix, i, v)
+		out += fmt.Sprintf("%s_cpu{core=\"%d\"} %v\n", prefix, i, v)
 	}
 
 	// connections
@@ -105,24 +111,24 @@ func promMetrics() string {
 	totCon = uint64(len(data.Connections))
 	out += fmt.Sprintf("# HELP %s_total_connections\n", prefix)
 	out += fmt.Sprintf("# TYPE %s_total_connections gauge\n", prefix)
-	out += fmt.Sprintf("%s_total_connections gauge %v\n", prefix, totCon)
+	out += fmt.Sprintf("%s_total_connections %v\n", prefix, totCon)
 	out += fmt.Sprintf("# HELP %s_established_connections\n", prefix)
 	out += fmt.Sprintf("# TYPE %s_established_connections gauge\n", prefix)
-	out += fmt.Sprintf("%s_established_connections gauge %v\n", prefix, estCon)
+	out += fmt.Sprintf("%s_established_connections %v\n", prefix, estCon)
 	out += fmt.Sprintf("# HELP %s_listen_connections\n", prefix)
 	out += fmt.Sprintf("# TYPE %s_listen_connections gauge\n", prefix)
-	out += fmt.Sprintf("%s_listen_connections gauge %v\n", prefix, lisCon)
+	out += fmt.Sprintf("%s_listen_connections %v\n", prefix, lisCon)
 
 	// load
 	out += fmt.Sprintf("# HELP %s_load1\n", prefix)
 	out += fmt.Sprintf("# TYPE %s_load1 gauge\n", prefix)
-	out += fmt.Sprintf("%s_load1 gauge %v\n", prefix, data.Load.Load1)
+	out += fmt.Sprintf("%s_load1 %v\n", prefix, data.Load.Load1)
 	out += fmt.Sprintf("# HELP %s_load5\n", prefix)
 	out += fmt.Sprintf("# TYPE %s_load5 gauge\n", prefix)
-	out += fmt.Sprintf("%s_load5 gauge %v\n", prefix, data.Load.Load5)
+	out += fmt.Sprintf("%s_load5 %v\n", prefix, data.Load.Load5)
 	out += fmt.Sprintf("# HELP %s_load15\n", prefix)
 	out += fmt.Sprintf("# TYPE %s_load15 gauge\n", prefix)
-	out += fmt.Sprintf("%s_load15 gauge %v\n", prefix, data.Load.Load15)
+	out += fmt.Sprintf("%s_load15 %v\n", prefix, data.Load.Load15)
 
 	// memory virtual
 	out += fmt.Sprintf("# HELP %s_mem_virt_total reports total virtual memory in bytes\n", prefix)

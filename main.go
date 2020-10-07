@@ -335,7 +335,15 @@ func main() {
 	StartTime = time.Now()
 	MetricsLastUpdateTime = time.Now()
 	NumPhysicalCores, err = cpu.Counts(false)
+	if err != nil {
+		log.Printf("unable to get number of physical cores, error %v\n", err)
+		NumPhysicalCores = 0
+	}
 	NumLogicalCores, err = cpu.Counts(true)
+	if err != nil {
+		log.Printf("unable to get number of logical cores, error %v\n", err)
+		NumLogicalCores = 0
+	}
 
 	CMSAuth.Init(Config.Hmac)
 	go updateCricRecords()
