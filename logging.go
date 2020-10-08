@@ -114,7 +114,7 @@ func logRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 	if Config.PrintMonitRecord {
 		data, err := monitRecord(rec)
 		if err == nil {
-			log.Printf(string(data))
+			fmt.Printf(string(data))
 		} else {
 			log.Println("unable to produce record for MONIT, error", err)
 		}
