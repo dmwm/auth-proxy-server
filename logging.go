@@ -78,7 +78,11 @@ func logRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 	if cauth == "" {
 		cauth = fmt.Sprintf("%v", r.Header.Get("Cms-Authn-Method"))
 	}
-	authMsg := fmt.Sprintf("[auth: %v %v \"%v\" %v]", aproto, cipher, r.Header.Get("Cms-Auth-Cert"), cauth)
+	cmsAuthCert := r.Header.Get("Cms-Auth-Cert")
+	if cmsAuthCert == "" {
+		cmsAuthCert = "NA"
+	}
+	authMsg := fmt.Sprintf("[auth: %v %v \"%v\" %v]", aproto, cipher, cmsAuthCert, cauth)
 	respHeader := w.Header()
 	dataMsg := fmt.Sprintf("[data: %v in %v out]", r.ContentLength, respHeader.Get("Content-Length"))
 	referer := r.Referer()
@@ -95,10 +99,6 @@ func logRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 	var bytesSend, bytesRecv int64
 	bytesSend = r.ContentLength
 	bytesRecv, _ = strconv.ParseInt(respHeader.Get("Content-Length"), 10, 64)
-	cmsAuthCert := r.Header.Get("Cms-Auth-Cert")
-	if cmsAuthCert == "" {
-		cmsAuthCert = "NA"
-	}
 	rec := LogRecord{
 		Method:         r.Method,
 		URI:            r.RequestURI,
