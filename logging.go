@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
@@ -89,12 +90,15 @@ func logRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 	respMsg := fmt.Sprintf("[req: %v resp: %v]", time.Since(start), respHeader.Get("Response-Time"))
 	log.Printf("%s %s %s %s %d %s %s %s %s\n", addr, r.Method, r.RequestURI, r.Proto, status, dataMsg, authMsg, refMsg, respMsg)
 	rTime, _ := strconv.ParseFloat(respHeader.Get("Response-Time-Seconds"), 10)
+	var bytesSend, bytesRecv int64
+	bytesSend = r.ContentLength
+	bytesRecv, _ = strconv.ParseInt(respHeader.Get("Content-Length"), 10, 64)
 	rec := LogRecord{
 		Method:         r.Method,
 		URI:            r.RequestURI,
-		API:            "",    // TODO
-		BytesSend:      12345, // TODO
-		BytesReceived:  12345, // TODO
+		API:            getAPI(r.RequestURI),
+		BytesSend:      bytesSend,
+		BytesReceived:  bytesRecv,
 		Proto:          r.Proto,
 		Status:         int64(status),
 		ContentLength:  r.ContentLength,
@@ -121,6 +125,15 @@ func logRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 	} else {
 		logChannel <- rec
 	}
+}
+
+// helper function to extract service API from the record URI
+func getAPI(uri string) string {
+	// /httpgo?test=bla
+	arr := strings.Split(uri, "/")
+	last := arr[len(arr)-1]
+	arr = strings.Split(last, "?")
+	return arr[0]
 }
 
 // helper function to prepare record for MONIT
