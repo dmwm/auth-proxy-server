@@ -143,7 +143,6 @@ func logChannelLoop(logChannel chan LogRecord) {
 				}
 				data, err := json.Marshal(r)
 				if err == nil {
-					buf.Reset()
 					if Config.Verbose > 1 {
 						log.Println("send", string(data))
 					}
@@ -153,6 +152,7 @@ func logChannelLoop(logChannel chan LogRecord) {
 					} else {
 						log.Println("unable to read data into buffer", err)
 					}
+					buf.Reset()
 				} else {
 					log.Printf("unable to marshal record %+v, error %v\n", r, err)
 				}
