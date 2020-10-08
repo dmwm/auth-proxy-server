@@ -111,12 +111,20 @@ func logRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 		RequestTime:    time.Since(start).Seconds(),
 		Timestamp:      time.Now().Unix() * 1000, // use milliseconds for MONIT
 	}
-	logChannel <- rec
+	if Config.PrintMonitRecord {
+		data, err := monitRecord(rec)
+		if err == nil {
+			log.Printf(string(data))
+		} else {
+			log.Println("unable to produce record for MONIT, error", err)
+		}
+	} else {
+		logChannel <- rec
+	}
 }
 
-// logChannelLoop process log records send to channel
-func logChannelLoop(logChannel chan LogRecord) {
-	log.Println("start logChannelLoop with", logChannel)
+// helper function to prepare record for MONIT
+func monitRecord(rec LogRecord) ([]byte, error) {
 	hostname, err := os.Hostname()
 	if err != nil {
 		log.Println("Unable to get hostname", err)
@@ -129,24 +137,31 @@ func logChannelLoop(logChannel chan LogRecord) {
 	if producer == "" {
 		producer = "cmsweb"
 	}
+	r := HTTPRecord{
+		Producer:  producer,
+		Type:      ltype,
+		Timestamp: time.Now().Unix() * 1000, // usr milliseconds for MONIT
+		Host:      hostname,
+		Data:      rec,
+	}
+	data, err := json.Marshal(r)
+	return data, err
+}
+
+// logChannelLoop process log records send to channel
+func logChannelLoop(logChannel chan LogRecord) {
+	log.Println("start logChannelLoop with", logChannel)
 	buf := &bytes.Buffer{}
 	for {
 		select {
 		case rec := <-logChannel:
 			if Config.LogsEndpoint.URI != "" {
-				r := HTTPRecord{
-					Producer:  producer,
-					Type:      ltype,
-					Timestamp: time.Now().Unix() * 1000, // usr milliseconds for MONIT
-					Host:      hostname,
-					Data:      rec,
-				}
-				data, err := json.Marshal(r)
+				data, err := monitRecord(rec)
 				if err == nil {
 					if Config.Verbose > 1 {
 						log.Println("send", string(data))
 					}
-					_, err := buf.Write(data)
+					_, err = buf.Write(data)
 					if err == nil {
 						send(buf)
 					} else {
@@ -154,7 +169,7 @@ func logChannelLoop(logChannel chan LogRecord) {
 					}
 					buf.Reset()
 				} else {
-					log.Printf("unable to marshal record %+v, error %v\n", r, err)
+					log.Printf("unable to marshal record %+v, error %v\n", rec, err)
 				}
 			}
 			if Config.StompConfig.URI != "" {
@@ -164,9 +179,6 @@ func logChannelLoop(logChannel chan LogRecord) {
 				} else {
 					log.Printf("unable to marshal record %+v, error %v\n", rec, err)
 				}
-			}
-			if Config.TestLogChannel {
-				log.Printf("log channel record %+v\n", rec)
 			}
 		default:
 			time.Sleep(time.Duration(10) * time.Millisecond) // wait for response

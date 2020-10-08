@@ -50,7 +50,7 @@ type Configuration struct {
 	UTC                 bool            `json:"utc"`                    // report logger time in UTC
 	ReadTimeout         int             `json:"read_timeout"`           // server read timeout in sec
 	WriteTimeout        int             `json:"write_timeout"`          // server write timeout in sec
-	TestLogChannel      bool            `json:"test_log_channel"`       // test log channel, i.e. print log records
+	PrintMonitRecord    bool            `json:"print_monit_record"`     // print monit record on stdout
 	StompConfig         StompConfig     `json:"stomp_config"`           // Stomp Configuration (optional)
 	LogsEndpoint        LogsEndpoint    `json:"logs_endpoint"`          // logs endpoint configuration (optional)
 	Scitokens           ScitokensConfig `json:"scitokens"`              // scitokens configuration
