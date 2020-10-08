@@ -85,7 +85,9 @@ func logRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 	if referer == "" {
 		referer = "-"
 	}
-	addr := fmt.Sprintf("[client: %v] [backend: %v]", r.Header.Get("X-Forwarded-Host"), r.RemoteAddr)
+	realIP := r.Header.Get("X-Real-IP")
+	clientIP := r.Header.Get("X-Forwarded-For")
+	addr := fmt.Sprintf("[x-real-ip %v] [x-forwarded-for: %v] [x-forwarded-host: %v] [remoteAddr: %v]", realIP, clientIP, r.Header.Get("X-Forwarded-Host"), r.RemoteAddr)
 	refMsg := fmt.Sprintf("[ref: \"%s\" \"%v\"]", referer, r.Header.Get("User-Agent"))
 	respMsg := fmt.Sprintf("[req: %v resp: %v]", time.Since(start), respHeader.Get("Response-Time"))
 	log.Printf("%s %s %s %s %d %s %s %s %s\n", addr, r.Method, r.RequestURI, r.Proto, status, dataMsg, authMsg, refMsg, respMsg)
@@ -93,10 +95,17 @@ func logRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 	var bytesSend, bytesRecv int64
 	bytesSend = r.ContentLength
 	bytesRecv, _ = strconv.ParseInt(respHeader.Get("Content-Length"), 10, 64)
+	cmsAuthCert := r.Header.Get("Cms-Auth-Cert")
+	if cmsAuthCert == "" {
+		cmsAuthCert = "NA"
+	}
 	rec := LogRecord{
 		Method:         r.Method,
 		URI:            r.RequestURI,
 		API:            getAPI(r.RequestURI),
+		System:         getSystem(r.RequestURI),
+		ClientIP:       clientIP,
+		RealIP:         realIP,
 		BytesSend:      bytesSend,
 		BytesReceived:  bytesRecv,
 		Proto:          r.Proto,
@@ -104,7 +113,7 @@ func logRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 		ContentLength:  r.ContentLength,
 		AuthProto:      aproto,
 		Cipher:         cipher,
-		CmsAuthCert:    r.Header.Get("Cms-Auth-Cert"),
+		CmsAuthCert:    cmsAuthCert,
 		CmsAuth:        cauth,
 		Referer:        referer,
 		UserAgent:      r.Header.Get("User-Agent"),
@@ -134,6 +143,21 @@ func getAPI(uri string) string {
 	last := arr[len(arr)-1]
 	arr = strings.Split(last, "?")
 	return arr[0]
+}
+
+// helper function to extract service system from the record URI
+func getSystem(uri string) string {
+	// /httpgo?test=bla
+	arr := strings.Split(uri, "/")
+	system := "base"
+	if len(arr) > 0 {
+		arr = strings.Split(arr[1], "?")
+		system = arr[0]
+	}
+	if system == "" {
+		system = "base"
+	}
+	return system
 }
 
 // helper function to prepare record for MONIT

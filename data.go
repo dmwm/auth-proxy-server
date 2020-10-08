@@ -92,6 +92,9 @@ type LogRecord struct {
 	Method         string  `json:"method"`           // http.Request HTTP method
 	URI            string  `json:"uri"`              // http.RequestURI
 	API            string  `json:"api"`              // http service API being used
+	System         string  `json:"system"`           // cmsweb service name
+	ClientIP       string  `json:"clientip"`         // x-forwarded-for
+	RealIP         string  `json:"realip"`           // x-real-ip
 	BytesSend      int64   `json:"bytes_send"`       // number of bytes send with HTTP request
 	BytesReceived  int64   `json:"bytes_received"`   // number of bytes received with HTTP request
 	Proto          string  `json:"proto"`            // http.Request protocol
