@@ -129,7 +129,7 @@ func logChannelLoop(logChannel chan LogRecord) {
 	if producer == "" {
 		producer = "cmsweb"
 	}
-	var reader *bytes.Reader
+	buf := &bytes.Buffer{}
 	for {
 		select {
 		case rec := <-logChannel:
@@ -146,8 +146,13 @@ func logChannelLoop(logChannel chan LogRecord) {
 					if Config.Verbose > 1 {
 						log.Println("send", string(data))
 					}
-					reader.Reset(data)
-					send(reader)
+					_, err := buf.Write(data)
+					if err == nil {
+						send(buf)
+					} else {
+						log.Println("unable to read data into buffer", err)
+					}
+					buf.Reset()
 				} else {
 					log.Printf("unable to marshal record %+v, error %v\n", r, err)
 				}
@@ -170,7 +175,7 @@ func logChannelLoop(logChannel chan LogRecord) {
 }
 
 // helper function to send our logs to http logs end-point
-func send(body *bytes.Reader) {
+func send(body *bytes.Buffer) {
 	rurl := Config.LogsEndpoint.URI
 	ctype := "application/json"
 	resp, err := http.Post(rurl, ctype, body)
