@@ -110,6 +110,9 @@ func reverseProxy(targetURL string, w http.ResponseWriter, r *http.Request) {
 
 	// set custom transport to capture size of response body
 	//     proxy.Transport = &transport{http.DefaultTransport}
+	if Config.Verbose > 2 {
+		log.Printf("HTTP headers: %+v\n", r.Header)
+	}
 
 	// Update the headers to allow for SSL redirection
 	r.URL.Host = url.Host
