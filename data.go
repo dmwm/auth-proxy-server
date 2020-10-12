@@ -104,6 +104,7 @@ type LogRecord struct {
 	AuthProto      string  `json:"auth_proto"`       // authentication protocol
 	Cipher         string  `json:"cipher"`           // TLS cipher name
 	CmsAuthCert    string  `json:"cms_auth_cert"`    // cms auth certificate, user DN
+	CmsLoginName   string  `json:"cms_login_name"`   // cms login name, user DN
 	CmsAuth        string  `json:"cms_auth"`         // cms auth method
 	Referer        string  `json:"referer"`          // http referer
 	UserAgent      string  `json:"user_agent"`       // http user-agent field

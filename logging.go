@@ -82,7 +82,11 @@ func logRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 	if cmsAuthCert == "" {
 		cmsAuthCert = "NA"
 	}
-	authMsg := fmt.Sprintf("[auth: %v %v \"%v\" %v]", aproto, cipher, cmsAuthCert, cauth)
+	cmsLoginName := r.Header.Get("Cms-Authn-Login")
+	if cmsLoginName == "" {
+		cmsLoginName = "NA"
+	}
+	authMsg := fmt.Sprintf("[auth: %v %v \"%v\" %v %v]", aproto, cipher, cmsAuthCert, cmsLoginName, cauth)
 	respHeader := w.Header()
 	dataMsg := fmt.Sprintf("[data: %v in %v out]", r.ContentLength, respHeader.Get("Content-Length"))
 	referer := r.Referer()
@@ -116,6 +120,7 @@ func logRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 		AuthProto:      aproto,
 		Cipher:         cipher,
 		CmsAuthCert:    cmsAuthCert,
+		CmsLoginName:   cmsLoginName,
 		CmsAuth:        cauth,
 		Referer:        referer,
 		UserAgent:      r.Header.Get("User-Agent"),
