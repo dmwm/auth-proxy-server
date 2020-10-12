@@ -212,9 +212,9 @@ func findCN(subject string) (string, error) {
 
 // helper function to find user info in cric records for given cert subject
 func findUser(subjects []string) (cmsauth.CricEntry, error) {
-	for _, r := range CricRecords {
+	for _, s := range subjects {
 		// loop over subjects is tiny, we may have only few subjects in certificates
-		for _, s := range subjects {
+		for _, r := range CricRecords {
 			cn, e := findCN(s)
 			if Config.Verbose > 2 {
 				log.Println("subject", s, "findCN", cn)
@@ -250,10 +250,17 @@ func getUserData(r *http.Request) map[string]interface{} {
 			continue
 		}
 		start := time.Now()
-		if Config.Verbose > 2 {
-			log.Println("cert subject", strings.Split(cert.Subject.String(), ","))
+		var subjects []string
+		for _, s := range strings.Split(cert.Subject.String(), ",") {
+			if strings.Contains(s, "ROOT") && strings.Contains(s, "CERN") || strings.Contains(s, "Grid") {
+				continue
+			}
+			subjects = append(subjects, s)
 		}
-		rec, err := findUser(strings.Split(cert.Subject.String(), ","))
+		if Config.Verbose > 2 {
+			log.Println("cert subjects", subjects)
+		}
+		rec, err := findUser(subjects)
 		if Config.Verbose > 0 {
 			log.Printf("found user %+v error=%v elapsed time %v\n", rec, err, time.Since(start))
 		}
@@ -268,6 +275,7 @@ func getUserData(r *http.Request) map[string]interface{} {
 			userData["email"] = cert.EmailAddresses
 			userData["roles"] = rec.Roles
 			userData["dn"] = rec.DN
+			break
 		} else {
 			log.Println(err)
 			continue
