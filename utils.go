@@ -215,10 +215,18 @@ func findUser(subjects []string) (cmsauth.CricEntry, error) {
 	for _, r := range CricRecords {
 		// loop over subjects is tiny, we may have only few subjects in certificates
 		for _, s := range subjects {
-			if cn, e := findCN(s); e == nil {
+			cn, e := findCN(s)
+			if Config.Verbose > 2 {
+				log.Println("subject", s, "findCN", cn)
+				log.Println("DNs", r.DNs)
+			}
+			if e == nil {
 				// loop over record DNs is tiny, we only have one or two DNs per user
 				for _, dn := range r.DNs {
 					if strings.HasSuffix(dn, cn) {
+						if Config.Verbose > 2 {
+							log.Println("match DN", dn, "with CN", cn)
+						}
 						return r, nil
 					}
 				}
@@ -242,6 +250,9 @@ func getUserData(r *http.Request) map[string]interface{} {
 			continue
 		}
 		start := time.Now()
+		if Config.Verbose > 2 {
+			log.Println("cert subject", strings.Split(cert.Subject.String(), ","))
+		}
 		rec, err := findUser(strings.Split(cert.Subject.String(), ","))
 		if Config.Verbose > 0 {
 			log.Printf("found user %+v error=%v elapsed time %v\n", rec, err, time.Since(start))
