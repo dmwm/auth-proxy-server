@@ -185,7 +185,7 @@ type Metrics struct {
 	RPSLogical        float64                 `json:"rpsLogical"`        // throughput req/sec using logical cpu
 }
 
-// SciTokensConfig represents configuration of scitokens service
+// ScitokensConfig represents configuration of scitokens service
 type ScitokensConfig struct {
 	FileGlog   string `json:"file_glob"`  // file glob
 	Lifetime   int    `json:"lifetime"`   // lifetime of token
@@ -211,7 +211,7 @@ type TokenResponse struct {
 	Expires     int64  `json:"expires_in"`   // token expiration
 }
 
-// Error Record represents our error
+// ErrorRecord represents our error
 type ErrorRecord struct {
 	Error string `json:"error"`      // error string
 	Code  int    `json:"error_code"` // error code

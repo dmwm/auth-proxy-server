@@ -69,6 +69,11 @@ func updateCricRecords() {
 			log.Println("Updated CRIC records", len(keys))
 			updateCMSRecords(cricRecords)
 			log.Println("Updated cms records", len(cmsRecords))
+			if Config.Verbose > 2 {
+				for k, v := range cmsRecords {
+					log.Printf("cn=%s record=%+v\n", k, v)
+				}
+			}
 		}
 		d := time.Duration(interval) * time.Second
 		time.Sleep(d) // sleep for next iteration
@@ -81,9 +86,11 @@ func updateCMSRecords(cricRecords cmsauth.CricRecords) {
 	defer cmsRecordsLock.Unlock()
 	cmsRecords = make(cmsauth.CricRecords)
 	for _, r := range cricRecords {
-		for _, v := range strings.Split(r.DN, "/") {
-			if strings.HasPrefix(v, "CN=") {
-				cmsRecords[v] = r
+		for _, dn := range r.DNs {
+			for _, v := range strings.Split(dn, "/") {
+				if strings.HasPrefix(v, "CN=") {
+					cmsRecords[v] = r
+				}
 			}
 		}
 	}

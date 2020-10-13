@@ -213,7 +213,7 @@ func findCN(subject string) (string, error) {
 }
 
 // helper function to find user info in cric records for given cert subject
-func findUser_old(subjects []string) (cmsauth.CricEntry, error) {
+func findUserOld(subjects []string) (cmsauth.CricEntry, error) {
 	for _, s := range subjects {
 		// loop over subjects is tiny, we may have only few subjects in certificates
 		for _, r := range CricRecords {
@@ -268,10 +268,10 @@ func getUserData(r *http.Request) map[string]interface{} {
 			if strings.Contains(s, "ROOT") && strings.Contains(s, "CERN") || strings.Contains(s, "Grid") {
 				continue
 			}
+			if Config.Verbose > 2 {
+				log.Println("cert subject", s)
+			}
 			subjects = append(subjects, s)
-		}
-		if Config.Verbose > 2 {
-			log.Println("cert subjects", subjects)
 		}
 		rec, err := findUser(subjects)
 		if Config.Verbose > 0 {
@@ -302,7 +302,7 @@ func InList(a string, list []string) bool {
 	check := 0
 	for _, b := range list {
 		if b == a {
-			check += 1
+			check++
 		}
 	}
 	if check != 0 {
