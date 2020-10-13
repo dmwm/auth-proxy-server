@@ -132,7 +132,7 @@ func logRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 		ResponseStatus: respHeader.Get("Response-Status"),
 		ResponseTime:   rTime,
 		RequestTime:    time.Since(start).Seconds(),
-		Timestamp:      time.Now().Unix() * 1000, // use milliseconds for MONIT
+		Timestamp:      int64(time.Now().UnixNano() / 1000000), // use milliseconds for MONIT
 	}
 	if Config.PrintMonitRecord {
 		data, err := monitRecord(rec)
@@ -187,7 +187,7 @@ func monitRecord(rec LogRecord) ([]byte, error) {
 	r := HTTPRecord{
 		Producer:  producer,
 		Type:      ltype,
-		Timestamp: time.Now().Unix() * 1000, // usr milliseconds for MONIT
+		Timestamp: int64(time.Now().UnixNano() / 1000000), // usr milliseconds for MONIT
 		Host:      hostname,
 		Data:      rec,
 	}
