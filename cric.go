@@ -8,6 +8,8 @@ package main
 import (
 	"log"
 	"reflect"
+	"strings"
+	"sync"
 	"time"
 
 	"github.com/dmwm/cmsauth"
@@ -15,6 +17,12 @@ import (
 
 // CricRecords list to hold CMS CRIC entries
 var CricRecords cmsauth.CricRecords
+
+// cmsRecords holds map of CricRecords for CMS users
+var cmsRecords cmsauth.CricRecords
+
+// cmsRecordsLock keeps lock for cmsRecords updates
+var cmsRecordsLock sync.RWMutex
 
 // helper function to periodically update cric records
 // should be run as goroutine
@@ -59,8 +67,24 @@ func updateCricRecords() {
 			CricRecords = cricRecords
 			keys := reflect.ValueOf(CricRecords).MapKeys()
 			log.Println("Updated CRIC records", len(keys))
+			updateCMSRecords(cricRecords)
+			log.Println("Updated cms records", len(cmsRecords))
 		}
 		d := time.Duration(interval) * time.Second
 		time.Sleep(d) // sleep for next iteration
+	}
+}
+
+// helper function to create cmsRecords
+func updateCMSRecords(cricRecords cmsauth.CricRecords) {
+	cmsRecordsLock.Lock()
+	defer cmsRecordsLock.Unlock()
+	cmsRecords = make(cmsauth.CricRecords)
+	for _, r := range cricRecords {
+		for _, v := range strings.Split(r.DN, "/") {
+			if strings.HasPrefix(v, "CN=") {
+				cmsRecords[v] = r
+			}
+		}
 	}
 }

@@ -93,9 +93,6 @@ type LogRecord struct {
 	URI            string  `json:"uri"`              // http.RequestURI
 	API            string  `json:"api"`              // http service API being used
 	System         string  `json:"system"`           // cmsweb service name
-	ClientIP       string  `json:"clientip"`         // x-forwarded-for
-	RealIP         string  `json:"realip"`           // x-real-ip
-	OrigIP         string  `json:"origip"`           // X-Original-Forwarded-For
 	BytesSend      int64   `json:"bytes_send"`       // number of bytes send with HTTP request
 	BytesReceived  int64   `json:"bytes_received"`   // number of bytes received with HTTP request
 	Proto          string  `json:"proto"`            // http.Request protocol
@@ -109,6 +106,7 @@ type LogRecord struct {
 	Referer        string  `json:"referer"`          // http referer
 	UserAgent      string  `json:"user_agent"`       // http user-agent field
 	XForwardedHost string  `json:"x_forwarded_host"` // http.Request X-Forwarded-Host
+	XForwardedFor  string  `json:"x_forwarded_for"`  // http.Request X-Forwarded-For
 	RemoteAddr     string  `json:"remote_addr"`      // http.Request remote address
 	ResponseStatus string  `json:"response_status"`  // http.Response status
 	ResponseTime   float64 `json:"response_time"`    // http response time

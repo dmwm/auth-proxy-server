@@ -146,7 +146,7 @@ func getServer(serverCrt, serverKey string, customVerify bool) (*http.Server, er
 			if Config.Verbose > 1 {
 				log.Println("### number of certs", len(certs))
 				for _, cert := range certs {
-					log.Println("### cert", cert)
+					log.Printf("issuer %v subject %v valid from %v till %v\n", cert.Issuer, cert.Subject, cert.NotBefore, cert.NotAfter)
 				}
 			}
 			opts := x509.VerifyOptions{
@@ -211,7 +211,7 @@ func findCN(subject string) (string, error) {
 }
 
 // helper function to find user info in cric records for given cert subject
-func findUser(subjects []string) (cmsauth.CricEntry, error) {
+func findUser_old(subjects []string) (cmsauth.CricEntry, error) {
 	for _, s := range subjects {
 		// loop over subjects is tiny, we may have only few subjects in certificates
 		for _, r := range CricRecords {
@@ -231,6 +231,17 @@ func findUser(subjects []string) (cmsauth.CricEntry, error) {
 					}
 				}
 			}
+		}
+	}
+	msg := fmt.Sprintf("user not found: %v\n", subjects)
+	return cmsauth.CricEntry{}, errors.New(msg)
+}
+
+// helper function to find user info in cric records for given cert subject
+func findUser(subjects []string) (cmsauth.CricEntry, error) {
+	for _, s := range subjects {
+		if r, ok := cmsRecords[s]; ok {
+			return r, nil
 		}
 	}
 	msg := fmt.Sprintf("user not found: %v\n", subjects)

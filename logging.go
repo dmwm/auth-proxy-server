@@ -93,10 +93,8 @@ func logRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 	if referer == "" {
 		referer = "-"
 	}
-	realIP := r.Header.Get("X-Real-IP")
-	clientIP := r.Header.Get("X-Forwarded-For")
-	origIP := r.Header.Get("X-Original-Forwarded-For")
-	addr := fmt.Sprintf("[X-Original-Forwarded-For: %v] [X-Real-IP: %v] [X-Forwarded-For: %v] [X-Forwarded-Host: %v] [remoteAddr: %v]", origIP, realIP, clientIP, r.Header.Get("X-Forwarded-Host"), r.RemoteAddr)
+	xff := r.Header.Get("X-Forwarded-For")
+	addr := fmt.Sprintf("[X-Forwarded-For: %v] [X-Forwarded-Host: %v] [remoteAddr: %v]", xff, r.Header.Get("X-Forwarded-Host"), r.RemoteAddr)
 	refMsg := fmt.Sprintf("[ref: \"%s\" \"%v\"]", referer, r.Header.Get("User-Agent"))
 	respMsg := fmt.Sprintf("[req: %v resp: %v]", time.Since(start), respHeader.Get("Response-Time"))
 	log.Printf("%s %s %s %s %d %s %s %s %s\n", addr, r.Method, r.RequestURI, r.Proto, status, dataMsg, authMsg, refMsg, respMsg)
@@ -109,9 +107,6 @@ func logRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 		URI:            r.RequestURI,
 		API:            getAPI(r.RequestURI),
 		System:         getSystem(r.RequestURI),
-		ClientIP:       clientIP,
-		RealIP:         realIP,
-		OrigIP:         origIP,
 		BytesSend:      bytesSend,
 		BytesReceived:  bytesRecv,
 		Proto:          r.Proto,
@@ -125,6 +120,7 @@ func logRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 		Referer:        referer,
 		UserAgent:      r.Header.Get("User-Agent"),
 		XForwardedHost: r.Header.Get("X-Forwarded-Host"),
+		XForwardedFor:  xff,
 		RemoteAddr:     r.RemoteAddr,
 		ResponseStatus: respHeader.Get("Response-Status"),
 		ResponseTime:   rTime,

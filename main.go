@@ -129,6 +129,7 @@ func reverseProxy(targetURL string, w http.ResponseWriter, r *http.Request) {
 	} else {
 		r.Header.Set("X-Forwarded-Host", reqHost)
 	}
+	r.Header.Set("X-Forwarded-For", r.RemoteAddr)
 	r.Host = url.Host
 	if Config.Verbose > 0 {
 		log.Printf("### proxy request: %+v\n", r)
