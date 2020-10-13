@@ -146,7 +146,9 @@ func getServer(serverCrt, serverKey string, customVerify bool) (*http.Server, er
 			if Config.Verbose > 1 {
 				log.Println("### number of certs", len(certs))
 				for _, cert := range certs {
-					log.Printf("issuer %v subject %v valid from %v till %v\n", cert.Issuer, cert.Subject, cert.NotBefore, cert.NotAfter)
+					if cert != nil {
+						log.Printf("issuer %v subject %v valid from %v till %v\n", cert.Issuer, cert.Subject, cert.NotBefore, cert.NotAfter)
+					}
 				}
 			}
 			opts := x509.VerifyOptions{
