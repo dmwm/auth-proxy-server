@@ -52,7 +52,6 @@ import (
 	"github.com/dmwm/cmsauth"
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
 	"github.com/shirou/gopsutil/cpu"
-	stomp "github.com/vkuznet/lb-stomp"
 )
 
 // StartTime of the server
@@ -66,9 +65,6 @@ var NumLogicalCores int
 
 // CMSAuth structure to create CMS Auth headers
 var CMSAuth cmsauth.CMSAuth
-
-// global stomp manager
-var stompMgr *stomp.StompManager
 
 // version of the code
 var version string
@@ -320,21 +316,6 @@ func main() {
 		log.Printf("%+v\n", Config)
 	}
 
-	// init stomp manager
-	c := stomp.Config{
-		URI:         Config.StompConfig.URI,
-		Login:       Config.StompConfig.Login,
-		Password:    Config.StompConfig.Password,
-		Iterations:  Config.StompConfig.Iterations,
-		SendTimeout: Config.StompConfig.SendTimeout,
-		RecvTimeout: Config.StompConfig.RecvTimeout,
-		Endpoint:    Config.StompConfig.Endpoint,
-		ContentType: Config.StompConfig.ContentType,
-		Verbose:     Config.StompConfig.Verbose,
-	}
-	stompMgr = stomp.New(c)
-	log.Println(stompMgr.String())
-
 	// setup StartTime and metrics last update time
 	StartTime = time.Now()
 	MetricsLastUpdateTime = time.Now()
@@ -352,18 +333,13 @@ func main() {
 	CMSAuth.Init(Config.Hmac)
 	go updateCricRecords()
 
-	// create log channel, start log channel loop and pass channel to our servers
-	logChannel := make(chan LogRecord)
-	defer close(logChannel)
-	go logChannelLoop(logChannel)
-
 	// our servers
 	if useX509 {
-		x509ProxyServer(logChannel)
+		x509ProxyServer()
 		return
 	} else if scitokens {
-		scitokensServer(logChannel)
+		scitokensServer()
 		return
 	}
-	oauthProxyServer(logChannel)
+	oauthProxyServer()
 }

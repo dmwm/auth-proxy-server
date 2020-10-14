@@ -213,33 +213,6 @@ func findCN(subject string) (string, error) {
 }
 
 // helper function to find user info in cric records for given cert subject
-func findUserOld(subjects []string) (cmsauth.CricEntry, error) {
-	for _, s := range subjects {
-		// loop over subjects is tiny, we may have only few subjects in certificates
-		for _, r := range CricRecords {
-			cn, e := findCN(s)
-			if Config.Verbose > 2 {
-				log.Println("subject", s, "findCN", cn)
-				log.Println("DNs", r.DNs)
-			}
-			if e == nil {
-				// loop over record DNs is tiny, we only have one or two DNs per user
-				for _, dn := range r.DNs {
-					if strings.HasSuffix(dn, cn) {
-						if Config.Verbose > 2 {
-							log.Println("match DN", dn, "with CN", cn)
-						}
-						return r, nil
-					}
-				}
-			}
-		}
-	}
-	msg := fmt.Sprintf("user not found: %v\n", subjects)
-	return cmsauth.CricEntry{}, errors.New(msg)
-}
-
-// helper function to find user info in cric records for given cert subject
 func findUser(subjects []string) (cmsauth.CricEntry, error) {
 	for _, s := range subjects {
 		if r, ok := cmsRecords[s]; ok {

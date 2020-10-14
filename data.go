@@ -51,31 +51,8 @@ type Configuration struct {
 	ReadTimeout         int             `json:"read_timeout"`           // server read timeout in sec
 	WriteTimeout        int             `json:"write_timeout"`          // server write timeout in sec
 	PrintMonitRecord    bool            `json:"print_monit_record"`     // print monit record on stdout
-	StompConfig         StompConfig     `json:"stomp_config"`           // Stomp Configuration (optional)
-	LogsEndpoint        LogsEndpoint    `json:"logs_endpoint"`          // logs endpoint configuration (optional)
 	Scitokens           ScitokensConfig `json:"scitokens"`              // scitokens configuration
 	WellKnown           string          `json:"well_known"`             // location of well-known area
-}
-
-// LogsEndpoint keeps information about HTTP logs end-point
-type LogsEndpoint struct {
-	URI      string `json:"uri"`      // logs http end-point to use
-	Producer string `json:"producer"` // name of producer to use in logs
-	Type     string `json:"type"`     // type name for logs
-	Prefix   string `json:"prefix"`   // type prefix for logs
-}
-
-// StompConfig stores server configuration parameters
-type StompConfig struct {
-	URI         string `json:"uri"`              // StompAMQ URI
-	Login       string `json:"login"`            // StompAQM login name
-	Password    string `json:"password"`         // StompAQM password
-	SendTimeout int    `json:"stompSendTimeout"` // heartbeat send timeout
-	RecvTimeout int    `json:"stompRecvTimeout"` // heartbeat recv timeout
-	Iterations  int    `json:"iterations"`       // Stomp iterations
-	Endpoint    string `json:"endpoint"`         // StompAMQ endpoint
-	ContentType string `json:"contentType"`      // content type of stomp message\w
-	Verbose     int    `json:"verbose"`          // verbose output
 }
 
 // HTTPRecord provides http record we send to logs endpoint

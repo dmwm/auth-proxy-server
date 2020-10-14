@@ -6,7 +6,6 @@ package main
 //
 
 import (
-	"bytes"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
@@ -49,8 +48,9 @@ func (writer logWriter) Write(data []byte) (int, error) {
 	return fmt.Print(utcMsg(data))
 }
 
-// helper function to log every single user request
-func logRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth string, status int, logChannel chan LogRecord) {
+// helper function to log every single user request, here we pass pointer to status code
+// as it may change through the handler while we use defer logRequest
+func logRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth string, status *int, tstamp int64) {
 	// our apache configuration
 	// CustomLog "||@APACHE2_ROOT@/bin/rotatelogs -f @LOGDIR@/access_log_%Y%m%d.txt 86400" \
 	//   "%t %v [client: %a] [backend: %h] \"%r\" %>s [data: %I in %O out %b body %D us ] [auth: %{SSL_PROTOCOL}x %{SSL_CIPHER}x \"%{SSL_CLIENT_S_DN}x\" \"%{cms-auth}C\" ] [ref: \"%{Referer}i\" \"%{User-Agent}i\" ]"
@@ -116,7 +116,7 @@ func logRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 		BytesSend:      bytesSend,
 		BytesReceived:  bytesRecv,
 		Proto:          r.Proto,
-		Status:         int64(status),
+		Status:         int64(*status),
 		ContentLength:  r.ContentLength,
 		AuthProto:      aproto,
 		Cipher:         cipher,
@@ -132,7 +132,7 @@ func logRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 		ResponseStatus: respHeader.Get("Response-Status"),
 		ResponseTime:   rTime,
 		RequestTime:    time.Since(start).Seconds(),
-		Timestamp:      int64(time.Now().UnixNano() / 1000000), // use milliseconds for MONIT
+		Timestamp:      tstamp,
 	}
 	if Config.PrintMonitRecord {
 		data, err := monitRecord(rec)
@@ -141,8 +141,6 @@ func logRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 		} else {
 			log.Println("unable to produce record for MONIT, error", err)
 		}
-	} else {
-		logChannel <- rec
 	}
 }
 
@@ -176,72 +174,15 @@ func monitRecord(rec LogRecord) ([]byte, error) {
 	if err != nil {
 		log.Println("Unable to get hostname", err)
 	}
-	ltype := Config.LogsEndpoint.Type
-	if ltype == "" {
-		ltype = "auth"
-	}
-	producer := Config.LogsEndpoint.Producer
-	if producer == "" {
-		producer = "cmsweb"
-	}
+	ltype := "auth"      // defined by MONIT team
+	producer := "cmsweb" // defined by MONIT team
 	r := HTTPRecord{
 		Producer:  producer,
 		Type:      ltype,
-		Timestamp: int64(time.Now().UnixNano() / 1000000), // usr milliseconds for MONIT
+		Timestamp: rec.Timestamp,
 		Host:      hostname,
 		Data:      rec,
 	}
 	data, err := json.Marshal(r)
 	return data, err
-}
-
-// logChannelLoop process log records send to channel
-func logChannelLoop(logChannel chan LogRecord) {
-	log.Println("start logChannelLoop with", logChannel)
-	buf := &bytes.Buffer{}
-	for {
-		select {
-		case rec := <-logChannel:
-			if Config.LogsEndpoint.URI != "" {
-				data, err := monitRecord(rec)
-				if err == nil {
-					if Config.Verbose > 1 {
-						log.Println("send", string(data))
-					}
-					_, err = buf.Write(data)
-					if err == nil {
-						send(buf)
-					} else {
-						log.Println("unable to read data into buffer", err)
-					}
-					buf.Reset()
-				} else {
-					log.Printf("unable to marshal record %+v, error %v\n", rec, err)
-				}
-			}
-			if Config.StompConfig.URI != "" {
-				data, err := json.Marshal(rec)
-				if err == nil {
-					stompMgr.Send(data)
-				} else {
-					log.Printf("unable to marshal record %+v, error %v\n", rec, err)
-				}
-			}
-		default:
-			time.Sleep(time.Duration(10) * time.Millisecond) // wait for response
-		}
-	}
-}
-
-// helper function to send our logs to http logs end-point
-func send(body *bytes.Buffer) {
-	rurl := Config.LogsEndpoint.URI
-	ctype := "application/json"
-	resp, err := http.Post(rurl, ctype, body)
-	if err != nil {
-		log.Printf("unable to send data to %s, error %v\n", rurl, err)
-	}
-	if Config.Verbose == 1 {
-		log.Println(rurl, resp.Proto, resp.Status)
-	}
 }

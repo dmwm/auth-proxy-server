@@ -271,7 +271,7 @@ func oauthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 // the proxy redirection is based on Config.Ingress dictionary, see Configuration
 // struct. The only exceptions are /token and /renew end-points which used internally
 // to display or renew user tokens, respectively
-func oauthRequestHandler(w http.ResponseWriter, r *http.Request, logChannel chan LogRecord) {
+func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	// increment GET/POST counters
 	if r.Method == "GET" {
@@ -284,7 +284,8 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request, logChannel chan
 
 	status := http.StatusOK
 	userData := make(map[string]interface{})
-	defer logRequest(w, r, start, "CERN-SSO-OAuth2-OICD", status, logChannel)
+	tstamp := int64(start.UnixNano() / 1000000) // use milliseconds for MONIT
+	defer logRequest(w, r, start, "CERN-SSO-OAuth2-OICD", &status, tstamp)
 	sess := globalSessions.SessionStart(w, r)
 	if Config.Verbose > 0 {
 		msg := fmt.Sprintf("call from '/', r.URL %s, sess.Path %v", r.URL, sess.Get("path"))
@@ -429,7 +430,7 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request, logChannel chan
 // and redirects their requests to targetUrl of reverse proxy.
 // If targetUrl is empty string it will redirect all request to
 // simple hello page.
-func oauthProxyServer(logChannel chan LogRecord) {
+func oauthProxyServer() {
 	// check if provided crt/key files exists
 	serverCrt := checkFile(Config.ServerCrt)
 	serverKey := checkFile(Config.ServerKey)
@@ -485,10 +486,7 @@ func oauthProxyServer(logChannel chan LogRecord) {
 	http.HandleFunc(fmt.Sprintf("%s/callback", Config.Base), oauthCallbackHandler)
 
 	// the request handler
-	//     http.HandleFunc("/", oauthRequestHandler)
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		oauthRequestHandler(w, r, logChannel)
-	})
+	http.HandleFunc("/", oauthRequestHandler)
 
 	// start HTTPs server
 	server, err := getServer(serverCrt, serverKey, false)

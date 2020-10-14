@@ -44,6 +44,8 @@ func updateCricRecords() {
 			CricRecords = cricRecords
 			keys := reflect.ValueOf(CricRecords).MapKeys()
 			log.Println("Updated CRIC records", len(keys))
+			updateCMSRecords(cricRecords)
+			log.Println("Updated cms records", len(cmsRecords))
 		}
 	}
 	for {

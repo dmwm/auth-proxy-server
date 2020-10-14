@@ -4,8 +4,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/vkuznet/auth-proxy-server)](https://goreportcard.com/report/github.com/vkuznet/auth-proxy-server)
 
 Go implementation of reverse proxy server with with OAuth OIDC or x509 authentication.
-It provides CMS authentication headers based on CRIC information, has optional
-ability to send asynchrounously request information to StompAMQ endpoint, and
+It provides CMS authentication headers based on CRIC information, and
 build-in rotate logs functionality.
 
 #### Server configuration
@@ -33,21 +32,13 @@ cat > config.json << EOF
     "rootCAs": ["/path/certificates/CA.crt", "/path/certificates/CA1.crt"],
     "verbose": false,
     "log_file": "/tmp/access.log",
-    "stomp_config": {
-        "uri": "URI",
-        "login": "bla",
-        "password": "bla",
-        "endpoint": "endpoint",
-        "verbose": true
-    },
     "port": 8181
 }
 EOF
 ```
 The ingress section allows to route incoming requests to specified backend
 services and it is based on path matching. The `log_file` controls writing logs
-to provided log file, the logs will be rotated on daily basis. The
-`stomp_config` section controls ability to send logs to StompAMQ endpoint.
+to provided log file, the logs will be rotated on daily basis.
 The `cric_url` and `cric_file` controls CRIC usage. If `cric_file` is provided
 it will be used to initialize CRIC map which later can be updated by fetching
 data through `cric_url`. The `update_cric` controls update interval for

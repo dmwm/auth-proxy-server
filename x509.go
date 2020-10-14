@@ -23,7 +23,7 @@ var TotalX509GetRequests uint64
 var TotalX509PostRequests uint64
 
 // x509RequestHandler handle requests for x509 clients
-func x509RequestHandler(w http.ResponseWriter, r *http.Request, logChannel chan LogRecord) {
+func x509RequestHandler(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	// increment GET/POST counters
 	if r.Method == "GET" {
@@ -36,7 +36,8 @@ func x509RequestHandler(w http.ResponseWriter, r *http.Request, logChannel chan 
 
 	// check if user provides valid credentials
 	status := http.StatusOK
-	defer logRequest(w, r, start, "x509", status, logChannel)
+	tstamp := int64(start.UnixNano() / 1000000) // use milliseconds for MONIT
+	defer logRequest(w, r, start, "x509", &status, tstamp)
 	userData := getUserData(r)
 	if _, ok := userData["name"]; !ok {
 		log.Println("unauthorized access, user not found in CRIC DB")
@@ -65,7 +66,7 @@ func x509RequestHandler(w http.ResponseWriter, r *http.Request, logChannel chan 
 }
 
 // helper function to start x509 proxy server
-func x509ProxyServer(logChannel chan LogRecord) {
+func x509ProxyServer() {
 	// check if provided crt/key files exists
 	serverCrt := checkFile(Config.ServerCrt)
 	serverKey := checkFile(Config.ServerKey)
@@ -82,10 +83,7 @@ func x509ProxyServer(logChannel chan LogRecord) {
 	http.HandleFunc(fmt.Sprintf("%s/server", Config.Base), settingsHandler)
 
 	// the request handler
-	//     http.HandleFunc("/", x509RequestHandler)
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		x509RequestHandler(w, r, logChannel)
-	})
+	http.HandleFunc("/", x509RequestHandler)
 
 	// start HTTPS server
 	server, err := getServer(serverCrt, serverKey, true)
