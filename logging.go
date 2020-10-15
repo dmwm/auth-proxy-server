@@ -159,7 +159,9 @@ func getSystem(uri string) string {
 	arr := strings.Split(uri, "/")
 	system := "base"
 	if len(arr) > 0 {
-		arr = strings.Split(arr[1], "?")
+		if len(arr) > 1 {
+			arr = strings.Split(arr[1], "?")
+		}
 		system = arr[0]
 	}
 	if system == "" {
