@@ -226,6 +226,9 @@ func findUser(subjects []string) (cmsauth.CricEntry, error) {
 // helper function to get user data from TLS request
 func getUserData(r *http.Request) map[string]interface{} {
 	userData := make(map[string]interface{})
+	if r.TLS == nil {
+		return userData
+	}
 	certs := r.TLS.PeerCertificates
 	for _, asn1Data := range certs {
 		cert, err := x509.ParseCertificate(asn1Data.Raw)
