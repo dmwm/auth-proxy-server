@@ -37,6 +37,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -67,6 +68,9 @@ var Context context.Context
 
 // globalSession manager for our HTTP requests
 var globalSessions *session.Manager
+
+// sessLock keeps lock for sess updates
+var sessLock sync.RWMutex
 
 // initialize global session manager
 func init() {
@@ -292,7 +296,9 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 		printHTTPRequest(r, msg)
 	}
 	oauthState := uuid.New().String()
+	sessLock.Lock()
 	sess.Set("somestate", oauthState)
+	sessLock.Unlock()
 	if sess.Get("path") == nil || sess.Get("path") == "" {
 		sess.Set("path", r.URL.Path)
 	}
