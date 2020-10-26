@@ -179,7 +179,8 @@ func redirect(w http.ResponseWriter, r *http.Request) {
 	// if Configuration provides Ingress rules we'll use them
 	// to redirect user request
 	for _, rec := range Config.Ingress {
-		if strings.Contains(r.URL.Path, rec.Path) {
+		// check that request URL path had ingress path with slash
+		if strings.Contains(r.URL.Path+"/", rec.Path+"/") {
 			if Config.Verbose > 0 {
 				log.Printf("ingress request path %s, record path %s, service url %s, old path %s, new path %s\n", r.URL.Path, rec.Path, rec.ServiceURL, rec.OldPath, rec.NewPath)
 			}
