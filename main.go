@@ -190,7 +190,10 @@ func redirect(w http.ResponseWriter, r *http.Request) {
 				r.URL.Path = strings.Replace(r.URL.Path, rec.OldPath, rec.NewPath, 1)
 				// if r.URL.Path ended with "/", remove it to avoid
 				// cases /path/index.html/ after old->new path substitution
-				r.URL.Path = strings.TrimSuffix(r.URL.Path, "/")
+				// but for couchdb/_utils we need final slash
+				if !strings.Contains(r.URL.Path, "couchdb") {
+					r.URL.Path = strings.TrimSuffix(r.URL.Path, "/")
+				}
 				// replace empty path with root path
 				if r.URL.Path == "" {
 					r.URL.Path = "/"
