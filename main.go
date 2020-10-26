@@ -110,6 +110,9 @@ func reverseProxy(targetURL string, w http.ResponseWriter, r *http.Request) {
 		log.Printf("HTTP headers: %+v\n", r.Header)
 	}
 
+	// handle double slashes in request path
+	r.URL.Path = strings.Replace(r.URL.Path, "//", "/", -1)
+
 	// Update the headers to allow for SSL redirection
 	r.URL.Host = url.Host
 	r.URL.Scheme = url.Scheme
@@ -191,9 +194,9 @@ func redirect(w http.ResponseWriter, r *http.Request) {
 				// if r.URL.Path ended with "/", remove it to avoid
 				// cases /path/index.html/ after old->new path substitution
 				// but for couchdb/_utils we need final slash
-				if !strings.Contains(r.URL.Path, "couchdb") {
-					r.URL.Path = strings.TrimSuffix(r.URL.Path, "/")
-				}
+				//                 if !strings.Contains(r.URL.Path, "couchdb") {
+				//                     r.URL.Path = strings.TrimSuffix(r.URL.Path, "/")
+				//                 }
 				// replace empty path with root path
 				if r.URL.Path == "" {
 					r.URL.Path = "/"
