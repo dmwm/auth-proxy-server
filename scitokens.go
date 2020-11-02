@@ -140,13 +140,13 @@ func readPublicJWKS(fname string) (PublicJWKSKey, error) {
 	var p PublicJWKSKey
 	data, err := ioutil.ReadFile(fname)
 	if err != nil {
-		log.Printf("Unable to read, file: %s, error: %v\n", fname, err)
+		log.Printf("unable to read, file: %s, error: %v\n", fname, err)
 		return p, err
 	}
 	var rec PublicJWKS
 	err = json.Unmarshal(data, &rec)
 	if err != nil {
-		log.Printf("Unable to parse, file: %s, error: %v\n", fname, err)
+		log.Printf("unable to parse, file: %s, error: %v\n", fname, err)
 		return p, err
 	}
 	return rec.Keys[0], nil
@@ -174,9 +174,6 @@ func scitokensHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	// fetch user data from our request
 	userData := getUserData(r)
-	if Config.Verbose > 0 {
-		log.Printf("user data %+v\n", userData)
-	}
 
 	// get token attribute values: issuer, jti, sub, scopes
 	issuer, kid := getIssuer(r)
@@ -255,8 +252,7 @@ func getRSAKey(fname string) (*rsa.PrivateKey, error) {
 			key = parseResult.(*rsa.PrivateKey)
 			return key, err
 		}
-		log.Println("unable to ParsePKCS8PrivateKey", fname, err)
-		log.Fatal(err)
+		log.Fatal("unable to ParsePKCS8PrivateKey", fname, err)
 	}
 	key, err := rsa.GenerateKey(rand.Reader, 2048)
 	return key, err
@@ -321,12 +317,10 @@ func validateJWT(w http.ResponseWriter, r *http.Request) (jwt.Claims, error) {
 	} else {
 		return jwtClaims, errors.New("invalid token header")
 	}
-	log.Println("token", tokenString)
 
 	// validate JWT token
 	parser := new(jwt.Parser)
 	token, err := parser.ParseWithClaims(tokenString, &ScitokensClaims{}, validateToken)
-	log.Println("parsed token", token.Header, err)
 	if err != nil {
 		return jwtClaims, fmt.Errorf("unable to parse JWT token, error: %v", err)
 	}
@@ -335,7 +329,6 @@ func validateJWT(w http.ResponseWriter, r *http.Request) (jwt.Claims, error) {
 	if !ok && !token.Valid {
 		return jwtClaims, errors.New("invalid token")
 	}
-	log.Println("claims", tokenClaims)
 	return tokenClaims, nil
 }
 
