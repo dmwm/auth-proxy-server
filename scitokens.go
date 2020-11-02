@@ -266,6 +266,9 @@ func getSciToken(issuer, kid, jti, sub, scopes string) (string, error) {
 	now := time.Now().Unix()
 	iat := now
 	version := "scitoken:2.0"
+	if Config.Scitokens.Version != "" {
+		version = Config.Scitokens.Version
+	}
 	// for definitions see
 	// https://godoc.org/github.com/dgrijalva/jwt-go#StandardClaims
 	// https://tools.ietf.org/html/rfc7519#section-4.1

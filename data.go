@@ -175,6 +175,7 @@ type ScitokensConfig struct {
 	PrivateKey  string `json:"rsa_key"`      // RSA private key to use
 	PrivateJWKS string `json:"private_jwks"` // private jwks file name
 	PublicJWKS  string `json:"public_jwks"`  // public jwks file name
+	Version     string `json:"version"`      // version string, e.g. scitokens:2.0
 }
 
 // Rule reperesents scitoken rule
