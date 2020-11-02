@@ -343,7 +343,7 @@ func validateJWT(w http.ResponseWriter, r *http.Request) (jwt.Claims, error) {
 func validateHandler(w http.ResponseWriter, r *http.Request) {
 	jwtClaims, err := validateJWT(w, r)
 	if err != nil {
-		handleError(w, r, fmt.Sprintf("%v", err), http.StatusForbidden)
+		handleError(w, r, fmt.Sprintf("%v", err), http.StatusUnauthorized)
 		return
 	}
 	if err := json.NewEncoder(w).Encode(jwtClaims); err != nil {
