@@ -36,6 +36,10 @@ import (
 	"github.com/google/uuid"
 )
 
+// server private/public keys to be used for signing
+var privateKey *rsa.PrivateKey
+var publicKey *rsa.PublicKey
+
 // helper function to handle http server errors
 func handleError(w http.ResponseWriter, r *http.Request, msg string) {
 	log.Println(Stack())
@@ -141,7 +145,7 @@ func scitokensHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	grantType := r.FormValue("grant_type")
 	if grantType != "client_credentials" {
-		msg := fmt.Sprintf("Incorrect grant_type %s", grantType)
+		msg := fmt.Sprintf("Incorrect grant_type '%s'", grantType)
 		handleError(w, r, msg)
 		return
 	}
@@ -293,15 +297,6 @@ func getSciToken(issuer, kid, jti, sub, scopes string) (string, error) {
 			NotBefore: now,     // nbf
 		},
 	}
-	fname := Config.Scitokens.PrivateKey
-	key, err := getRSAKey(fname)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	//     token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	//     secret := []byte(Config.Scitokens.Secret)
-	//     tokenString, err := token.SignedString(secret)
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
 	if _, ok := token.Header["kid"]; !ok {
 		if kid == "" {
@@ -310,8 +305,54 @@ func getSciToken(issuer, kid, jti, sub, scopes string) (string, error) {
 			token.Header["kid"] = kid
 		}
 	}
-	tokenString, err := token.SignedString(key)
+	tokenString, err := token.SignedString(privateKey)
 	return tokenString, err
+}
+
+// helper function to validate token
+func validateToken(token *jwt.Token) (interface{}, error) {
+	if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
+		return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+	}
+	return publicKey, nil
+}
+
+// validateHandler validate given JWT
+func validateHandler(w http.ResponseWriter, r *http.Request) {
+	// get token from HTTP header
+	bearToken := r.Header.Get("Authorization")
+
+	// normally Authorization the_token_xxx
+	strArr := strings.Split(bearToken, " ")
+	var tokenString string
+	if len(strArr) == 2 {
+		tokenString = strArr[1]
+	} else {
+		msg := "invalid token header"
+		handleError(w, r, msg)
+		return
+	}
+	log.Println("token", tokenString)
+
+	// validate JWT token
+	parser := new(jwt.Parser)
+	token, err := parser.ParseWithClaims(tokenString, &ScitokensClaims{}, validateToken)
+	log.Println("parsed token", token.Header, err)
+	if err != nil {
+		msg := fmt.Sprintf("unable to parse JWT token, error: %v", err)
+		handleError(w, r, msg)
+		return
+	}
+	tokenClaims, ok := token.Claims.(jwt.Claims)
+
+	if !ok && !token.Valid {
+		msg := "invalid token"
+		handleError(w, r, msg)
+		return
+	}
+	log.Println("claims", tokenClaims)
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("OK"))
 }
 
 // helper function to start scitokens server
@@ -319,6 +360,15 @@ func scitokensServer() {
 	// check if provided crt/key files exists
 	serverCrt := checkFile(Config.ServerCrt)
 	serverKey := checkFile(Config.ServerKey)
+
+	// initialize server private/public RSA keys to be used for signing
+	fname := Config.Scitokens.PrivateKey
+	key, err := getRSAKey(fname)
+	if err != nil {
+		log.Fatal(err)
+	}
+	privateKey = key
+	publicKey = &privateKey.PublicKey
 
 	// the server settings handler
 	base := Config.Base
@@ -330,6 +380,7 @@ func scitokensServer() {
 
 	// the request handler
 	http.HandleFunc(fmt.Sprintf("%s/token", base), scitokensHandler)
+	http.HandleFunc(fmt.Sprintf("%s/validate", base), validateHandler)
 
 	// start HTTPS server
 	server, err := getServer(serverCrt, serverKey, true)
