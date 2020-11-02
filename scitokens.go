@@ -41,11 +41,22 @@ import (
 var privateKey *rsa.PrivateKey
 var publicKey *rsa.PublicKey
 
+// PublicJWKS represents public structure of jwks
+type PublicJWKS struct {
+	Alg string `json:"alg"`
+	E   string `json:"e"`
+	Kid string `json:"kid"`
+	N   string `json:"n"`
+	Use string `json:"use"`
+}
+
+// server variable to hold public jwks record
+var publicJWKS PublicJWKS
+
 // helper function to handle http server errors
 func handleError(w http.ResponseWriter, r *http.Request, msg string, code int) {
 	log.Println(Stack())
 	rec := ErrorRecord{Error: msg}
-	// TODO: we may introduce error codes at some point
 	log.Printf("error %+v\n", rec)
 	data, err := json.Marshal(rec)
 	if err != nil {
@@ -101,24 +112,7 @@ func getScopes(r *http.Request, userData map[string]interface{}) []string {
 
 // helper function to get issuer
 func getIssuer(r *http.Request) (string, string) {
-	// from python code
-	// x509-scitokens-issuer/src/x509_scitokens_issuer/test_x509_scitokens_issuer.py
-	// with open(app.config['ISSUER_KEY'], 'r') as fd:
-	//      json_obj = json.load(fd)
-	// app.issuer_kid = json_obj['keys'][0]['kid']
-	// app.issuer_key = x509_utils.load_jwks(json_obj['keys'][0])
-
-	// get hostname from http Request if not provided use hostname
-	// or get issuer from userData
-	// issuer should be hostname of our server
-	//     var issuer string
-	//     if v, ok := userData["issuer"]; ok {
-	//         issuer = v.(string)
-	//     }
-
 	issuer := Config.Scitokens.Issuer
-	// TODO: read kid from issuer_key from issuer_key.jwks file
-	kid := ""
 	if issuer == "" {
 		hostname, err := os.Hostname()
 		if err != nil {
@@ -127,7 +121,30 @@ func getIssuer(r *http.Request) (string, string) {
 		kid := ""
 		return hostname, kid
 	}
+	// read kid from issuer_public.jwks file
+	kid := ""
+	rec, err := readPublicJWKS(Config.Scitokens.PublicJWKS)
+	if err == nil {
+		kid = rec.Kid
+	}
 	return issuer, kid
+}
+
+// read public JWKS data
+func readPublicJWKS(fname string) (PublicJWKS, error) {
+	var p PublicJWKS
+	data, err := ioutil.ReadFile(fname)
+	if err != nil {
+		log.Printf("Unable to read, file: %s, error: %v\n", fname, err)
+		return p, err
+	}
+	var rec []PublicJWKS
+	err = json.Unmarshal(data, &rec)
+	if err != nil {
+		log.Printf("Unable to parse, file: %s, error: %v\n", fname, err)
+		return p, err
+	}
+	return rec[0], nil
 }
 
 // scitokensHandler handle requests for x509 clients
@@ -150,7 +167,7 @@ func scitokensHandler(w http.ResponseWriter, r *http.Request) {
 		handleError(w, r, msg, http.StatusForbidden)
 		return
 	}
-	// getch user data from our request
+	// fetch user data from our request
 	userData := getUserData(r)
 	if Config.Verbose > 0 {
 		log.Printf("user data %+v\n", userData)
@@ -284,7 +301,9 @@ func validateToken(token *jwt.Token) (interface{}, error) {
 }
 
 // validateJWT validate given JWT
-func validateJWT(w http.ResponseWriter, r *http.Request) error {
+func validateJWT(w http.ResponseWriter, r *http.Request) (jwt.Claims, error) {
+	var jwtClaims jwt.Claims
+
 	// get token from HTTP header
 	bearToken := r.Header.Get("Authorization")
 
@@ -294,7 +313,7 @@ func validateJWT(w http.ResponseWriter, r *http.Request) error {
 	if len(strArr) == 2 {
 		tokenString = strArr[1]
 	} else {
-		return errors.New("invalid token header")
+		return jwtClaims, errors.New("invalid token header")
 	}
 	log.Println("token", tokenString)
 
@@ -303,25 +322,32 @@ func validateJWT(w http.ResponseWriter, r *http.Request) error {
 	token, err := parser.ParseWithClaims(tokenString, &ScitokensClaims{}, validateToken)
 	log.Println("parsed token", token.Header, err)
 	if err != nil {
-		return errors.New(fmt.Sprintf("unable to parse JWT token, error: %v", err))
+		return jwtClaims, errors.New(fmt.Sprintf("unable to parse JWT token, error: %v", err))
 	}
 	tokenClaims, ok := token.Claims.(jwt.Claims)
 
 	if !ok && !token.Valid {
-		return errors.New("invalid token")
+		return jwtClaims, errors.New("invalid token")
 	}
 	log.Println("claims", tokenClaims)
-	return nil
+	return tokenClaims, nil
 }
 
 // validateHandler validate given JWT
 func validateHandler(w http.ResponseWriter, r *http.Request) {
-	err := validateJWT(w, r)
+	jwtClaims, err := validateJWT(w, r)
 	if err != nil {
 		handleError(w, r, fmt.Sprintf("%v", err), http.StatusForbidden)
 		return
 	}
+	data, err := json.Marshal(jwtClaims)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(fmt.Sprintf("unable to marshal jwt claims, error=%v", err)))
+		return
+	}
 	w.WriteHeader(http.StatusOK)
+	w.Write(data)
 }
 
 // helper function to start scitokens server
@@ -339,6 +365,9 @@ func scitokensServer() {
 	privateKey = key
 	publicKey = &privateKey.PublicKey
 
+	// read jwks record
+	publicJWKS, err = readPublicJWKS(Config.Scitokens.PublicJWKS)
+
 	// the server settings handler
 	base := Config.Base
 	http.HandleFunc(fmt.Sprintf("%s/server", base), settingsHandler)
@@ -354,7 +383,7 @@ func scitokensServer() {
 		base = "/"
 	}
 	http.HandleFunc(base, func(w http.ResponseWriter, r *http.Request) {
-		err := validateJWT(w, r)
+		_, err := validateJWT(w, r)
 		if err != nil {
 			handleError(w, r, fmt.Sprintf("%v", err), http.StatusForbidden)
 			return

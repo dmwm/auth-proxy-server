@@ -164,15 +164,17 @@ type Metrics struct {
 
 // ScitokensConfig represents configuration of scitokens service
 type ScitokensConfig struct {
-	FileGlog   string `json:"file_glob"`  // file glob
-	Lifetime   int    `json:"lifetime"`   // lifetime of token
-	IssuerKey  string `json:"issuer_key"` // issuer key
-	Issuer     string `json:"issuer"`     // issuer hostname
-	Rules      []Rule `json:"rules"`      // rules
-	DNMapping  string `json:"dn_mapping"` // dn mapping
-	Verbose    bool   `json:"verbose"`    // verbosity mode
-	Secret     string `json:"secret"`     // secret
-	PrivateKey string `json:"rsa_key"`    // RSA private key to use
+	FileGlog    string `json:"file_glob"`    // file glob
+	Lifetime    int    `json:"lifetime"`     // lifetime of token
+	IssuerKey   string `json:"issuer_key"`   // issuer key
+	Issuer      string `json:"issuer"`       // issuer hostname
+	Rules       []Rule `json:"rules"`        // rules
+	DNMapping   string `json:"dn_mapping"`   // dn mapping
+	Verbose     bool   `json:"verbose"`      // verbosity mode
+	Secret      string `json:"secret"`       // secret
+	PrivateKey  string `json:"rsa_key"`      // RSA private key to use
+	PrivateJWKS string `json:"private_jwks"` // private jwks file name
+	PublicJWKS  string `json:"public_jwks"`  // public jwks file name
 }
 
 // Rule reperesents scitoken rule
