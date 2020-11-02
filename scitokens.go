@@ -41,7 +41,7 @@ var privateKey *rsa.PrivateKey
 var publicKey *rsa.PublicKey
 
 // helper function to handle http server errors
-func handleError(w http.ResponseWriter, r *http.Request, msg string) {
+func handleError(w http.ResponseWriter, r *http.Request, msg string, code int) {
 	log.Println(Stack())
 	rec := ErrorRecord{Error: msg}
 	// TODO: we may introduce error codes at some point
@@ -51,7 +51,7 @@ func handleError(w http.ResponseWriter, r *http.Request, msg string) {
 		w.Write([]byte(fmt.Sprintf("unable to marshal data, error=%v", err)))
 		return
 	}
-	w.WriteHeader(http.StatusBadRequest)
+	w.WriteHeader(code)
 	w.Write(data)
 }
 
@@ -101,7 +101,7 @@ func getScopes(r *http.Request, userData map[string]interface{}) []string {
 // helper function to get issuer
 func getIssuer(r *http.Request) (string, string) {
 	// from python code
-	// /Users/vk/CMS/DMWM/GIT/x509-scitokens-issuer/src/x509_scitokens_issuer/test_x509_scitokens_issuer.py
+	// x509-scitokens-issuer/src/x509_scitokens_issuer/test_x509_scitokens_issuer.py
 	// with open(app.config['ISSUER_KEY'], 'r') as fd:
 	//      json_obj = json.load(fd)
 	// app.issuer_kid = json_obj['keys'][0]['kid']
@@ -146,7 +146,7 @@ func scitokensHandler(w http.ResponseWriter, r *http.Request) {
 	grantType := r.FormValue("grant_type")
 	if grantType != "client_credentials" {
 		msg := fmt.Sprintf("Incorrect grant_type '%s'", grantType)
-		handleError(w, r, msg)
+		handleError(w, r, msg, http.StatusForbidden)
 		return
 	}
 	// getch user data from our request
@@ -161,7 +161,7 @@ func scitokensHandler(w http.ResponseWriter, r *http.Request) {
 	scopes := getScopes(r, userData)
 	if len(scopes) == 0 {
 		msg := "No applicable scopes for this user"
-		handleError(w, r, msg)
+		handleError(w, r, msg, http.StatusForbidden)
 		return
 	}
 	var sub string
@@ -169,7 +169,7 @@ func scitokensHandler(w http.ResponseWriter, r *http.Request) {
 		sub = v.(string)
 	} else {
 		msg := fmt.Sprintf("No CMS credentials found in TLS authentication")
-		handleError(w, r, msg)
+		handleError(w, r, msg, http.StatusForbidden)
 		return
 	}
 
@@ -241,41 +241,6 @@ func getRSAKey(fname string) (*rsa.PrivateKey, error) {
 	return key, err
 }
 
-/*
-// helper function to get scitoken, it is based on
-// github.com/cristalhq/jwt/v3
-func getSciToken(issuer, jti, sub, scopes string) (string, error) {
-	// Create a new token object, specifying signing method and the claims
-	expires := jwt.NewNumericDate(time.Now().Add(time.Minute * time.Duration(Config.Scitokens.Lifetime)))
-	now := jwt.NewNumericDate(time.Now())
-	iat := jwt.NewNumericDate(time.Now())
-	// for definitions see
-	// https://godoc.org/github.com/dgrijalva/jwt-go#StandardClaims
-	// https://tools.ietf.org/html/rfc7519#section-4.1
-	claims := ScitokensClaims{
-		scopes,
-		jwt.StandardClaims{
-			ExpiresAt: expires, // exp
-			Issuer:    issuer,  // iss
-			IssuedAt:  iat,     // iat
-			ID:        jti,     // jti
-			Subject:   sub,     // sub
-			NotBefore: now,     // nbf
-		},
-	}
-	fname := ""
-	key, err := getRSAKey(fname)
-	signer, err := jwt.NewSignerRS(jwt.RS256, key)
-	if err != nil {
-		log.Fatal(err)
-	}
-	builder := jwt.NewBuilder(signer)
-	token, err := builder.Build(claims)
-	tokenString := token.String()
-	return tokenString, err
-}
-*/
-
 // helper function to get scitoken
 func getSciToken(issuer, kid, jti, sub, scopes string) (string, error) {
 	// Create a new token object, specifying signing method and the claims
@@ -329,7 +294,7 @@ func validateHandler(w http.ResponseWriter, r *http.Request) {
 		tokenString = strArr[1]
 	} else {
 		msg := "invalid token header"
-		handleError(w, r, msg)
+		handleError(w, r, msg, http.StatusForbidden)
 		return
 	}
 	log.Println("token", tokenString)
@@ -340,19 +305,18 @@ func validateHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("parsed token", token.Header, err)
 	if err != nil {
 		msg := fmt.Sprintf("unable to parse JWT token, error: %v", err)
-		handleError(w, r, msg)
+		handleError(w, r, msg, http.StatusForbidden)
 		return
 	}
 	tokenClaims, ok := token.Claims.(jwt.Claims)
 
 	if !ok && !token.Valid {
 		msg := "invalid token"
-		handleError(w, r, msg)
+		handleError(w, r, msg, http.StatusForbidden)
 		return
 	}
 	log.Println("claims", tokenClaims)
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("OK"))
 }
 
 // helper function to start scitokens server
