@@ -23,6 +23,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"encoding/pem"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -282,8 +283,8 @@ func validateToken(token *jwt.Token) (interface{}, error) {
 	return publicKey, nil
 }
 
-// validateHandler validate given JWT
-func validateHandler(w http.ResponseWriter, r *http.Request) {
+// validateJWT validate given JWT
+func validateJWT(w http.ResponseWriter, r *http.Request) error {
 	// get token from HTTP header
 	bearToken := r.Header.Get("Authorization")
 
@@ -293,9 +294,7 @@ func validateHandler(w http.ResponseWriter, r *http.Request) {
 	if len(strArr) == 2 {
 		tokenString = strArr[1]
 	} else {
-		msg := "invalid token header"
-		handleError(w, r, msg, http.StatusForbidden)
-		return
+		return errors.New("invalid token header")
 	}
 	log.Println("token", tokenString)
 
@@ -304,18 +303,24 @@ func validateHandler(w http.ResponseWriter, r *http.Request) {
 	token, err := parser.ParseWithClaims(tokenString, &ScitokensClaims{}, validateToken)
 	log.Println("parsed token", token.Header, err)
 	if err != nil {
-		msg := fmt.Sprintf("unable to parse JWT token, error: %v", err)
-		handleError(w, r, msg, http.StatusForbidden)
-		return
+		return errors.New(fmt.Sprintf("unable to parse JWT token, error: %v", err))
 	}
 	tokenClaims, ok := token.Claims.(jwt.Claims)
 
 	if !ok && !token.Valid {
-		msg := "invalid token"
-		handleError(w, r, msg, http.StatusForbidden)
-		return
+		return errors.New("invalid token")
 	}
 	log.Println("claims", tokenClaims)
+	return nil
+}
+
+// validateHandler validate given JWT
+func validateHandler(w http.ResponseWriter, r *http.Request) {
+	err := validateJWT(w, r)
+	if err != nil {
+		handleError(w, r, fmt.Sprintf("%v", err), http.StatusForbidden)
+		return
+	}
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -342,9 +347,20 @@ func scitokensServer() {
 	// static content
 	http.Handle(fmt.Sprintf("%s/.well-known/", base), http.StripPrefix(base+"/.well-known/", http.FileServer(http.Dir(Config.WellKnown))))
 
-	// the request handler
+	// the HTTP handlers
 	http.HandleFunc(fmt.Sprintf("%s/token", base), scitokensHandler)
 	http.HandleFunc(fmt.Sprintf("%s/validate", base), validateHandler)
+	if base == "" {
+		base = "/"
+	}
+	http.HandleFunc(base, func(w http.ResponseWriter, r *http.Request) {
+		err := validateJWT(w, r)
+		if err != nil {
+			handleError(w, r, fmt.Sprintf("%v", err), http.StatusForbidden)
+			return
+		}
+		redirect(w, r)
+	})
 
 	// start HTTPS server
 	server, err := getServer(serverCrt, serverKey, true)
