@@ -41,8 +41,13 @@ import (
 var privateKey *rsa.PrivateKey
 var publicKey *rsa.PublicKey
 
-// PublicJWKS represents public structure of jwks
+// PublicJWKS represents public structure of jwks keys
 type PublicJWKS struct {
+	Keys []PublicJWKSKey
+}
+
+// PublicJWKSKey represents public jwks key
+type PublicJWKSKey struct {
 	Alg string `json:"alg"`
 	E   string `json:"e"`
 	Kid string `json:"kid"`
@@ -50,8 +55,8 @@ type PublicJWKS struct {
 	Use string `json:"use"`
 }
 
-// server variable to hold public jwks record
-var publicJWKS PublicJWKS
+// server variable to hold public jwks key
+var publicJWKSkey PublicJWKSKey
 
 // helper function to handle http server errors
 func handleError(w http.ResponseWriter, r *http.Request, msg string, code int) {
@@ -131,20 +136,20 @@ func getIssuer(r *http.Request) (string, string) {
 }
 
 // read public JWKS data
-func readPublicJWKS(fname string) (PublicJWKS, error) {
-	var p PublicJWKS
+func readPublicJWKS(fname string) (PublicJWKSKey, error) {
+	var p PublicJWKSKey
 	data, err := ioutil.ReadFile(fname)
 	if err != nil {
 		log.Printf("Unable to read, file: %s, error: %v\n", fname, err)
 		return p, err
 	}
-	var rec []PublicJWKS
+	var rec PublicJWKS
 	err = json.Unmarshal(data, &rec)
 	if err != nil {
 		log.Printf("Unable to parse, file: %s, error: %v\n", fname, err)
 		return p, err
 	}
-	return rec[0], nil
+	return rec.Keys[0], nil
 }
 
 // scitokensHandler handle requests for x509 clients
@@ -199,15 +204,13 @@ func scitokensHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	resp := TokenResponse{AccessToken: token, TokenType: "bearer", Expires: expires}
-	data, err := json.Marshal(resp)
-	if err != nil {
-		w.Write([]byte(fmt.Sprintf("unable to marshal data, error=%v", err)))
-		return
-	}
 	w.Header().Set("Cache-Control", "no-store")
 	w.Header().Set("Pragma", "no-cache")
-	w.WriteHeader(http.StatusOK)
-	w.Write(data)
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(fmt.Sprintf("unable to marshal token response, error=%v", err)))
+		return
+	}
 }
 
 // ScitokensClaims represent structure of scitokens claims
@@ -325,7 +328,7 @@ func validateJWT(w http.ResponseWriter, r *http.Request) (jwt.Claims, error) {
 	token, err := parser.ParseWithClaims(tokenString, &ScitokensClaims{}, validateToken)
 	log.Println("parsed token", token.Header, err)
 	if err != nil {
-		return jwtClaims, errors.New(fmt.Sprintf("unable to parse JWT token, error: %v", err))
+		return jwtClaims, fmt.Errorf("unable to parse JWT token, error: %v", err)
 	}
 	tokenClaims, ok := token.Claims.(jwt.Claims)
 
@@ -343,14 +346,11 @@ func validateHandler(w http.ResponseWriter, r *http.Request) {
 		handleError(w, r, fmt.Sprintf("%v", err), http.StatusForbidden)
 		return
 	}
-	data, err := json.Marshal(jwtClaims)
-	if err != nil {
+	if err := json.NewEncoder(w).Encode(jwtClaims); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(fmt.Sprintf("unable to marshal jwt claims, error=%v", err)))
 		return
 	}
-	w.WriteHeader(http.StatusOK)
-	w.Write(data)
 }
 
 // helper function to start scitokens server
@@ -369,7 +369,7 @@ func scitokensServer() {
 	publicKey = &privateKey.PublicKey
 
 	// read jwks record
-	publicJWKS, err = readPublicJWKS(Config.Scitokens.PublicJWKS)
+	publicJWKSkey, err = readPublicJWKS(Config.Scitokens.PublicJWKS)
 
 	// the server settings handler
 	base := Config.Base
