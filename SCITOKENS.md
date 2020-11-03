@@ -45,7 +45,7 @@ be properly assigned at a deployment time to some DNS alias.
 scurl -d grant_type=client_credentials https://localhost:8443/token
 
 # validate client with existing JWT token
-scurl -H "Authorization: bearer $token" https://localhost:8443/validate
+scurl -H "Authorization: bearer $token" https://localhost:8443/token/validate
 
 # access resource (httpgo) using valid JWT token
 scurl -H "Authorization: bearer $token" https://localhost:8443/httpgo

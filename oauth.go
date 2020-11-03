@@ -13,8 +13,8 @@ authenticated and this codebase provides CMS X509 headers based on
 CMS CRIC meta-data. An additional hmac is set via cmsauth package.
 The server can be initialize either as HTTP or HTTPs and provides the
 following end-points
+- /token/renew renew user tokens
 - /token returns information about tokens
-- /renew renew user tokens
 - /callback handles the callback authentication requests
 - / performs reverse proxy redirects to backends defined in ingress part of configuration
 
@@ -335,6 +335,43 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 				printHTTPRequest(r, "cms headers")
 			}
 		}
+		// renew existing token
+		if r.URL.Path == fmt.Sprintf("%s/token/renew", Config.Base) {
+			var token string
+			t := sess.Get("refreshToken")
+			if t == nil { // cli request
+				if v, ok := r.Header["Authorization"]; ok {
+					if len(v) == 1 {
+						token = strings.Replace(v[0], "Bearer ", "", 1)
+					}
+				}
+			} else {
+				token = t.(string)
+			}
+			tokenInfo, err := renewToken(token, r)
+			if err != nil {
+				msg := fmt.Sprintf("unable to refresh access token, %v", err)
+				status = http.StatusInternalServerError
+				http.Error(w, msg, status)
+				return
+			}
+			if Config.Verbose > 2 {
+				printJSON(tokenInfo, "new token info")
+			}
+			if !strings.Contains(strings.ToLower(accept), "json") {
+				w.Write([]byte(tokenInfo.String()))
+				return
+			}
+			data, err := json.Marshal(tokenInfo)
+			if err != nil {
+				msg := fmt.Sprintf("unable to marshal token info, %v", err)
+				status = http.StatusInternalServerError
+				http.Error(w, msg, status)
+				return
+			}
+			w.Write(data)
+			return
+		}
 		// return token back to the user
 		if r.URL.Path == fmt.Sprintf("%s/token", Config.Base) {
 			var token, rtoken string
@@ -366,43 +403,6 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 				rtexp = sess.Get("refreshExpire").(int64)
 			}
 			tokenInfo := TokenInfo{AccessToken: token, RefreshToken: rtoken, AccessExpire: texp, RefreshExpire: rtexp, IDToken: token}
-			if !strings.Contains(strings.ToLower(accept), "json") {
-				w.Write([]byte(tokenInfo.String()))
-				return
-			}
-			data, err := json.Marshal(tokenInfo)
-			if err != nil {
-				msg := fmt.Sprintf("unable to marshal token info, %v", err)
-				status = http.StatusInternalServerError
-				http.Error(w, msg, status)
-				return
-			}
-			w.Write(data)
-			return
-		}
-		// renew existing token
-		if r.URL.Path == fmt.Sprintf("%s/renew", Config.Base) {
-			var token string
-			t := sess.Get("refreshToken")
-			if t == nil { // cli request
-				if v, ok := r.Header["Authorization"]; ok {
-					if len(v) == 1 {
-						token = strings.Replace(v[0], "Bearer ", "", 1)
-					}
-				}
-			} else {
-				token = t.(string)
-			}
-			tokenInfo, err := renewToken(token, r)
-			if err != nil {
-				msg := fmt.Sprintf("unable to refresh access token, %v", err)
-				status = http.StatusInternalServerError
-				http.Error(w, msg, status)
-				return
-			}
-			if Config.Verbose > 2 {
-				printJSON(tokenInfo, "new token info")
-			}
 			if !strings.Contains(strings.ToLower(accept), "json") {
 				w.Write([]byte(tokenInfo.String()))
 				return

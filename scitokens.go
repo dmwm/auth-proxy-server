@@ -373,8 +373,8 @@ func scitokensServer() {
 	http.Handle(fmt.Sprintf("%s/.well-known/", base), http.StripPrefix(base+"/.well-known/", http.FileServer(http.Dir(Config.WellKnown))))
 
 	// the HTTP handlers
+	http.HandleFunc(fmt.Sprintf("%s/token/validate", base), validateHandler)
 	http.HandleFunc(fmt.Sprintf("%s/token", base), scitokensHandler)
-	http.HandleFunc(fmt.Sprintf("%s/validate", base), validateHandler)
 	if base == "" {
 		base = "/"
 	}
