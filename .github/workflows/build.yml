@@ -1,0 +1,62 @@
+name: Build
+
+on:
+  push:
+    tags:
+      - '*.*.*'
+
+jobs:
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: ^1.15
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v2
+
+    - name: Get dependencies
+      run: |
+        go get github.com/dmwm/cmsauth
+        go get github.com/vkuznet/x509proxy
+        go get github.com/vkuznet/lb-stomp
+        go get github.com/divan/expvarmon
+        go get github.com/lestrrat-go/file-rotatelogs
+        go get github.com/thomasdarimont/go-kc-example/session_memory
+        go get github.com/thomasdarimont/go-kc-example/session
+        go get github.com/coreos/go-oidc
+        go get github.com/google/uuid
+        go get golang.org/x/oauth2
+        go get github.com/shirou/gopsutil
+        go get github.com/dgrijalva/jwt-go
+
+    - name: Build
+      run: |
+        make
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: false
+        prerelease: false
+
+    - name: Upload binary
+      id: upload-auth-proxy-server
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./auth-proxy-server
+        asset_name: auth-proxy-server
+        asset_content_type: application/octet-stream
