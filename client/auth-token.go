@@ -32,12 +32,15 @@ func call(aurl string, formData url.Values, verbose bool) map[string]interface{}
 		}
 	}
 	defer resp.Body.Close()
-	var data map[string]interface{}
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		d, _ := ioutil.ReadAll(resp.Body)
-		log.Printf("Error parsing the response body: %s, %+v\n", err, string(d))
+	var rec map[string]interface{}
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatalf("unable to read incoming request body %s error %v", string(data), err)
 	}
-	return data
+	if err := json.Unmarshal(data, &rec); err != nil {
+		log.Fatalf("Error parsing the response body %s error %v\n", string(data), err)
+	}
+	return rec
 }
 
 func credentials() (string, string) {

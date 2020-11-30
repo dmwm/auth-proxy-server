@@ -257,7 +257,13 @@ func settingsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 	var s = ServerSettings{}
-	err := json.NewDecoder(r.Body).Decode(&s)
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("unable to read incoming request body %s error %v", string(data), err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	err = json.Unmarshal(data, &s)
 	if err != nil {
 		log.Printf("unable to unmarshal incoming request, error %v", err)
 		w.WriteHeader(http.StatusInternalServerError)

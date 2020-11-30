@@ -32,6 +32,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/httputil"
@@ -108,9 +109,14 @@ func introspectToken(token string) (TokenAttributes, error) {
 	}
 	defer resp.Body.Close()
 	var tokenAttributes TokenAttributes
-	err = json.NewDecoder(resp.Body).Decode(&tokenAttributes)
+	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		msg := fmt.Sprintf("unable to decode response body: %+v", err)
+		msg := fmt.Sprintf("unable to read response body %s error %v", string(data), err)
+		return TokenAttributes{}, errors.New(msg)
+	}
+	err = json.Unmarshal(data, &tokenAttributes)
+	if err != nil {
+		msg := fmt.Sprintf("unable to decode response body, error %v", err)
 		return TokenAttributes{}, errors.New(msg)
 	}
 	return tokenAttributes, nil
@@ -151,9 +157,14 @@ func renewToken(token string, r *http.Request) (TokenInfo, error) {
 	}
 	defer resp.Body.Close()
 	var tokenInfo TokenInfo
-	err = json.NewDecoder(resp.Body).Decode(&tokenInfo)
+	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		msg := fmt.Sprintf("unable to decode response body: %+v", err)
+		msg := fmt.Sprintf("unable to read response body %s error %v", string(data), err)
+		return TokenInfo{}, errors.New(msg)
+	}
+	err = json.Unmarshal(data, &tokenInfo)
+	if err != nil {
+		msg := fmt.Sprintf("unable to decode response body, error %v", err)
 		return TokenInfo{}, errors.New(msg)
 	}
 	return tokenInfo, nil
