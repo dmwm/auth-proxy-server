@@ -62,9 +62,11 @@ jobs:
         asset_content_type: application/octet-stream
 
     - name: "Build image"
+      with:
+        tag_with_ref: true
       run: |
         curl -ksLO https://raw.githubusercontent.com/dmwm/CMSKubernetes/master/docker/auth-proxy-server/Dockerfile
-        docker build . --tag docker.pkg.github.com/vkuznet/auth-proxy-server/auth-proxy-server:${{github.ref}}
+        docker build . --tag docker.pkg.github.com/vkuznet/auth-proxy-server/auth-proxy-server
       
     - name: "Login to Registry"
       uses: docker/login-action@v1.6.0
@@ -74,4 +76,10 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: "Publish image"
-      run: docker push docker.pkg.github.com/vkuznet/auth-proxy-server/auth-proxy-server:${{github.ref}}
+      uses: docker/build-push-action@v1
+      with:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+        registry: docker.pkg.github.com
+        repository: vkuznet/auth-proxy-server/auth-proxy-server
+        tag_with_ref: true
