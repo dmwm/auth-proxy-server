@@ -61,9 +61,17 @@ jobs:
         asset_name: auth-proxy-server
         asset_content_type: application/octet-stream
 
+	- name: Get the Ref
+      id: get-ref
+      uses: ankitvgupta/ref-to-tag-action@master
+      with:
+        ref: ${{ github.ref }}
+        head_ref: ${{ github.head_ref }}
+
     - name: Build image
       run: |
         curl -ksLO https://raw.githubusercontent.com/dmwm/CMSKubernetes/master/docker/auth-proxy-server/Dockerfile
+        sed -i -e "s,ENV TAG=.*,ENV TAG=${{steps.get-ref.outputs.tag}}" Dockerfile
         docker build . --tag docker.pkg.github.com/vkuznet/auth-proxy-server/auth-proxy-server
       
     - name: Login to Registry
