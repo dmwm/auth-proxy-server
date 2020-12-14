@@ -71,7 +71,7 @@ jobs:
     - name: Build image
       run: |
         curl -ksLO https://raw.githubusercontent.com/dmwm/CMSKubernetes/master/docker/auth-proxy-server/Dockerfile
-        sed -i -e "s,ENV TAG=.*,ENV TAG=${{steps.get-ref.outputs.tag}}" Dockerfile
+        sed -i -e "s,ENV TAG=.*,ENV TAG=${{steps.get-ref.outputs.tag}},g" Dockerfile
         docker build . --tag docker.pkg.github.com/vkuznet/auth-proxy-server/auth-proxy-server
       
     - name: Login to Registry
