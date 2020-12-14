@@ -101,5 +101,6 @@ jobs:
       with:
         context: .
         file: ./Dockerfile
-        push: true
+        load: true
         tags: cmssw/auth-proxy-server:${{steps.get-ref.outputs.tag}}
+    - run: docker push cmssw/auth-proxy-server:${{steps.get-ref.outputs.tag}}
