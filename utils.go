@@ -215,6 +215,7 @@ func findCN(subject string) (string, error) {
 // helper function to find user info in cric records for given cert subject
 func findUser(subjects []string) (cmsauth.CricEntry, error) {
 	for _, s := range subjects {
+		s = strings.Replace(s, "CN=", "", -1)
 		if r, ok := cmsRecords[s]; ok {
 			return r, nil
 		}
