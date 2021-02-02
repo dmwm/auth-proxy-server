@@ -8,6 +8,7 @@ package main
 import (
 	"log"
 	"reflect"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -23,6 +24,9 @@ var cmsRecords cmsauth.CricRecords
 
 // cmsRecordsLock keeps lock for cmsRecords updates
 var cmsRecordsLock sync.RWMutex
+
+// int pattern
+var intPattern = regexp.MustCompile(`^\d+$`)
 
 // helper function to periodically update cric records
 // should be run as goroutine
@@ -89,9 +93,11 @@ func updateCMSRecords(cricRecords cmsauth.CricRecords) {
 	cmsRecords = make(cmsauth.CricRecords)
 	for _, r := range cricRecords {
 		for _, dn := range r.DNs {
-			for _, v := range strings.Split(dn, "/") {
-				if strings.HasPrefix(v, "CN=") {
-					cmsRecords[v] = r
+			for _, v := range strings.Split(dn, "/CN=") {
+				if !strings.HasPrefix(v, "/") {
+					if matched := intPattern.MatchString(v); !matched {
+						cmsRecords[v] = r
+					}
 				}
 			}
 		}
