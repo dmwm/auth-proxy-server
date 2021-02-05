@@ -90,6 +90,8 @@ type LogRecord struct {
 	ResponseTime   float64 `json:"response_time"`    // http response time
 	RequestTime    float64 `json:"request_time"`     // http request time
 	Timestamp      int64   `json:"timestamp"`        // record timestamp
+	RecTimestamp   int64   `json:"rec_timestamp"`    // timestamp for backward compatibility with apache
+	RecDate        string  `json:"rec_date"`         // timestamp for backward compatibility with apache
 }
 
 // ServerSettings controls server parameters

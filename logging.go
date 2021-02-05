@@ -133,6 +133,8 @@ func logRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 		ResponseTime:   rTime,
 		RequestTime:    time.Since(start).Seconds(),
 		Timestamp:      tstamp,
+		RecTimestamp:   int64(time.Now().Unix()),
+		RecDate:        time.Now().Format(time.RFC3339),
 	}
 	if Config.PrintMonitRecord {
 		data, err := monitRecord(rec)
