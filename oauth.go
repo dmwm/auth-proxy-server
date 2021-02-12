@@ -213,7 +213,9 @@ func oauthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		msg := fmt.Sprintf("call from '/callback', r.URL %s, sess.path %v", r.URL, sess.Get("path"))
 		printHTTPRequest(r, msg)
 	}
+	sessLock.Lock()
 	state := sess.Get("somestate")
+	sessLock.Unlock()
 	if state == nil {
 		http.Error(w, fmt.Sprintf("state did not match, %v", state), http.StatusBadRequest)
 		return
@@ -268,12 +270,14 @@ func oauthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//storing the token and the info of the user in session memory
+	sessLock.Lock()
 	sess.Set("rawIDToken", rawIDToken)
 	sess.Set("refreshToken", refreshToken)
 	sess.Set("refreshExpire", int64(refreshExpire))
 	sess.Set("accessExpire", int64(accessExpire))
 	sess.Set("userinfo", resp.IDTokenClaims)
 	urlPath := sess.Get("path").(string)
+	sessLock.Unlock()
 	if Config.Verbose > 0 {
 		log.Println("session data", string(data))
 		log.Println("redirect to", urlPath)
@@ -303,19 +307,21 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 	defer logRequest(w, r, start, "CERN-SSO-OAuth2-OICD", &status, tstamp)
 	sess := globalSessions.SessionStart(w, r)
 	if Config.Verbose > 0 {
+		sessLock.Lock()
 		msg := fmt.Sprintf("call from '/', r.URL %s, sess.Path %v", r.URL, sess.Get("path"))
 		printHTTPRequest(r, msg)
+		sessLock.Unlock()
 	}
 	oauthState := uuid.New().String()
 	sessLock.Lock()
 	sess.Set("somestate", oauthState)
-	sessLock.Unlock()
 	if sess.Get("path") == nil || sess.Get("path") == "" {
 		sess.Set("path", r.URL.Path)
 	}
 	// checking the userinfo in the session or if client provides valid access token.
 	// if either is present we'll allow user request
 	userInfo := sess.Get("userinfo")
+	sessLock.Unlock()
 	hasToken := checkAccessToken(r)
 	accept := r.Header["Accept"][0]
 	if userInfo != nil || hasToken {
@@ -349,7 +355,9 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 		// renew existing token
 		if r.URL.Path == fmt.Sprintf("%s/token/renew", Config.Base) {
 			var token string
+			sessLock.Lock()
 			t := sess.Get("refreshToken")
+			sessLock.Unlock()
 			if t == nil { // cli request
 				if v, ok := r.Header["Authorization"]; ok {
 					if len(v) == 1 {
@@ -386,8 +394,10 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 		// return token back to the user
 		if r.URL.Path == fmt.Sprintf("%s/token", Config.Base) {
 			var token, rtoken string
+			sessLock.Lock()
 			t := sess.Get("rawIDToken")
 			rt := sess.Get("refreshToken")
+			sessLock.Unlock()
 			if t == nil { // cli request
 				if v, ok := r.Header["Authorization"]; ok {
 					if len(v) == 1 {
@@ -407,12 +417,14 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 				rtoken = rt.(string)
 			}
 			var texp, rtexp int64
+			sessLock.Lock()
 			if sess.Get("accessExpire") != nil {
 				texp = sess.Get("accessExpire").(int64)
 			}
 			if sess.Get("refreshExpire") != nil {
 				rtexp = sess.Get("refreshExpire").(int64)
 			}
+			sessLock.Unlock()
 			tokenInfo := TokenInfo{AccessToken: token, RefreshToken: rtoken, AccessExpire: texp, RefreshExpire: rtexp, IDToken: token}
 			if !strings.Contains(strings.ToLower(accept), "json") {
 				w.Write([]byte(tokenInfo.String()))
