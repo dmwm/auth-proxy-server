@@ -100,6 +100,9 @@ func main() {
 		fmt.Println(info())
 		os.Exit(0)
 	}
+	if !strings.HasSuffix(uri, "token") {
+		uri = fmt.Sprintf("%s/token", uri)
+	}
 	rec := renew(uri, token, verbose)
 	if out != "" {
 		err := ioutil.WriteFile(out, []byte(rec.AccessToken), 0777)
@@ -110,11 +113,16 @@ func main() {
 	// run as daemon if requested
 	if interval > 0 {
 		for {
-			d := time.Duration(interval) * time.Minute
+			d := time.Duration(interval) * time.Second
 			time.Sleep(d)
-			uri = fmt.Sprintf("%s/renew", uri)
+			if !strings.HasSuffix(uri, "token/renew") {
+				uri = fmt.Sprintf("%s/token/renew", uri)
+			}
 			// get refresh token from previous record
 			rtoken := rec.RefreshToken
+			if verbose > 0 {
+				log.Printf("Renew token at %s", uri)
+			}
 			// renew token using our refresh token
 			rec = renew(uri, rtoken, verbose)
 			if out != "" {
