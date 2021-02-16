@@ -5,6 +5,13 @@
 *.so
 *.dylib
 auth-proxy-server
+auth-token
+token-manager
+README_SCITOKENS.md
+go.mod.local
+TODO
+c.json
+config*.json
 
 # Test binary, built with `go test -c`
 *.test

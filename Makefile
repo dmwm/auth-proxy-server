@@ -1,13 +1,25 @@
 VERSION=`git rev-parse --short HEAD`
+#flags=-ldflags="-s -w -X main.version=${VERSION}"
+OS := $(shell uname)
+ifeq ($(OS),Darwin)
 flags=-ldflags="-s -w -X main.version=${VERSION}"
+else
+flags=-ldflags="-s -w -X main.version=${VERSION} -static"
+endif
 
-all: vet build
+all: vet build build_client build_token
 
 vet:
 	go vet .
 
 build:
 	go clean; rm -rf pkg; go build -o auth-proxy-server ${flags}
+
+build_client:
+	go build -o auth-token ${flags} client/auth-token.go
+
+build_token:
+	go build -o token-manager ${flags} manager/token.go
 
 build_debug:
 	go clean; rm -rf pkg; go build -o auth-proxy-server ${flags} -gcflags="-m -m"
