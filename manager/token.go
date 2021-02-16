@@ -48,7 +48,7 @@ type TokenRecord struct {
 // renew token
 func renew(uri, token string, verbose int) TokenRecord {
 	t := ReadToken(token)
-	if verbose > 0 {
+	if verbose > 1 {
 		log.Printf("renew %s\ninput token : %s\noutput token: %s\n", uri, token, t)
 	}
 	req, err := http.NewRequest("GET", uri, nil)
