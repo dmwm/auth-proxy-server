@@ -48,6 +48,9 @@ type TokenRecord struct {
 // renew token
 func renew(uri, token string, verbose int) TokenRecord {
 	t := ReadToken(token)
+	if verbose > 0 {
+		log.Printf("renew %s\ninput token : %s\noutput token: %s\n", uri, token, t)
+	}
 	req, err := http.NewRequest("GET", uri, nil)
 	if err != nil {
 		log.Fatal(err)
@@ -100,7 +103,7 @@ func main() {
 		fmt.Println(info())
 		os.Exit(0)
 	}
-	rurl := fmt.Sprintf("%s/token", uri)
+	rurl := fmt.Sprintf("%s/token/renew", uri)
 	rec := renew(rurl, token, verbose)
 	if out != "" {
 		err := ioutil.WriteFile(out, []byte(rec.AccessToken), 0777)
@@ -108,17 +111,16 @@ func main() {
 			log.Fatalf("Unable to write, file: %s, error: %v\n", out, err)
 		}
 	}
+	if verbose > 1 {
+		log.Printf("New token record: %+v", rec)
+	}
 	// run as daemon if requested
 	if interval > 0 {
 		for {
 			d := time.Duration(interval) * time.Second
 			time.Sleep(d)
-			rurl := fmt.Sprintf("%s/token/renew", uri)
 			// get refresh token from previous record
 			rtoken := rec.RefreshToken
-			if verbose > 0 {
-				log.Printf("Renew token at %s", rurl)
-			}
 			// renew token using our refresh token
 			rec = renew(rurl, rtoken, verbose)
 			if out != "" {
