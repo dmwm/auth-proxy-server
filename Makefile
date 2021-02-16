@@ -4,7 +4,7 @@ OS := $(shell uname)
 ifeq ($(OS),Darwin)
 flags=-ldflags="-s -w -X main.version=${VERSION}"
 else
-flags=-ldflags="-s -w -X main.version=${VERSION} -static"
+flags=-ldflags="-s -w -X main.version=${VERSION} -extldflags -static"
 endif
 
 all: vet build build_client build_token
