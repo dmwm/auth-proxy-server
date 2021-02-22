@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -66,7 +67,11 @@ func renew(uri, token, rootCAs string, verbose int) TokenRecord {
 		}
 	}
 	// get http client
-	client := &http.Client{Transport: transport(rootCAs, verbose)}
+	client := &http.Client{}
+	tr, err := transport(rootCAs, verbose)
+	if err == nil {
+		client = &http.Client{Transport: tr}
+	}
 	resp, err := client.Do(req)
 	if err == nil {
 		if verbose > 1 {
@@ -92,12 +97,13 @@ func renew(uri, token, rootCAs string, verbose int) TokenRecord {
 }
 
 // helper function to get http transport
-func transport(rootCAs string, verbose int) *http.Transport {
+func transport(rootCAs string, verbose int) (*http.Transport, error) {
 	certPool := x509.NewCertPool()
 	files, err := ioutil.ReadDir(rootCAs)
 	if err != nil {
-		log.Printf("Unable to list files in '%s', error: %v\n", rootCAs, err)
-		return nil
+		msg := fmt.Sprintf("Unable to list files in '%s', error: %v\n", rootCAs, err)
+		log.Printf(msg)
+		return nil, errors.New(msg)
 	}
 	for _, finfo := range files {
 		fname := fmt.Sprintf("%s/%s", rootCAs, finfo.Name())
@@ -121,7 +127,7 @@ func transport(rootCAs string, verbose int) *http.Transport {
 	tr := &http.Transport{
 		TLSClientConfig: mTLSConfig,
 	}
-	return tr
+	return tr, nil
 }
 
 // main function
