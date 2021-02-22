@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -46,7 +48,7 @@ type TokenRecord struct {
 }
 
 // renew token
-func renew(uri, token string, verbose int) TokenRecord {
+func renew(uri, token, rootCAs string, verbose int) TokenRecord {
 	t := ReadToken(token)
 	if verbose > 1 {
 		log.Printf("renew %s\ninput token : %s\noutput token: %s\n", uri, token, t)
@@ -63,13 +65,18 @@ func renew(uri, token string, verbose int) TokenRecord {
 			log.Println("request: ", string(dump))
 		}
 	}
-	client := &http.Client{}
+	// get http client
+	client := &http.Client{Transport: transport(rootCAs, verbose)}
 	resp, err := client.Do(req)
-	if verbose > 1 {
-		dump, err := httputil.DumpResponse(resp, true)
-		if err == nil {
-			log.Println("[DEBUG] response:", string(dump))
+	if err == nil {
+		if verbose > 1 {
+			dump, err := httputil.DumpResponse(resp, true)
+			if err == nil {
+				log.Println("[DEBUG] response:", string(dump))
+			}
 		}
+	} else {
+		log.Fatal("Unable to make HTTP request", req, err)
 	}
 	defer resp.Body.Close()
 	data, err := ioutil.ReadAll(resp.Body)
@@ -84,6 +91,39 @@ func renew(uri, token string, verbose int) TokenRecord {
 	return rec
 }
 
+// helper function to get http transport
+func transport(rootCAs string, verbose int) *http.Transport {
+	certPool := x509.NewCertPool()
+	files, err := ioutil.ReadDir(rootCAs)
+	if err != nil {
+		log.Printf("Unable to list files in '%s', error: %v\n", rootCAs, err)
+		return nil
+	}
+	for _, finfo := range files {
+		fname := fmt.Sprintf("%s/%s", rootCAs, finfo.Name())
+		caCert, err := ioutil.ReadFile(fname)
+		if err != nil {
+			if verbose > 1 {
+				log.Printf("Unable to read %s\n", fname)
+			}
+		}
+		if ok := certPool.AppendCertsFromPEM(caCert); !ok {
+			if verbose > 1 {
+				log.Printf("invalid PEM format while importing trust-chain: %q", fname)
+			}
+		}
+		log.Println("Load CA file", fname)
+	}
+	mTLSConfig := &tls.Config{
+		//         InsecureSkipVerify: true,
+		RootCAs: certPool,
+	}
+	tr := &http.Transport{
+		TLSClientConfig: mTLSConfig,
+	}
+	return tr
+}
+
 // main function
 func main() {
 	var version bool
@@ -96,6 +136,8 @@ func main() {
 	flag.StringVar(&out, "out", "", "output file to store refreshed token")
 	var uri string
 	flag.StringVar(&uri, "url", "", "token URL")
+	var rootCAs string
+	flag.StringVar(&rootCAs, "rootCAs", "", "location of ROOT CAs")
 	var interval int
 	flag.IntVar(&interval, "interval", 0, "run as daemon with given interval")
 	flag.Parse()
@@ -104,7 +146,7 @@ func main() {
 		os.Exit(0)
 	}
 	rurl := fmt.Sprintf("%s/token/renew", uri)
-	rec := renew(rurl, token, verbose)
+	rec := renew(rurl, token, rootCAs, verbose)
 	if out != "" {
 		err := ioutil.WriteFile(out, []byte(rec.AccessToken), 0777)
 		if err != nil {
@@ -122,7 +164,7 @@ func main() {
 			// get refresh token from previous record
 			rtoken := rec.RefreshToken
 			// renew token using our refresh token
-			rec = renew(rurl, rtoken, verbose)
+			rec = renew(rurl, rtoken, rootCAs, verbose)
 			if out != "" {
 				err := ioutil.WriteFile(out, []byte(rec.AccessToken), 0777)
 				if err != nil {
