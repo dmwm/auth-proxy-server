@@ -323,7 +323,12 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 	userInfo := sess.Get("userinfo")
 	sessLock.Unlock()
 	hasToken := checkAccessToken(r)
-	accept := r.Header["Accept"][0]
+	var accept string
+	if v, ok := r.Header["Accept"]; ok {
+		if len(v) > 0 {
+			accept = v[0]
+		}
+	}
 	if userInfo != nil || hasToken {
 		// decode userInfo
 		switch t := userInfo.(type) {
