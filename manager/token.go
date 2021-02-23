@@ -108,6 +108,7 @@ func transport(rootCAs string, verbose int) (*http.Transport, error) {
 		log.Printf(msg)
 		return nil, errors.New(msg)
 	}
+	var certs bool
 	for _, finfo := range files {
 		fname := fmt.Sprintf("%s/%s", rootCAs, finfo.Name())
 		caCert, err := ioutil.ReadFile(fname)
@@ -124,10 +125,15 @@ func transport(rootCAs string, verbose int) (*http.Transport, error) {
 		if verbose > 2 {
 			log.Println("Load CA file", fname)
 		}
+		certs = true
 	}
 	mTLSConfig := &tls.Config{
-		//         InsecureSkipVerify: true,
-		RootCAs: certPool,
+		InsecureSkipVerify: true,
+	}
+	if certs {
+		mTLSConfig = &tls.Config{
+			RootCAs: certPool,
+		}
 	}
 	tr := &http.Transport{
 		TLSClientConfig: mTLSConfig,
