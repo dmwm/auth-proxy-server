@@ -114,11 +114,13 @@ func transport(rootCAs string, verbose int) (*http.Transport, error) {
 			}
 		}
 		if ok := certPool.AppendCertsFromPEM(caCert); !ok {
-			if verbose > 1 {
+			if verbose > 2 {
 				log.Printf("invalid PEM format while importing trust-chain: %q", fname)
 			}
 		}
-		log.Println("Load CA file", fname)
+		if verbose > 2 {
+			log.Println("Load CA file", fname)
+		}
 	}
 	mTLSConfig := &tls.Config{
 		//         InsecureSkipVerify: true,
@@ -128,6 +130,18 @@ func transport(rootCAs string, verbose int) (*http.Transport, error) {
 		TLSClientConfig: mTLSConfig,
 	}
 	return tr, nil
+}
+
+// helper function to print our token record
+func printRecord(rec TokenRecord, verbose int) {
+	if verbose > 0 {
+		data, err := json.MarshalIndent(rec, "", "    ")
+		if err == nil {
+			log.Printf("New token record:\n%s", string(data))
+		} else {
+			log.Println("Unable to marshal record", err)
+		}
+	}
 }
 
 // main function
@@ -159,9 +173,7 @@ func main() {
 			log.Fatalf("Unable to write, file: %s, error: %v\n", out, err)
 		}
 	}
-	if verbose > 1 {
-		log.Printf("New token record: %+v", rec)
-	}
+	printRecord(rec, verbose)
 	// run as daemon if requested
 	if interval > 0 {
 		for {
@@ -177,6 +189,7 @@ func main() {
 					log.Fatalf("Unable to write, file: %s, error: %v\n", out, err)
 				}
 			}
+			printRecord(rec, verbose)
 		}
 	}
 }
