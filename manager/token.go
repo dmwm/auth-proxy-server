@@ -102,6 +102,9 @@ func transport(rootCAs string, verbose int) (*http.Transport, error) {
 	files, err := ioutil.ReadDir(rootCAs)
 	if err != nil {
 		msg := fmt.Sprintf("Unable to list files in '%s', error: %v\n", rootCAs, err)
+		if rootCAs == "" {
+			msg = fmt.Sprintf("root CAs area is not provided")
+		}
 		log.Printf(msg)
 		return nil, errors.New(msg)
 	}
@@ -157,7 +160,7 @@ func main() {
 	var uri string
 	flag.StringVar(&uri, "url", "", "token URL")
 	var rootCAs string
-	flag.StringVar(&rootCAs, "rootCAs", "", "location of ROOT CAs")
+	flag.StringVar(&rootCAs, "rootCAs", "", "location of root CAs")
 	var interval int
 	flag.IntVar(&interval, "interval", 0, "run as daemon with given interval")
 	flag.Parse()
