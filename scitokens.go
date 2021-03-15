@@ -29,6 +29,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -138,7 +139,7 @@ func getIssuer(r *http.Request) (string, string) {
 // read public JWKS data
 func readPublicJWKS(fname string) (PublicJWKSKey, error) {
 	var p PublicJWKSKey
-	data, err := ioutil.ReadFile(fname)
+	data, err := ioutil.ReadFile(filepath.Clean(fname))
 	if err != nil {
 		log.Printf("unable to read, file: %s, error: %v\n", fname, err)
 		return p, err
@@ -225,7 +226,7 @@ type ScitokensClaims struct {
 // scitokens-admin-create-key --create-keys --pem-private --pem-public > /tmp/issuer.pem
 func getRSAKey(fname string) (*rsa.PrivateKey, error) {
 	if fname != "" {
-		file, err := os.Open(fname)
+		file, err := os.Open(filepath.Clean(fname))
 		if err != nil {
 			log.Fatal(err)
 		}
