@@ -38,13 +38,13 @@ build_linux:
 
 build_power8:
 	go clean; rm -rf pkg auth-proxy-server; GOARCH=ppc64le GOOS=linux CGO_ENABLED=0 go build -o auth-proxy-server ${flags}
-	GOOS=ppc64le CGO_ENABLED=0 go build -o auth-token ${flags} client/auth-token.go
-	GOOS=ppc64le CGO_ENABLED=0 go build -o token-manager ${flags} manager/token.go
+	GOOS=linux GOARCH=ppc64le CGO_ENABLED=0 go build -o auth-token ${flags} client/auth-token.go
+	GOOS=linux GOARCH=ppc64le CGO_ENABLED=0 go build -o token-manager ${flags} manager/token.go
 
 build_arm64:
 	go clean; rm -rf pkg auth-proxy-server; GOARCH=arm64 GOOS=linux CGO_ENABLED=0 go build -o auth-proxy-server ${flags}
-	GOOS=arm64 CGO_ENABLED=0 go build -o auth-token ${flags} client/auth-token.go
-	GOOS=arm64 CGO_ENABLED=0 go build -o token-manager ${flags} manager/token.go
+	GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -o auth-token ${flags} client/auth-token.go
+	GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -o token-manager ${flags} manager/token.go
 
 build_windows:
 	go clean; rm -rf pkg auth-proxy-server; GOARCH=amd64 GOOS=windows CGO_ENABLED=0 go build -o auth-proxy-server ${flags}
