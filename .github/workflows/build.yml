@@ -41,6 +41,26 @@ jobs:
         mkdir auth-proxy-tools
         mv auth-proxy-server auth-token token-manager auth-proxy-tools
         tar cfz auth-proxy-tools.tar.gz auth-proxy-tools
+        echo "Darwin build"
+        make build_osx
+        mkdir auth-proxy-tools_darwin
+        mv auth-proxy-server auth-token token-manager auth-proxy-tools_darwin
+        tar cfz auth-proxy-tools.tar.gz auth-proxy-tools_darwin
+        echo "Power8 build"
+        make build_power8
+        mkdir auth-proxy-tools_power8
+        mv auth-proxy-server auth-token token-manager auth-proxy-tools_power8
+        tar cfz auth-proxy-tools.tar.gz auth-proxy-tools_power8
+        echo "ARM64 build"
+        make build_arm64
+        mkdir auth-proxy-tools_arm64
+        mv auth-proxy-server auth-token token-manager auth-proxy-tools_arm64
+        tar cfz auth-proxy-tools.tar.gz auth-proxy-tools_arm64
+        echo "Windows build"
+        make build_windows
+        mkdir auth-proxy-tools_windows
+        mv auth-proxy-server auth-token token-manager auth-proxy-tools_windows
+        tar cfz auth-proxy-tools.tar.gz auth-proxy-tools_windows
 
     - name: Create Release
       id: create_release
@@ -63,6 +83,51 @@ jobs:
         asset_path: ./auth-proxy-tools.tar.gz
         asset_name: auth-proxy-tools.tar.gz
         asset_content_type: application/octet-stream
+
+    - name: Upload darwin binary
+      id: upload-auth-proxy-server
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./auth-proxy-tools_darwin.tar.gz
+        asset_name: auth-proxy-tools_darwin.tar.gz
+        asset_content_type: application/octet-stream
+
+    - name: Upload power8 binary
+      id: upload-auth-proxy-server
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./auth-proxy-tools_power8.tar.gz
+        asset_name: auth-proxy-tools_power8.tar.gz
+        asset_content_type: application/octet-stream
+
+    - name: Upload arm64 binary
+      id: upload-auth-proxy-server
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./auth-proxy-tools_arm64.tar.gz
+        asset_name: auth-proxy-tools_arm64.tar.gz
+        asset_content_type: application/octet-stream
+
+    - name: Upload windows binary
+      id: upload-auth-proxy-server
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./auth-proxy-tools_windows.tar.gz
+        asset_name: auth-proxy-tools_windows.tar.gz
+        asset_content_type: application/octet-stream
+
 
     - name: Get the Ref
       id: get-ref
