@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"log"
+	"path/filepath"
 )
 
 // Config variable represents configuration object
@@ -16,7 +17,7 @@ var Config Configuration
 
 // helper function to parse server configuration file
 func parseConfig(configFile string) error {
-	data, err := ioutil.ReadFile(configFile)
+	data, err := ioutil.ReadFile(filepath.Clean(configFile))
 	if err != nil {
 		log.Println("Unable to read", err)
 		return err
