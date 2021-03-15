@@ -45,22 +45,22 @@ jobs:
         make build_osx
         mkdir auth-proxy-tools_darwin
         mv auth-proxy-server auth-token token-manager auth-proxy-tools_darwin
-        tar cfz auth-proxy-tools.tar.gz auth-proxy-tools_darwin
+        tar cfz auth-proxy-tools_darwin.tar.gz auth-proxy-tools_darwin
         echo "Power8 build"
         make build_power8
         mkdir auth-proxy-tools_power8
         mv auth-proxy-server auth-token token-manager auth-proxy-tools_power8
-        tar cfz auth-proxy-tools.tar.gz auth-proxy-tools_power8
+        tar cfz auth-proxy-tools_power8.tar.gz auth-proxy-tools_power8
         echo "ARM64 build"
         make build_arm64
         mkdir auth-proxy-tools_arm64
         mv auth-proxy-server auth-token token-manager auth-proxy-tools_arm64
-        tar cfz auth-proxy-tools.tar.gz auth-proxy-tools_arm64
+        tar cfz auth-proxy-tools_arm64.tar.gz auth-proxy-tools_arm64
         echo "Windows build"
         make build_windows
         mkdir auth-proxy-tools_windows
         mv auth-proxy-server auth-token token-manager auth-proxy-tools_windows
-        tar cfz auth-proxy-tools.tar.gz auth-proxy-tools_windows
+        tar cfz auth-proxy-tools_windows.tar.gz auth-proxy-tools_windows
 
     - name: Create Release
       id: create_release
