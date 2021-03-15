@@ -41,6 +41,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"os"
+	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
@@ -171,7 +172,8 @@ func srvURL(surl string) string {
 	// if we are given comma separated service urls we'll use random one
 	if strings.Contains(surl, ",") {
 		arr := strings.Split(surl, ",")
-		idx := rand.Intn(len(arr))
+		/* #nosec */
+		idx := rand.Intn(len(arr))         /* #nosec */
 		return strings.Trim(arr[idx], " ") // remove empty spaces around the string
 	}
 	return surl
@@ -225,7 +227,7 @@ func redirect(w http.ResponseWriter, r *http.Request) {
 				fname = fmt.Sprintf("%s/index.html", Config.DocumentRoot)
 			}
 			if _, err := os.Stat(fname); err == nil {
-				body, err := ioutil.ReadFile(fname)
+				body, err := ioutil.ReadFile(filepath.Clean(fname))
 				if err == nil {
 					data := []byte(body)
 					w.Write(data)
