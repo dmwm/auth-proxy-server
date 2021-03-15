@@ -153,6 +153,51 @@ func printRecord(rec TokenRecord, verbose int) {
 	}
 }
 
+// helper function to load CERN CAs
+func loadCAs(verbose int) (string, error) {
+	var homeDir string
+	for _, item := range os.Environ() {
+		value := strings.Split(item, "=")
+		if value[0] == "HOME" {
+			homeDir = value[1]
+			break
+		}
+	}
+	links := []string{
+		"https://cafiles.cern.ch/cafiles/certificates/CERN%20Certification%20Authority.crt",
+		"https://cafiles.cern.ch/cafiles/certificates/CERN%20Certification%20Authority(1).crt",
+		"https://cafiles.cern.ch/cafiles/certificates/CERN%20Root%20Certification%20Authority%202.crt",
+		"https://cafiles.cern.ch/cafiles/certificates/CERN%20Grid%20Certification%20Authority.crt",
+	}
+	dname := fmt.Sprintf("%s/.certificates", homeDir)
+	if _, err := os.Stat(dname); err != nil {
+		os.Mkdir(dname, 0777)
+	}
+	for _, link := range links {
+		arr := strings.Split(link, "/")
+		fname := fmt.Sprintf("%s/.certificates/%s", homeDir, arr[len(arr)-1])
+		if _, err := os.Stat(fname); err != nil {
+			if verbose > 0 {
+				fmt.Println("download", link)
+			}
+			resp, err := http.Get(link)
+			if err != nil {
+				return dname, err
+			}
+			defer resp.Body.Close()
+			data, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				return dname, err
+			}
+			err = ioutil.WriteFile(fname, []byte(data), 0777)
+			if err != nil {
+				return dname, err
+			}
+		}
+	}
+	return dname, nil
+}
+
 // main function
 func main() {
 	var version bool
@@ -173,6 +218,16 @@ func main() {
 	if version {
 		fmt.Println(info())
 		os.Exit(0)
+	}
+	if rootCAs == "" {
+		dir, err := loadCAs(verbose)
+		if err != nil {
+			log.Fatalf("unable to load CERN CAs: %v", err)
+		}
+		rootCAs = dir
+	}
+	if verbose > 0 {
+		fmt.Println("Read CERN CAs from", rootCAs)
 	}
 	rurl := fmt.Sprintf("%s/token/renew", uri)
 	rec := renew(rurl, token, rootCAs, verbose)
