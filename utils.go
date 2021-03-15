@@ -15,6 +15,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"time"
@@ -73,7 +74,7 @@ func getServer(serverCrt, serverKey string, customVerify bool) (*http.Server, er
 	}
 	for _, finfo := range files {
 		fname := fmt.Sprintf("%s/%s", Config.RootCAs, finfo.Name())
-		caCert, err := ioutil.ReadFile(fname)
+		caCert, err := ioutil.ReadFile(filepath.Clean(fname))
 		if err != nil {
 			if Config.Verbose > 1 {
 				log.Printf("Unable to read %s\n", fname)
@@ -96,6 +97,7 @@ func getServer(serverCrt, serverKey string, customVerify bool) (*http.Server, er
 
 		}
 		tlsConfig = &tls.Config{
+			MinVersion:   0x0304,
 			RootCAs:      rootCAs,
 			Certificates: []tls.Certificate{cert},
 		}
