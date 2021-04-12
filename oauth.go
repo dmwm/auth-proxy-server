@@ -323,6 +323,10 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 	userInfo := sess.Get("userinfo")
 	sessLock.Unlock()
 	hasToken := checkAccessToken(r)
+	if !hasToken {
+		http.Error(w, "invalid token", http.StatusUnauthorized)
+		return
+	}
 	var accept string
 	if v, ok := r.Header["Accept"]; ok {
 		if len(v) > 0 {
