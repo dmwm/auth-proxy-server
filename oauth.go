@@ -170,6 +170,53 @@ func renewToken(token string, r *http.Request) (TokenInfo, error) {
 	return tokenInfo, nil
 }
 
+// inspect token and extract token attributes
+func inspectToken(token string) (TokenAttributes, error) {
+	var attrs TokenAttributes
+	claims, err := tokenClaims(token)
+	if err != nil {
+		return attrs, err
+	}
+	if Config.Verbose > 1 {
+		log.Println("token claims", claims)
+	}
+	for k, v := range claims {
+		if k == "email" {
+			attrs.Email = fmt.Sprintf("%v", v)
+		}
+		if k == "cern_upn" {
+			attrs.UserName = fmt.Sprintf("%v", v)
+		}
+		if k == "cern_person_id" {
+			attrs.ClientID = fmt.Sprintf("%v", v)
+		}
+		if k == "session_state" {
+			attrs.SessionState = fmt.Sprintf("%v", v)
+		}
+		if k == "exp" {
+			val := v.(float64)
+			attrs.Expiration = int64(val)
+		}
+		if k == "scope" {
+			attrs.Scope = fmt.Sprintf("%v", v)
+		}
+		if k == "cern_roles" {
+			s := fmt.Sprintf("%v", v)
+			s = strings.Replace(s, "[", "", -1)
+			s = strings.Replace(s, "]", "", -1)
+			attrs.Scope = s
+		}
+	}
+	attrs.Active = true
+	if Config.Verbose > 1 {
+		if err := printJSON(attrs, "token attributes"); err != nil {
+			msg := fmt.Sprintf("Failed to output token attributes: %v", err)
+			log.Println(msg)
+		}
+	}
+	return attrs, err
+}
+
 // helper function to check access token of the client
 // it is done via introspect auth end-point
 func checkAccessToken(r *http.Request) bool {
@@ -181,8 +228,24 @@ func checkAccessToken(r *http.Request) bool {
 	// token is last part of Authorization header
 	arr := strings.Split(tokenStr, " ")
 	token := arr[len(arr)-1]
-	// verify token
-	attrs, err := introspectToken(token)
+
+	// first, we inspect our token
+	attrs, err := inspectToken(token)
+	if err == nil {
+		if attrs.ClientHost == "" {
+			attrs.ClientHost = r.Referer()
+		}
+		r.Header.Set("scope", attrs.Scope)
+		r.Header.Set("client-host", attrs.ClientHost)
+		r.Header.Set("client-id", attrs.ClientID)
+		return true
+	}
+
+	log.Println("unable to inspect token: ", err)
+
+	// if inspection fails, we'll try to send introspect request to auth provider
+	// to verify token
+	attrs, err = introspectToken(token)
 	if err != nil {
 		msg := fmt.Sprintf("unable to verify token: %+v", err)
 		log.Println(msg)

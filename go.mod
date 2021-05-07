@@ -3,6 +3,7 @@ module github.com/vkuznet/auth-proxy-server
 go 1.16
 
 require (
+	github.com/MicahParks/keyfunc v0.4.0 // indirect
 	github.com/StackExchange/wmi v0.0.0-20210224194228-fe8f1750fd46 // indirect
 	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
@@ -12,6 +13,7 @@ require (
 	github.com/jonboulle/clockwork v0.2.2 // indirect
 	github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible
 	github.com/lestrrat-go/strftime v1.0.4 // indirect
+	github.com/pascaldekloe/jwt v1.10.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pquerna/cachecontrol v0.0.0-20201205024021-ac21108117ac // indirect
 	github.com/shirou/gopsutil v3.21.2+incompatible
