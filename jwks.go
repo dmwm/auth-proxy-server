@@ -11,8 +11,10 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"math/big"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/pascaldekloe/jwt"
@@ -40,41 +42,108 @@ type Certs struct {
 	Keys []Keys
 }
 
-// JWKSBody holds content of JWKS body
-var JWKSBody []byte
+// OpenIDConfiguration holds configuration for OpenID Provider
+type OpenIDConfiguration struct {
+	Issuer                string   `json:"issuer"`
+	AuthorizationEndpoint string   `json:"authorization_endpoint"`
+	TokenEndpoint         string   `json:"token_endpoint"`
+	IntrospectionEndpoint string   `json:"introspection_endpoint"`
+	UserInfoEndpoint      string   `json:"userinfo_endpoint"`
+	EndSessionEndpoint    string   `json:"end_session_endpoint"`
+	JWKSUri               string   `json:"jwks_uri"`
+	ClaimsSupported       []string `json:"claims_supported"`
+	ScopeSupported        []string `json:"scopes_supported"`
+	RevocationEndpoint    string   `json:"revocation_endpoint"`
+}
 
-// PublicKey holds RSA public key
-var PublicKey *rsa.PublicKey
+// Provider holds all information about given provider
+type Provider struct {
+	URL           string              // provider url
+	Configuration OpenIDConfiguration // provider OpenID configuration
+	PublicKey     *rsa.PublicKey      // RSA public key of the provider
+	JWKSBody      []byte              // jwks body content of the provider
+}
 
-// helper funciont to get JWKS body content
-func getJWKS(rurl string) ([]byte, error) {
-	var out []byte
-	resp, err := http.Get(rurl)
+// String provides string representation of provider
+func (p *Provider) String() string {
+	data, err := json.MarshalIndent(p, "", "    ")
 	if err != nil {
-		return out, err
+		return fmt.Sprintf("%v", p)
+	}
+	return string(data)
+}
+
+// Init function initialize provider configuration
+func (p *Provider) Init(purl string) error {
+	resp, err := http.Get(fmt.Sprintf("%s/.well-known/openid-configuration", purl))
+	if err != nil {
+		log.Println("unable to contact ", purl, " error ", err)
+		return err
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return out, err
+		log.Println("unable to read body of HTTP response ", err)
+		return err
 	}
-	return body, err
+	var conf OpenIDConfiguration
+	err = json.Unmarshal(body, &conf)
+	if err != nil {
+		log.Println("unable to unmarshal body of HTTP response ", err)
+		return err
+	}
+	p.URL = purl
+	p.Configuration = conf
+	if Config.Verbose > 0 {
+		log.Println("provider configuration", conf)
+	}
+
+	// obtain public key for our OpenID provider, for that we send
+	// HTTP request to jwks_uri, fetch cert information and decode its public key
+	resp2, err := http.Get(p.Configuration.JWKSUri)
+	if err != nil {
+		log.Println("unable to contact ", p.Configuration.JWKSUri, " error ", err)
+		return err
+	}
+	defer resp2.Body.Close()
+	body2, err := ioutil.ReadAll(resp2.Body)
+	if err != nil {
+		log.Println("unable to read body of HTTP response ", err)
+		return err
+	}
+	var certs Certs
+	err = json.Unmarshal(body2, &certs)
+	if err != nil {
+		log.Println("unable to unmarshal body of HTTP response ", err)
+		return err
+	}
+	p.JWKSBody = body2
+	exp := certs.Keys[0].E   // exponent
+	mod := certs.Keys[0].N   // modulus
+	kty := certs.Keys[0].Kty // kty attribute
+	if strings.ToLower(kty) != "rsa" {
+		msg := fmt.Sprintf("not RSA kty key: %s", kty)
+		log.Println(msg)
+		return errors.New(msg)
+	}
+	pub, err := getPublicKey(exp, mod)
+	if err != nil {
+		log.Println("unable to get public key ", err)
+		return err
+	}
+	p.PublicKey = pub
+	if Config.Verbose > 0 {
+		log.Println("\n", p.String())
+	}
+	return nil
 }
 
 // helper function to check given access token and return its claims
 // it is based on github.com/dgrijalva/jwt-go and github.com/MicahParks/keyfunc go packages
-func tokenClaims(accessToken string) (map[string]interface{}, error) {
+func tokenClaims(provider Provider, accessToken string) (map[string]interface{}, error) {
 	out := make(map[string]interface{})
-	rurl := fmt.Sprintf("%s/protocol/openid-connect/certs", Config.OAuthURL)
-	if JWKSBody == nil {
-		body, err := getJWKS(rurl)
-		if err != nil {
-			return out, err
-		}
-		JWKSBody = body
-	}
 	// Create the JWKS from the resource at the given URL.
-	jwks, err := keyfunc.New(JWKSBody)
+	jwks, err := keyfunc.New(provider.JWKSBody)
 	if err != nil {
 		return out, err
 	}
@@ -134,30 +203,10 @@ func getPublicKey(exp, mod string) (*rsa.PublicKey, error) {
 
 // helper function to check access token and return claims map based on
 // github.com/pascaldekloe/jwt go package
-func tokenClaims2(token string) (map[string]interface{}, error) {
+func tokenClaims2(provider Provider, token string) (map[string]interface{}, error) {
 	out := make(map[string]interface{})
-	rurl := fmt.Sprintf("%s/protocol/openid-connect/certs", Config.OAuthURL)
-	if PublicKey == nil {
-		if JWKSBody == nil {
-			body, err := getJWKS(rurl)
-			if err != nil {
-				return out, err
-			}
-			JWKSBody = body
-		}
-		var certs Certs
-		err := json.Unmarshal(JWKSBody, &certs)
-		if err != nil {
-			return out, err
-		}
-		pub, err := getPublicKey(certs.Keys[0].E, certs.Keys[0].N)
-		if err != nil {
-			return out, err
-		}
-		PublicKey = pub
-	}
 	// verify a JWT
-	claims, err := jwt.RSACheck([]byte(token), PublicKey)
+	claims, err := jwt.RSACheck([]byte(token), provider.PublicKey)
 	if err != nil {
 		return out, err
 	}
@@ -165,5 +214,10 @@ func tokenClaims2(token string) (map[string]interface{}, error) {
 		msg := "The token is not valid"
 		return out, errors.New(msg)
 	}
-	return claims.Set, nil
+	for k, v := range claims.Set {
+		out[k] = v
+	}
+	t := claims.Registered.Expires.Time()
+	out["exp"] = t.Unix()
+	return out, nil
 }
