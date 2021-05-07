@@ -170,10 +170,29 @@ func renewToken(token string, r *http.Request) (TokenInfo, error) {
 	return tokenInfo, nil
 }
 
+// helper function to inspect token against all participated providers
+func inspectTokenProviders(token string) (TokenAttributes, error) {
+	for _, purl := range Config.Providers {
+		if p, ok := OAuthProviders[purl]; ok {
+			attrs, err := inspectToken(p, token)
+			if err == nil {
+				if Config.Verbose > 0 {
+					log.Println("token is validated with provider ", purl)
+				}
+				return attrs, nil
+			} else {
+				log.Println("provider", p.URL, " token error ", err)
+			}
+		}
+	}
+	msg := fmt.Sprintf("Token is not valid with participated providers: %v", Config.Providers)
+	return TokenAttributes{}, errors.New(msg)
+}
+
 // inspect token and extract token attributes
-func inspectToken(token string) (TokenAttributes, error) {
+func inspectToken(provider Provider, token string) (TokenAttributes, error) {
 	var attrs TokenAttributes
-	claims, err := tokenClaims(token)
+	claims, err := tokenClaims2(provider, token)
 	if err != nil {
 		return attrs, err
 	}
@@ -194,8 +213,12 @@ func inspectToken(token string) (TokenAttributes, error) {
 			attrs.SessionState = fmt.Sprintf("%v", v)
 		}
 		if k == "exp" {
-			val := v.(float64)
-			attrs.Expiration = int64(val)
+			switch val := v.(type) {
+			case float64:
+				attrs.Expiration = int64(val)
+			case int64:
+				attrs.Expiration = val
+			}
 		}
 		if k == "scope" {
 			attrs.Scope = fmt.Sprintf("%v", v)
@@ -230,7 +253,7 @@ func checkAccessToken(r *http.Request) bool {
 	token := arr[len(arr)-1]
 
 	// first, we inspect our token
-	attrs, err := inspectToken(token)
+	attrs, err := inspectTokenProviders(token)
 	if err == nil {
 		if attrs.ClientHost == "" {
 			attrs.ClientHost = r.Referer()
