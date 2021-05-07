@@ -42,7 +42,7 @@ func printJSON(j interface{}, msg string) error {
 	var err error
 	out, err = json.MarshalIndent(j, "", "    ")
 	if err == nil {
-		fmt.Println(string(out))
+		log.Println(string(out))
 	}
 	return err
 }
