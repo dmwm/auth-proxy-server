@@ -107,3 +107,6 @@ In these tests we used DBS datasets queries with different dataset names.
 
 #### failure rate measurements
 ![Failure-rate](https://github.com/vkuznet/auth-proxy-server/raw/master/docs/perf-failure-dbs.png)
+
+### References
+[WLCG tokens](https://github.com/WLCG-AuthZ-WG/common-jwt-profile/blob/master/profile.md)
