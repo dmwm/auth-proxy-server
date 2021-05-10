@@ -50,17 +50,17 @@ func printJSON(j interface{}, msg string) error {
 // helper function to print HTTP request information
 func printHTTPRequest(r *http.Request, msg string) {
 	log.Printf("HTTP request: %s\n", msg)
-	fmt.Println("TLS:", r.TLS)
-	fmt.Println("Header:", r.Header)
+	log.Println("TLS:", r.TLS)
+	log.Println("Header:", r.Header)
 
 	// print out all request headers
-	fmt.Printf("%s %s %s \n", r.Method, r.URL, r.Proto)
+	log.Printf("%s %s %s \n", r.Method, r.URL, r.Proto)
 	for k, v := range r.Header {
-		fmt.Printf("Header field %q, Value %q\n", k, v)
+		log.Printf("Header field %q, Value %q\n", k, v)
 	}
-	fmt.Printf("Host = %q\n", r.Host)
-	fmt.Printf("RemoteAddr= %q\n", r.RemoteAddr)
-	fmt.Printf("\n\nFinding value of \"Accept\" %q\n", r.Header["Accept"])
+	log.Printf("Host = %q\n", r.Host)
+	log.Printf("RemoteAddr= %q\n", r.RemoteAddr)
+	log.Printf("\n\nFinding value of \"Accept\" %q\n", r.Header["Accept"])
 }
 
 // helper function to construct http server with TLS
