@@ -109,4 +109,10 @@ In these tests we used DBS datasets queries with different dataset names.
 ![Failure-rate](https://github.com/vkuznet/auth-proxy-server/raw/master/docs/perf-failure-dbs.png)
 
 ### References
-[WLCG tokens](https://github.com/WLCG-AuthZ-WG/common-jwt-profile/blob/master/profile.md)
+
+- [Certified OpenID connect implementations](https://openid.net/developers/certified/)
+- [JWT tokens](https://jwt.io/)
+- [WLCG tokens](https://github.com/WLCG-AuthZ-WG/common-jwt-profile/blob/master/profile.md)
+- [SciTokens](https://scitokens.org/)
+- [CERN SSO OAuth2 OICD](https://gitlab.cern.ch/authzsvc/docs/keycloak-sso-examples)
+- JSON Web Token libraries: [jwt](https://github.com/pascaldekloe/jwt) and [jwt-go](https://github.com/dgrijalva/jwt-go)
