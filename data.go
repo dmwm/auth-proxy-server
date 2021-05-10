@@ -46,6 +46,7 @@ type Configuration struct {
 	Hmac                string          `json:"hmac"`                   // cmsweb hmac file
 	CricURL             string          `json:"cric_url"`               // CRIC URL
 	CricFile            string          `json:"cric_file"`              // name of the CRIC file
+	CricVerbose         int             `json:"cric_verbose"`           // verbose output for cric
 	UpdateCricInterval  int64           `json:"update_cric"`            // interval (in sec) to update cric records
 	UTC                 bool            `json:"utc"`                    // report logger time in UTC
 	ReadTimeout         int             `json:"read_timeout"`           // server read timeout in sec

@@ -34,7 +34,7 @@ func updateCricRecords() {
 	var err error
 	cricRecords := make(cmsauth.CricRecords)
 	verbose := false
-	if Config.Verbose > 2 {
+	if Config.CricVerbose > 0 {
 		verbose = true
 	}
 	// if cric file is given read it first, then if we have
