@@ -7,7 +7,7 @@ require (
 	github.com/StackExchange/wmi v0.0.0-20210224194228-fe8f1750fd46 // indirect
 	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
-	github.com/dmwm/cmsauth v0.0.0-20210614155950-78bddf99a4ee
+	github.com/dmwm/cmsauth v0.0.0-20210614180517-01f2d7ce5a8a
 	github.com/go-ole/go-ole v1.2.5 // indirect
 	github.com/google/uuid v1.2.0
 	github.com/jonboulle/clockwork v0.2.2 // indirect

@@ -31,6 +31,7 @@ var intPattern = regexp.MustCompile(`^\d+$`)
 // helper function to periodically update cric records
 // should be run as goroutine
 func updateCricRecords(key string) {
+	log.Println("update cric records with", key, "as a key")
 	var err error
 	cricRecords := make(cmsauth.CricRecords)
 	verbose := false
@@ -52,7 +53,11 @@ func updateCricRecords(key string) {
 			CricRecords = cricRecords
 			keys := reflect.ValueOf(CricRecords).MapKeys()
 			log.Println("Updated CRIC records", len(keys))
-			updateCMSRecords(cricRecords)
+			if key == "id" {
+				cmsRecords = cricRecords
+			} else {
+				updateCMSRecords(cricRecords)
+			}
 			log.Println("Updated cms records", len(cmsRecords))
 		}
 	}
@@ -63,7 +68,11 @@ func updateCricRecords(key string) {
 		}
 		// parse cric records
 		if Config.CricURL != "" {
-			cricRecords, err = cmsauth.GetCricData(Config.CricURL, verbose)
+			if key == "id" {
+				cricRecords, err = cmsauth.GetCricDataByKey(Config.CricURL, "id", verbose)
+			} else {
+				cricRecords, err = cmsauth.GetCricData(Config.CricURL, verbose)
+			}
 			log.Printf("obtain CRIC records from %s, %v", Config.CricURL, err)
 		} else if Config.CricFile != "" {
 			if key == "id" {
@@ -81,11 +90,20 @@ func updateCricRecords(key string) {
 			CricRecords = cricRecords
 			keys := reflect.ValueOf(CricRecords).MapKeys()
 			log.Println("Updated CRIC records", len(keys))
-			updateCMSRecords(cricRecords)
+			if key == "id" {
+				cmsRecords = cricRecords
+			} else {
+				updateCMSRecords(cricRecords)
+			}
 			log.Println("Updated cms records", len(cmsRecords))
 			if Config.Verbose > 2 {
 				for k, v := range cmsRecords {
-					log.Printf("cn=%s record=%+v\n", k, v)
+					log.Printf("key=%s value=%s record=%+v\n", key, k, v)
+				}
+			} else if Config.Verbose > 0 {
+				for k, v := range cmsRecords {
+					log.Printf("key=%s value=%s record=%+v\n", key, k, v)
+					break // break to avoid lots of CRIC record printous
 				}
 			}
 		}
