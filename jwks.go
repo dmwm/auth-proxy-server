@@ -68,7 +68,7 @@ type Provider struct {
 func (p *Provider) String() string {
 	data, err := json.MarshalIndent(p, "", "    ")
 	if err != nil {
-		return fmt.Sprintf("%v", p)
+		return fmt.Sprintf("Provider, error=%v", err)
 	}
 	return string(data)
 }

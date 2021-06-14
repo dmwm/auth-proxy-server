@@ -361,15 +361,16 @@ func main() {
 	}
 
 	CMSAuth.Init(Config.Hmac)
-	go updateCricRecords()
 
-	// our servers
+	// start our servers
 	if useX509 {
+		go updateCricRecords("dn")
 		x509ProxyServer()
 		return
 	} else if scitokens {
 		scitokensServer()
 		return
 	}
+	go updateCricRecords("id")
 	oauthProxyServer()
 }

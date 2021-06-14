@@ -30,7 +30,7 @@ var intPattern = regexp.MustCompile(`^\d+$`)
 
 // helper function to periodically update cric records
 // should be run as goroutine
-func updateCricRecords() {
+func updateCricRecords(key string) {
 	var err error
 	cricRecords := make(cmsauth.CricRecords)
 	verbose := false
@@ -40,7 +40,11 @@ func updateCricRecords() {
 	// if cric file is given read it first, then if we have
 	// cric url we'll update it from there
 	if Config.CricFile != "" {
-		cricRecords, err = cmsauth.ParseCricByKey(Config.CricFile, "id", verbose)
+		if key == "id" {
+			cricRecords, err = cmsauth.ParseCricByKey(Config.CricFile, "id", verbose)
+		} else {
+			cricRecords, err = cmsauth.ParseCric(Config.CricFile, verbose)
+		}
 		log.Printf("obtain CRIC records from %s, %v", Config.CricFile, err)
 		if err != nil {
 			log.Printf("Unable to update CRIC records: %v", err)
@@ -62,7 +66,11 @@ func updateCricRecords() {
 			cricRecords, err = cmsauth.GetCricData(Config.CricURL, verbose)
 			log.Printf("obtain CRIC records from %s, %v", Config.CricURL, err)
 		} else if Config.CricFile != "" {
-			cricRecords, err = cmsauth.ParseCric(Config.CricFile, verbose)
+			if key == "id" {
+				cricRecords, err = cmsauth.ParseCricByKey(Config.CricFile, "id", verbose)
+			} else {
+				cricRecords, err = cmsauth.ParseCric(Config.CricFile, verbose)
+			}
 			log.Printf("obtain CRIC records from %s, %v", Config.CricFile, err)
 		} else {
 			log.Println("Untable to get CRIC records no file or no url was provided")
