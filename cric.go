@@ -40,7 +40,7 @@ func updateCricRecords() {
 	// if cric file is given read it first, then if we have
 	// cric url we'll update it from there
 	if Config.CricFile != "" {
-		cricRecords, err = cmsauth.ParseCric(Config.CricFile, verbose)
+		cricRecords, err = cmsauth.ParseCricByKey(Config.CricFile, "id", verbose)
 		log.Printf("obtain CRIC records from %s, %v", Config.CricFile, err)
 		if err != nil {
 			log.Printf("Unable to update CRIC records: %v", err)

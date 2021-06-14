@@ -466,6 +466,9 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
+		// in case of IAM token we'll map its attribute of user data to
+		// the ones provided by CERN SSO
+
 		// set CMS headers
 		if Config.CMSHeaders {
 			if Config.Verbose > 2 {
@@ -474,9 +477,9 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 			if Config.Verbose > 3 {
-				CMSAuth.SetCMSHeaders(r, userData, CricRecords, true)
+				CMSAuth.SetCMSHeadersByKey(r, userData, CricRecords, "id", "oauth", true)
 			} else {
-				CMSAuth.SetCMSHeaders(r, userData, CricRecords, false)
+				CMSAuth.SetCMSHeadersByKey(r, userData, CricRecords, "id", "oauth", false)
 			}
 			if Config.Verbose > 0 {
 				printHTTPRequest(r, "cms headers")
