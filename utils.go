@@ -96,8 +96,19 @@ func getServer(serverCrt, serverKey string, customVerify bool) (*http.Server, er
 			log.Fatalf("server loadkeys: %s", err)
 
 		}
+		// see go doc tls.VersionTLS13 for different versions
+		minVer := tls.VersionTLS13
+		if Config.TLSVersion == "tls10" {
+			minVer = tls.VersionTLS10
+		} else if Config.TLSVersion == "tls11" {
+			minVer = tls.VersionTLS11
+		} else if Config.TLSVersion == "tls12" {
+			minVer = tls.VersionTLS12
+		} else if Config.TLSVersion == "tls13" {
+			minVer = tls.VersionTLS13
+		}
 		tlsConfig = &tls.Config{
-			MinVersion:   0x0304,
+			MinVersion:   uint16(minVer),
 			RootCAs:      rootCAs,
 			Certificates: []tls.Certificate{cert},
 		}
