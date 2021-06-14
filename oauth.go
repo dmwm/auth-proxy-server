@@ -423,7 +423,43 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 			accept = v[0]
 		}
 	}
-	if hasToken {
+	if hasToken && !strings.Contains(r.URL.Path, "token") {
+		// case of existing token CERN SSO or IAM and we not asked for token path
+		token := getToken(r)
+		if token == "" {
+			http.Error(w, "unable to get user token", http.StatusUnauthorized)
+			return
+		}
+		attrs, err := inspectTokenProviders(token)
+		if err != nil {
+			log.Println("fail to inspect user token", err)
+			http.Error(w, "unable to get user token", http.StatusInternalServerError)
+			return
+		}
+		// in case of IAM token we'll get token attributes as user info
+		userData["email"] = attrs.Email
+		userData["id"] = attrs.ClientID
+		userData["name"] = attrs.UserName
+		userData["exp"] = attrs.Expiration
+		// set CMS headers
+		if Config.CMSHeaders {
+			if Config.Verbose > 2 {
+				if err := printJSON(userData, "user data"); err != nil {
+					log.Println("unable to print user data")
+				}
+			}
+			if Config.Verbose > 3 {
+				CMSAuth.SetCMSHeadersByKey(r, userData, CricRecords, "id", "oauth", true)
+			} else {
+				CMSAuth.SetCMSHeadersByKey(r, userData, CricRecords, "id", "oauth", false)
+			}
+			if Config.Verbose > 0 {
+				printHTTPRequest(r, "cms headers")
+			}
+		}
+		redirect(w, r)
+		return
+	} else if userInfo != nil || hasToken {
 		// renew existing token
 		if r.URL.Path == fmt.Sprintf("%s/token/renew", Config.Base) {
 			var token string
@@ -460,35 +496,15 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		// decode userInfo
-		if userInfo != nil {
-			switch t := userInfo.(type) {
-			case *json.RawMessage:
-				err := json.Unmarshal(*t, &userData)
-				if err != nil {
-					msg := fmt.Sprintf("unable to decode user data, %v", err)
-					status = http.StatusInternalServerError
-					http.Error(w, msg, status)
-					return
-				}
-			}
-		} else {
-			// in case of IAM token we'll get token attributes as user info
-			// extract token from a request
-			token := getToken(r)
-			if token == "" {
-				http.Error(w, "unable to get user token", http.StatusUnauthorized)
-				return
-			}
-			attrs, err := inspectTokenProviders(token)
+		switch t := userInfo.(type) {
+		case *json.RawMessage:
+			err := json.Unmarshal(*t, &userData)
 			if err != nil {
-				log.Println("fail to inspect user token", err)
-				http.Error(w, "unable to get user token", http.StatusInternalServerError)
+				msg := fmt.Sprintf("unable to decode user data, %v", err)
+				status = http.StatusInternalServerError
+				http.Error(w, msg, status)
 				return
 			}
-			userData["email"] = attrs.Email
-			userData["id"] = attrs.ClientID
-			userData["name"] = attrs.UserName
-			userData["exp"] = attrs.Expiration
 		}
 		// set CMS headers
 		if Config.CMSHeaders {
