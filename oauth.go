@@ -203,7 +203,7 @@ func inspectToken(provider Provider, token string) (TokenAttributes, error) {
 		if k == "email" {
 			attrs.Email = fmt.Sprintf("%v", v)
 		}
-		if k == "cern_upn" {
+		if k == "cern_upn" || k == "preferred_username" {
 			attrs.UserName = fmt.Sprintf("%v", v)
 		}
 		if k == "cern_person_id" {
@@ -240,17 +240,25 @@ func inspectToken(provider Provider, token string) (TokenAttributes, error) {
 	return attrs, err
 }
 
+// helper function to get token from http request
+func getToken(r *http.Request) string {
+	tokenStr := r.Header.Get("Authorization")
+	if tokenStr == "" {
+		return tokenStr
+	}
+	arr := strings.Split(tokenStr, " ")
+	token := arr[len(arr)-1]
+	return token
+}
+
 // helper function to check access token of the client
 // it is done via introspect auth end-point
 func checkAccessToken(r *http.Request) bool {
 	// extract token from a request
-	tokenStr := r.Header.Get("Authorization")
-	if tokenStr == "" {
+	token := getToken(r)
+	if token == "" {
 		return false
 	}
-	// token is last part of Authorization header
-	arr := strings.Split(tokenStr, " ")
-	token := arr[len(arr)-1]
 
 	// first, we inspect our token
 	attrs, err := inspectTokenProviders(token)
@@ -415,7 +423,7 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 			accept = v[0]
 		}
 	}
-	if userInfo != nil || hasToken {
+	if hasToken {
 		// renew existing token
 		if r.URL.Path == fmt.Sprintf("%s/token/renew", Config.Base) {
 			var token string
@@ -423,11 +431,7 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 			t := sess.Get("refreshToken")
 			sessLock.Unlock()
 			if t == nil { // cli request
-				if v, ok := r.Header["Authorization"]; ok {
-					if len(v) == 1 {
-						token = strings.Replace(v[0], "Bearer ", "", 1)
-					}
-				}
+				token = getToken(r)
 			} else {
 				token = t.(string)
 			}
@@ -456,19 +460,36 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		// decode userInfo
-		switch t := userInfo.(type) {
-		case *json.RawMessage:
-			err := json.Unmarshal(*t, &userData)
-			if err != nil {
-				msg := fmt.Sprintf("unable to decode user data, %v", err)
-				status = http.StatusInternalServerError
-				http.Error(w, msg, status)
+		if userInfo != nil {
+			switch t := userInfo.(type) {
+			case *json.RawMessage:
+				err := json.Unmarshal(*t, &userData)
+				if err != nil {
+					msg := fmt.Sprintf("unable to decode user data, %v", err)
+					status = http.StatusInternalServerError
+					http.Error(w, msg, status)
+					return
+				}
+			}
+		} else {
+			// in case of IAM token we'll get token attributes as user info
+			// extract token from a request
+			token := getToken(r)
+			if token == "" {
+				http.Error(w, "unable to get user token", http.StatusUnauthorized)
 				return
 			}
+			attrs, err := inspectTokenProviders(token)
+			if err != nil {
+				log.Println("fail to inspect user token", err)
+				http.Error(w, "unable to get user token", http.StatusInternalServerError)
+				return
+			}
+			userData["email"] = attrs.Email
+			userData["id"] = attrs.ClientID
+			userData["name"] = attrs.UserName
+			userData["exp"] = attrs.Expiration
 		}
-		// in case of IAM token we'll map its attribute of user data to
-		// the ones provided by CERN SSO
-
 		// set CMS headers
 		if Config.CMSHeaders {
 			if Config.Verbose > 2 {
@@ -493,11 +514,7 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 			rt := sess.Get("refreshToken")
 			sessLock.Unlock()
 			if t == nil { // cli request
-				if v, ok := r.Header["Authorization"]; ok {
-					if len(v) == 1 {
-						token = strings.Replace(v[0], "Bearer ", "", 1)
-					}
-				}
+				token = getToken(r)
 			} else {
 				token = t.(string)
 			}
