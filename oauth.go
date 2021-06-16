@@ -539,10 +539,11 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		// in case of existing token CERN SSO or IAM we use token attributes as user data
 		userData["email"] = attrs.Email
-		userData["id"] = attrs.ClientID
 		userData["name"] = attrs.UserName
 		userData["exp"] = attrs.Expiration
 	}
+	// set id in user data based on token ClientID. The id will be used by SetCMSHeadersXXX calls
+	userData["id"] = attrs.ClientID
 
 	// set CMS headers
 	if Config.CMSHeaders {
@@ -551,11 +552,11 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 				log.Println("unable to print user data")
 			}
 		}
+		level := false
 		if Config.Verbose > 3 {
-			CMSAuth.SetCMSHeadersByKey(r, userData, CricRecords, "id", "oauth", true)
-		} else {
-			CMSAuth.SetCMSHeadersByKey(r, userData, CricRecords, "id", "oauth", false)
+			level = true
 		}
+		CMSAuth.SetCMSHeadersByKey(r, userData, CricRecords, "id", "oauth", level)
 		if Config.Verbose > 0 {
 			printHTTPRequest(r, "cms headers")
 		}
