@@ -85,7 +85,9 @@ func getServer(serverCrt, serverKey string, customVerify bool) (*http.Server, er
 				log.Printf("invalid PEM format while importing trust-chain: %q", fname)
 			}
 		}
-		log.Println("Load CA file", fname)
+		if Config.Verbose > 1 {
+			log.Println("Load CA file", fname)
+		}
 	}
 
 	var tlsConfig *tls.Config

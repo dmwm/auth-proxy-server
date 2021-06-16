@@ -405,7 +405,6 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 	status := http.StatusOK
 	userData := make(map[string]interface{})
 	tstamp := int64(start.UnixNano() / 1000000) // use milliseconds for MONIT
-	defer logRequest(w, r, start, "CERN-SSO-OAuth2-OICD", &status, tstamp)
 	sess := globalSessions.SessionStart(w, r)
 	oauthState := uuid.New().String()
 
@@ -429,6 +428,7 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	attrs, err := checkAccessToken(r)
+	defer logRequest(w, r, start, "CERN-SSO-OAuth2-OICD", &status, tstamp)
 	if err != nil {
 		// there is no proper authentication yet, redirect users to auth callback
 		aurl := OAuth2Config.AuthCodeURL(oauthState)
