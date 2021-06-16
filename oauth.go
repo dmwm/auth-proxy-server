@@ -373,12 +373,17 @@ func oauthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	urlPath := sess.Get("path").(string)
 	sessLock.Unlock()
 	if Config.Verbose > 0 {
+		log.Printf("response data %+v", resp)
 		log.Println("session data", string(data))
 		log.Println("redirect to", urlPath)
 	}
-	if accessToken, ok := oauth2Token.Extra("access_token").(string); ok {
+	accessToken := resp.OAuth2Token.AccessToken
+	if accessToken != "" {
 		bt := fmt.Sprintf("Bearer %s", accessToken)
 		r.Header.Set("Authorization", bt)
+		if Config.Verbose > 0 {
+			log.Printf("new http request headers %+v", r.Header)
+		}
 	}
 	http.Redirect(w, r, urlPath, http.StatusFound)
 	return
