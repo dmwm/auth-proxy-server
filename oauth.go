@@ -376,6 +376,10 @@ func oauthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println("session data", string(data))
 		log.Println("redirect to", urlPath)
 	}
+	if accessToken, ok := oauth2Token.Extra("access_token").(string); ok {
+		bt := fmt.Sprintf("Bearer %s", accessToken)
+		r.Header.Set("Authorization", bt)
+	}
 	http.Redirect(w, r, urlPath, http.StatusFound)
 	return
 }
@@ -421,6 +425,7 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 		// there is no proper authentication yet, redirect users to auth callback
 		aurl := OAuth2Config.AuthCodeURL(oauthState)
 		if Config.Verbose > 0 {
+			log.Printf("token attributes %+v, error %v", attrs, err)
 			log.Println("auth redirect to", aurl)
 		}
 		status = http.StatusFound
