@@ -253,11 +253,11 @@ func getToken(r *http.Request) string {
 
 // helper function to check access token of the client
 // it is done via introspect auth end-point
-func checkAccessToken(r *http.Request) bool {
+func checkAccessToken(r *http.Request) (TokenAttributes, error) {
 	// extract token from a request
 	token := getToken(r)
 	if token == "" {
-		return false
+		return TokenAttributes{}, errors.New("no token present in HTTP request")
 	}
 
 	// first, we inspect our token
@@ -269,7 +269,7 @@ func checkAccessToken(r *http.Request) bool {
 		r.Header.Set("scope", attrs.Scope)
 		r.Header.Set("client-host", attrs.ClientHost)
 		r.Header.Set("client-id", attrs.ClientID)
-		return true
+		return attrs, nil
 	}
 
 	log.Println("unable to inspect token: ", err)
@@ -280,12 +280,12 @@ func checkAccessToken(r *http.Request) bool {
 	if err != nil {
 		msg := fmt.Sprintf("unable to verify token: %+v", err)
 		log.Println(msg)
-		return false
+		return attrs, err
 	}
 	if !attrs.Active || attrs.Expiration-time.Now().Unix() < 0 {
 		msg := fmt.Sprintf("token is invalid: %+v", attrs)
 		log.Println(msg)
-		return false
+		return attrs, errors.New("invalid token")
 	}
 	if Config.Verbose > 2 {
 		if err := printJSON(attrs, "token attributes"); err != nil {
@@ -296,7 +296,7 @@ func checkAccessToken(r *http.Request) bool {
 	r.Header.Set("scope", attrs.Scope)
 	r.Header.Set("client-host", attrs.ClientHost)
 	r.Header.Set("client-id", attrs.ClientID)
-	return true
+	return attrs, nil
 }
 
 // callback handler function performs authentication callback and obtain
@@ -407,95 +407,112 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 		sessLock.Unlock()
 	}
 	oauthState := uuid.New().String()
+
+	// check userinfo in the session or if client provides valid access token.
 	sessLock.Lock()
 	sess.Set("somestate", oauthState)
 	if sess.Get("path") == nil || sess.Get("path") == "" {
 		sess.Set("path", r.URL.Path)
 	}
-	// checking the userinfo in the session or if client provides valid access token.
-	// if either is present we'll allow user request
 	userInfo := sess.Get("userinfo")
 	sessLock.Unlock()
-	hasToken := checkAccessToken(r)
-	var accept string
-	if v, ok := r.Header["Accept"]; ok {
-		if len(v) > 0 {
-			accept = v[0]
+	attrs, err := checkAccessToken(r)
+	if err != nil {
+		// there is no proper authentication yet, redirect users to auth callback
+		aurl := OAuth2Config.AuthCodeURL(oauthState)
+		if Config.Verbose > 0 {
+			log.Println("auth redirect to", aurl)
 		}
+		status = http.StatusFound
+		http.Redirect(w, r, aurl, status)
+		return
 	}
-	if hasToken && !strings.Contains(r.URL.Path, "token") {
-		// case of existing token CERN SSO or IAM and we not asked for token path
-		token := getToken(r)
-		if token == "" {
-			http.Error(w, "unable to get user token", http.StatusUnauthorized)
-			return
+
+	// if user wants to renew token
+	if r.URL.Path == fmt.Sprintf("%s/token/renew", Config.Base) {
+		var token string
+		sessLock.Lock()
+		t := sess.Get("refreshToken")
+		sessLock.Unlock()
+		if t == nil { // cli request
+			token = getToken(r)
+		} else {
+			token = t.(string)
 		}
-		attrs, err := inspectTokenProviders(token)
+		tokenInfo, err := renewToken(token, r)
 		if err != nil {
-			log.Println("fail to inspect user token", err)
-			http.Error(w, "unable to get user token", http.StatusInternalServerError)
+			msg := fmt.Sprintf("unable to refresh access token, %v", err)
+			status = http.StatusInternalServerError
+			http.Error(w, msg, status)
 			return
 		}
-		// in case of IAM token we'll get token attributes as user info
-		userData["email"] = attrs.Email
-		userData["id"] = attrs.ClientID
-		userData["name"] = attrs.UserName
-		userData["exp"] = attrs.Expiration
-		// set CMS headers
-		if Config.CMSHeaders {
-			if Config.Verbose > 2 {
-				if err := printJSON(userData, "user data"); err != nil {
-					log.Println("unable to print user data")
+		if Config.Verbose > 2 {
+			printJSON(tokenInfo, "new token info")
+		}
+		if !strings.Contains(strings.ToLower(r.Header.Get("Accept")), "json") {
+			w.Write([]byte(tokenInfo.String()))
+			return
+		}
+		data, err := json.Marshal(tokenInfo)
+		if err != nil {
+			msg := fmt.Sprintf("unable to marshal token info, %v", err)
+			status = http.StatusInternalServerError
+			http.Error(w, msg, status)
+			return
+		}
+		w.Write(data)
+		return
+	}
+	// if user wants to see token
+	if r.URL.Path == fmt.Sprintf("%s/token", Config.Base) {
+		var token, rtoken string
+		sessLock.Lock()
+		t := sess.Get("rawIDToken")
+		rt := sess.Get("refreshToken")
+		sessLock.Unlock()
+		if t == nil { // cli request
+			token = getToken(r)
+		} else {
+			token = t.(string)
+		}
+		if rt == nil { // cli request
+			if v, ok := r.Header["Refresh-Token"]; ok {
+				if len(v) == 1 {
+					rtoken = v[0]
 				}
 			}
-			if Config.Verbose > 3 {
-				CMSAuth.SetCMSHeadersByKey(r, userData, CricRecords, "id", "oauth", true)
-			} else {
-				CMSAuth.SetCMSHeadersByKey(r, userData, CricRecords, "id", "oauth", false)
-			}
-			if Config.Verbose > 0 {
-				printHTTPRequest(r, "cms headers")
-			}
+		} else {
+			rtoken = rt.(string)
 		}
-		redirect(w, r)
-		return
-	} else if userInfo != nil || hasToken {
-		// renew existing token
-		if r.URL.Path == fmt.Sprintf("%s/token/renew", Config.Base) {
-			var token string
-			sessLock.Lock()
-			t := sess.Get("refreshToken")
-			sessLock.Unlock()
-			if t == nil { // cli request
-				token = getToken(r)
-			} else {
-				token = t.(string)
-			}
-			tokenInfo, err := renewToken(token, r)
-			if err != nil {
-				msg := fmt.Sprintf("unable to refresh access token, %v", err)
-				status = http.StatusInternalServerError
-				http.Error(w, msg, status)
-				return
-			}
-			if Config.Verbose > 2 {
-				printJSON(tokenInfo, "new token info")
-			}
-			if !strings.Contains(strings.ToLower(accept), "json") {
-				w.Write([]byte(tokenInfo.String()))
-				return
-			}
-			data, err := json.Marshal(tokenInfo)
-			if err != nil {
-				msg := fmt.Sprintf("unable to marshal token info, %v", err)
-				status = http.StatusInternalServerError
-				http.Error(w, msg, status)
-				return
-			}
-			w.Write(data)
+		var texp, rtexp int64
+		sessLock.Lock()
+		if sess.Get("accessExpire") != nil {
+			texp = sess.Get("accessExpire").(int64)
+		}
+		if sess.Get("refreshExpire") != nil {
+			rtexp = sess.Get("refreshExpire").(int64)
+		}
+		sessLock.Unlock()
+		tokenInfo := TokenInfo{AccessToken: token, RefreshToken: rtoken, AccessExpire: texp, RefreshExpire: rtexp, IDToken: token}
+		if !strings.Contains(strings.ToLower(r.Header.Get("Accept")), "json") {
+			w.Write([]byte(tokenInfo.String()))
 			return
 		}
-		// decode userInfo
+		data, err := json.Marshal(tokenInfo)
+		if err != nil {
+			msg := fmt.Sprintf("unable to marshal token info, %v", err)
+			status = http.StatusInternalServerError
+			http.Error(w, msg, status)
+			return
+		}
+		w.Write(data)
+		return
+	}
+
+	// fill out user data
+	if userInfo != nil {
+		// request through CERN SSO web interface which fills out user info
+		// which we use to initialize user data
 		switch t := userInfo.(type) {
 		case *json.RawMessage:
 			err := json.Unmarshal(*t, &userData)
@@ -506,78 +523,33 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
-		// set CMS headers
-		if Config.CMSHeaders {
-			if Config.Verbose > 2 {
-				if err := printJSON(userData, "user data"); err != nil {
-					log.Println("unable to print user data")
-				}
-			}
-			if Config.Verbose > 3 {
-				CMSAuth.SetCMSHeadersByKey(r, userData, CricRecords, "id", "oauth", true)
-			} else {
-				CMSAuth.SetCMSHeadersByKey(r, userData, CricRecords, "id", "oauth", false)
-			}
-			if Config.Verbose > 0 {
-				printHTTPRequest(r, "cms headers")
+	} else {
+		// in case of existing token CERN SSO or IAM we use token attributes as user data
+		userData["email"] = attrs.Email
+		userData["id"] = attrs.ClientID
+		userData["name"] = attrs.UserName
+		userData["exp"] = attrs.Expiration
+	}
+
+	// set CMS headers
+	if Config.CMSHeaders {
+		if Config.Verbose > 2 {
+			if err := printJSON(userData, "user data"); err != nil {
+				log.Println("unable to print user data")
 			}
 		}
-		// return token back to the user
-		if r.URL.Path == fmt.Sprintf("%s/token", Config.Base) {
-			var token, rtoken string
-			sessLock.Lock()
-			t := sess.Get("rawIDToken")
-			rt := sess.Get("refreshToken")
-			sessLock.Unlock()
-			if t == nil { // cli request
-				token = getToken(r)
-			} else {
-				token = t.(string)
-			}
-			if rt == nil { // cli request
-				if v, ok := r.Header["Refresh-Token"]; ok {
-					if len(v) == 1 {
-						rtoken = v[0]
-					}
-				}
-			} else {
-				rtoken = rt.(string)
-			}
-			var texp, rtexp int64
-			sessLock.Lock()
-			if sess.Get("accessExpire") != nil {
-				texp = sess.Get("accessExpire").(int64)
-			}
-			if sess.Get("refreshExpire") != nil {
-				rtexp = sess.Get("refreshExpire").(int64)
-			}
-			sessLock.Unlock()
-			tokenInfo := TokenInfo{AccessToken: token, RefreshToken: rtoken, AccessExpire: texp, RefreshExpire: rtexp, IDToken: token}
-			if !strings.Contains(strings.ToLower(accept), "json") {
-				w.Write([]byte(tokenInfo.String()))
-				return
-			}
-			data, err := json.Marshal(tokenInfo)
-			if err != nil {
-				msg := fmt.Sprintf("unable to marshal token info, %v", err)
-				status = http.StatusInternalServerError
-				http.Error(w, msg, status)
-				return
-			}
-			w.Write(data)
-			return
+		if Config.Verbose > 3 {
+			CMSAuth.SetCMSHeadersByKey(r, userData, CricRecords, "id", "oauth", true)
+		} else {
+			CMSAuth.SetCMSHeadersByKey(r, userData, CricRecords, "id", "oauth", false)
 		}
-		redirect(w, r)
-		return
+		if Config.Verbose > 0 {
+			printHTTPRequest(r, "cms headers")
+		}
 	}
-	// there is no proper authentication yet, redirect users to auth callback
-	aurl := OAuth2Config.AuthCodeURL(oauthState)
-	if Config.Verbose > 0 {
-		log.Println("auth redirect to", aurl)
-	}
-	status = http.StatusFound
-	http.Redirect(w, r, aurl, status)
-	return
+
+	// redirect HTTP requests
+	redirect(w, r)
 }
 
 // oauth server provides reverse proxy functionality with
