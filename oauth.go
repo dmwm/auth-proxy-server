@@ -371,19 +371,17 @@ func oauthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	sess.Set("accessExpire", int64(accessExpire))
 	sess.Set("userinfo", resp.IDTokenClaims)
 	urlPath := sess.Get("path").(string)
+	accessToken := resp.OAuth2Token.AccessToken
+	if accessToken != "" {
+		sess.Set("accessToken", accessToken)
+		r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", accessToken))
+	}
 	sessLock.Unlock()
 	if Config.Verbose > 0 {
 		log.Printf("response data %+v", resp)
 		log.Println("session data", string(data))
 		log.Println("redirect to", urlPath)
-	}
-	accessToken := resp.OAuth2Token.AccessToken
-	if accessToken != "" {
-		bt := fmt.Sprintf("Bearer %s", accessToken)
-		r.Header.Set("Authorization", bt)
-		if Config.Verbose > 0 {
-			log.Printf("new http request headers %+v", r.Header)
-		}
+		printHTTPRequest(r, "new http request headers after CERN SSO")
 	}
 	http.Redirect(w, r, urlPath, http.StatusFound)
 	return
@@ -409,12 +407,6 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 	tstamp := int64(start.UnixNano() / 1000000) // use milliseconds for MONIT
 	defer logRequest(w, r, start, "CERN-SSO-OAuth2-OICD", &status, tstamp)
 	sess := globalSessions.SessionStart(w, r)
-	if Config.Verbose > 0 {
-		sessLock.Lock()
-		msg := fmt.Sprintf("call from '/', r.URL %s, sess.Path %v", r.URL, sess.Get("path"))
-		printHTTPRequest(r, msg)
-		sessLock.Unlock()
-	}
 	oauthState := uuid.New().String()
 
 	// check userinfo in the session or if client provides valid access token.
@@ -423,8 +415,19 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 	if sess.Get("path") == nil || sess.Get("path") == "" {
 		sess.Set("path", r.URL.Path)
 	}
+	if sess.Get("accessToken") != nil && sess.Get("accessToken") != "" && r.Header.Get("Authorization") == "" {
+		r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", sess.Get("accessToken")))
+	}
 	userInfo := sess.Get("userinfo")
 	sessLock.Unlock()
+
+	if Config.Verbose > 0 {
+		sessLock.Lock()
+		msg := fmt.Sprintf("oauthRequestHandler, r.URL %s, sess.Path %v", r.URL, sess.Get("path"))
+		printHTTPRequest(r, msg)
+		sessLock.Unlock()
+	}
+
 	attrs, err := checkAccessToken(r)
 	if err != nil {
 		// there is no proper authentication yet, redirect users to auth callback
