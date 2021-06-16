@@ -562,6 +562,16 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// check if cms credentials are in place
+	cmsLoginName := r.Header.Get("Cms-Authn-Login")
+	cmsAuthCert := r.Header.Get("Cms-Auth-Cert")
+	if cmsAuthCert == "" || cmsLoginName == "" {
+		msg := fmt.Sprintf("not authorized access")
+		status = http.StatusUnauthorized
+		http.Error(w, msg, status)
+		return
+	}
+
 	// redirect HTTP requests
 	redirect(w, r)
 }
