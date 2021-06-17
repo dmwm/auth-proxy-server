@@ -44,6 +44,14 @@ func x509RequestHandler(w http.ResponseWriter, r *http.Request) {
 		level = true
 	}
 	CMSAuth.SetCMSHeaders(r, userData, CricRecords, level)
+	if r.Header.Get("Cms-Auth-Cert") == "" {
+		if dn, ok := userData["dn"]; ok {
+			r.Header.Set("Cms-Auth-Cert", dn.(string))
+		}
+	}
+	if Config.Verbose > 0 {
+		printHTTPRequest(r, "cms headers")
+	}
 	// add logRequest after we set cms headers in HTTP request
 	defer logRequest(w, r, start, "x509", &status, tstamp)
 	if _, ok := userData["name"]; !ok {
