@@ -428,6 +428,7 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	attrs, err := checkAccessToken(r)
+	// add logRequest after we set cms headers in HTTP request
 	defer logRequest(w, r, start, "CERN-SSO-OAuth2-OICD", &status, tstamp)
 	if err != nil {
 		// there is no proper authentication yet, redirect users to auth callback

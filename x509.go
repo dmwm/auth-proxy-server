@@ -37,19 +37,20 @@ func x509RequestHandler(w http.ResponseWriter, r *http.Request) {
 	// check if user provides valid credentials
 	status := http.StatusOK
 	tstamp := int64(start.UnixNano() / 1000000) // use milliseconds for MONIT
-	defer logRequest(w, r, start, "x509", &status, tstamp)
 	userData := getUserData(r)
+	// set CMS headers based on provided user certificate
+	level := false
+	if Config.Verbose > 3 {
+		level = true
+	}
+	CMSAuth.SetCMSHeaders(r, userData, CricRecords, level)
+	// add logRequest after we set cms headers in HTTP request
+	defer logRequest(w, r, start, "x509", &status, tstamp)
 	if _, ok := userData["name"]; !ok {
 		log.Println("unauthorized access, user not found in CRIC DB")
 		status = http.StatusUnauthorized
 		w.WriteHeader(status)
 		return
-	}
-	// set CMS headers based on provided user certificate
-	if Config.Verbose > 3 {
-		CMSAuth.SetCMSHeaders(r, userData, CricRecords, true)
-	} else {
-		CMSAuth.SetCMSHeaders(r, userData, CricRecords, false)
 	}
 
 	// check CMS headers
