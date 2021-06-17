@@ -135,7 +135,7 @@ func reverseProxy(targetURL string, w http.ResponseWriter, r *http.Request) {
 	r.Header.Set("X-Forwarded-For", r.RemoteAddr)
 	r.Host = url.Host
 	if Config.Verbose > 0 {
-		log.Printf("### proxy request: %+v\n", r)
+		log.Printf("proxy request: %+v\n", r)
 	}
 
 	// use custom modify response function to setup response headers
@@ -245,9 +245,8 @@ func redirect(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		msg := fmt.Sprintf("Hello %s", r.URL.Path)
-		data := []byte(msg)
-		w.Write(data)
+		// prohibit access to main page
+		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 	return
