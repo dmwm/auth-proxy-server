@@ -46,8 +46,5 @@ func parseConfig(configFile string) error {
 	if Config.WriteTimeout == 0 {
 		Config.WriteTimeout = 300
 	}
-	if Config.TLSVersion == "" {
-		Config.TLSVersion = "tls13"
-	}
 	return nil
 }

@@ -55,7 +55,8 @@ type Configuration struct {
 	Scitokens           ScitokensConfig `json:"scitokens"`              // scitokens configuration
 	WellKnown           string          `json:"well_known"`             // location of well-known area
 	Providers           []string        `json:"providers`               // list of JWKS providers
-	TLSVersion          string          `json:"tlsVersion"`             // minimum TLS version
+	MinTLSVersion       string          `json:"minTLSVersion"`          // minimum TLS version
+	MaxTLSVersion       string          `json:"maxTLSVersion"`          // maximum TLS version
 }
 
 // HTTPRecord provides http record we send to logs endpoint

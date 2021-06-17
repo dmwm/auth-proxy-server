@@ -91,6 +91,27 @@ func getServer(serverCrt, serverKey string, customVerify bool) (*http.Server, er
 	}
 
 	var tlsConfig *tls.Config
+	// see go doc tls.VersionTLS13 for different versions
+	var minVer, maxVer int
+	if Config.MinTLSVersion == "tls10" {
+		minVer = tls.VersionTLS10
+	} else if Config.MinTLSVersion == "tls11" {
+		minVer = tls.VersionTLS11
+	} else if Config.MinTLSVersion == "tls12" {
+		minVer = tls.VersionTLS12
+	} else if Config.MinTLSVersion == "tls13" {
+		minVer = tls.VersionTLS13
+	}
+	if Config.MaxTLSVersion == "tls10" {
+		maxVer = tls.VersionTLS10
+	} else if Config.MaxTLSVersion == "tls11" {
+		maxVer = tls.VersionTLS11
+	} else if Config.MaxTLSVersion == "tls12" {
+		maxVer = tls.VersionTLS12
+	} else if Config.MaxTLSVersion == "tls13" {
+		maxVer = tls.VersionTLS13
+	}
+	log.Println("set tlsConfig with min version", minVer)
 	// if we do not require custom verification we'll load server crt/key and present to client
 	if customVerify == false {
 		cert, err := tls.LoadX509KeyPair(serverCrt, serverKey)
@@ -98,19 +119,9 @@ func getServer(serverCrt, serverKey string, customVerify bool) (*http.Server, er
 			log.Fatalf("server loadkeys: %s", err)
 
 		}
-		// see go doc tls.VersionTLS13 for different versions
-		minVer := tls.VersionTLS13
-		if Config.TLSVersion == "tls10" {
-			minVer = tls.VersionTLS10
-		} else if Config.TLSVersion == "tls11" {
-			minVer = tls.VersionTLS11
-		} else if Config.TLSVersion == "tls12" {
-			minVer = tls.VersionTLS12
-		} else if Config.TLSVersion == "tls13" {
-			minVer = tls.VersionTLS13
-		}
 		tlsConfig = &tls.Config{
 			MinVersion:   uint16(minVer),
+			MaxVersion:   uint16(maxVer),
 			RootCAs:      rootCAs,
 			Certificates: []tls.Certificate{cert},
 		}
@@ -118,6 +129,8 @@ func getServer(serverCrt, serverKey string, customVerify bool) (*http.Server, er
 		tlsConfig = &tls.Config{
 			// Set InsecureSkipVerify to skip the default validation we are
 			// replacing. This will not disable VerifyPeerCertificate.
+			MinVersion:         uint16(minVer),
+			MaxVersion:         uint16(maxVer),
 			InsecureSkipVerify: true,
 			ClientAuth:         tls.RequestClientCert,
 			RootCAs:            rootCAs,
