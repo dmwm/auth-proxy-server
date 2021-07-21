@@ -567,6 +567,7 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 	cmsLoginName := r.Header.Get("Cms-Authn-Login")
 	cmsAuthCert := r.Header.Get("Cms-Auth-Cert")
 	if cmsAuthCert == "" || cmsLoginName == "" {
+		log.Printf("request headers %+v\n", r.Header)
 		msg := fmt.Sprintf("not authorized access")
 		status = http.StatusUnauthorized
 		http.Error(w, msg, status)
