@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package cms;
+
+// Interface exported by the server.
+service DataService {
+  // A simple RPC.
+  rpc GetData (Request) returns (Response) {}
+}
+
+message Data {
+  int64 id = 1;
+  string token = 2;
+}
+
+message Request {
+  // repeated Data data = 1; 
+  Data data = 1; 
+}
+  
+message Response {
+  repeated int64 ids = 1; 
+}
