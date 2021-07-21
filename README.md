@@ -8,41 +8,57 @@ It provides CMS authentication headers based on CRIC information, and
 build-in rotate logs functionality.
 
 #### Server configuration
-The server relies on the followign configuration file:
+The server relies on the followign configuration file (for full set of
+options please see data.go Configuration struct):
 ```
-# server configuration file, for more see Config struct in the code
+# server configuration file
 cat > config.json << EOF
 {
     "base": "",
     "client_id": "xxx",
-    "client_secret": "xxx-yyy-zzz"
+    "client_secret": "xxx-yyy-zzz",
     "oauth_url": "https://auth.cern.ch/auth/realms/cern",
-    "server_cert": "/etc/secrets/tls.crt",
-    "server_key": "/etc/secrets/tls.key",
-    "redirect_url": "redirect_url",
-    "hmac": "/etc/secrets/hmac",
-    "document_root": "/www",
-    "cric_url": "cric_url",
-    "cric_file": "/etc/secrets/cric.json",
+    "providers": ["https://auth.cern.ch/auth/realms/cern", "https://cms-auth.web.cern.ch"],
+    "static": "/static/hello",
+    "server_cert": "/etc/certificates/tls.crt",
+    "server_key": "/etc/certificates/tls.key",
+    "redirect_url": "http://localhost/callback",
+    "hmac": "/tmp/secrets/hmac",
+    "document_root": "/tmp/secrets/www",
+    "cric_url": "https://cms-cric.cern.ch/api/accounts/user/query/?json&preset=roles",
+    "cric_file": "/Users/vk/certificates/cric.json",
     "update_cric": 3600,
     "ingress": [
         {"path":"/path", "service_url":"http://services.namespace.svc.cluster.local:<port>"}
     ],
+    "rootCAs": "/etc/grid-security/certificates",
     "cms_headers": true,
-    "rootCAs": ["/path/certificates/CA.crt", "/path/certificates/CA1.crt"],
-    "verbose": false,
+    "verbose": 0,
     "log_file": "/tmp/access.log",
     "port": 8181
 }
 EOF
 ```
 The ingress section allows to route incoming requests to specified backend
-services and it is based on path matching. The `log_file` controls writing logs
-to provided log file, the logs will be rotated on daily basis.
-The `cric_url` and `cric_file` controls CRIC usage. If `cric_file` is provided
-it will be used to initialize CRIC map which later can be updated by fetching
-data through `cric_url`. The `update_cric` controls update interval for
-fetching new CRIC map.
+services and it is based on path matching. Each entry contains `path`,
+`service_url`, `old_path` and `new_path` parameters, e.g.
+```
+    {
+      "path": "/couchdb/_utils",
+      "service_url": "http://vocms0731.cern.ch:5984",
+      "old_path": "/couchdb",
+      "new_path": ""
+    },
+```
+The `path` represents HTTP path of the request, the `service_url` points to
+backend server URL, the `old_path` and `new_path` reflects how to treat given
+path of the request. The former part is replaced with later path value.
+
+The `log_file` controls writing logs to provided log file, the logs will be
+rotated on daily basis.  The `cric_url` and `cric_file` controls CRIC usage. If
+`cric_file` is provided it will be used to initialize CRIC map which later can
+be updated by fetching data through `cric_url`. The `update_cric` controls
+update interval for fetching new CRIC map.
 
 #### Building and runnign the code
 
