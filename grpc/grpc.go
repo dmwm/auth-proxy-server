@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log"
 	"time"
 
 	cms "github.com/vkuznet/auth-proxy-server/grpc/cms"
@@ -12,9 +11,8 @@ import (
 var defaultRequestTimeout = time.Second * 10
 
 // Service defines the interface exposed by this package.
-type GrpcService interface {
-	//     GetData(input interface{}) ([]byte, error)
-	GetData(request *cms.Request) ([]byte, error)
+type GRPCService interface {
+	GetData(request *cms.Request) (*cms.Response, error)
 }
 
 type grpcService struct {
@@ -22,7 +20,7 @@ type grpcService struct {
 }
 
 // NewGRPCService creates a new gRPC user service connection using the specified connection string.
-func NewGRPCService(connString string) (GrpcService, error) {
+func NewGRPCService(connString string) (GRPCService, error) {
 	conn, err := grpc.Dial(connString, grpc.WithInsecure())
 	if err != nil {
 		return nil, err
@@ -30,17 +28,11 @@ func NewGRPCService(connString string) (GrpcService, error) {
 	return &grpcService{grpcClient: cms.NewDataServiceClient(conn)}, nil
 }
 
-// func (s *grpcService) GetData(input interface{}) ([]byte, error) {
-func (s *grpcService) GetData(req *cms.Request) ([]byte, error) {
+// GetData implements grpcServer GetData API
+func (s *grpcService) GetData(req *cms.Request) (*cms.Response, error) {
 	ctx, cancelFunc := context.WithTimeout(context.Background(), defaultRequestTimeout)
 	defer cancelFunc()
-	// TODO: we should read data from the input
-	//     log.Printf("gRPC request: %+v\n", input)
-	//     data := cms.Data{Id: 1, Token: "token"}
-	//     req := &cms.Request{
-	//         Data: &data,
-	//     }
+	// pass incoming gRPC request to backend gRPC server
 	resp, err := s.grpcClient.GetData(ctx, req)
-	log.Println("gRPC response", resp, err)
-	return []byte(resp.String()), err
+	return resp, err
 }

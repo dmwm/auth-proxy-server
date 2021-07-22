@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/vkuznet/auth-proxy-server/grpc/cms"
@@ -27,13 +28,16 @@ func RequestHandler(w http.ResponseWriter, r *http.Request) {
 	req := &cms.Request{
 		Data: &cms.Data{Id: 1, Token: token},
 	}
-	grpcResult, err := backendGrpc.GetData(req)
-	//     grpcResult, err := backendGrpc.GetData(r)
+	resp, err := backendGRPC.GetData(req)
 
 	if err != nil {
 		msg := "Unable to make gRPC request"
 		status := http.StatusBadRequest
 		http.Error(w, msg, status)
 	}
-	w.Write(grpcResult)
+	if Config.Verbose > 0 {
+		log.Println("gRPC response", resp, err)
+	}
+	w.Write([]byte(resp.String()))
+	//     w.Write(grpcResult)
 }

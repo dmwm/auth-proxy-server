@@ -1,12 +1,19 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net"
 	"net/http"
 	"os"
+
+	"github.com/vkuznet/auth-proxy-server/grpc/cms"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 // Configuration stores server configuration parameters
@@ -49,7 +56,7 @@ func checkFile(fname string) string {
 }
 
 // our backend gRpc service
-var backendGrpc GrpcService
+var backendGRPC GRPCService
 
 // http server implementation
 func grpcHttpServer() {
@@ -59,7 +66,7 @@ func grpcHttpServer() {
 
 	// initialize gRPC remote backend
 	var err error
-	backendGrpc, err = NewGRPCService(Config.GRPCAddress)
+	backendGRPC, err = NewGRPCService(Config.GRPCAddress)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -79,7 +86,62 @@ func grpcHttpServer() {
 	}
 }
 
+// gRPC proxy server type
+type proxyServer struct {
+}
+
+// gRPC proxy server GetData API implementation
+func (*proxyServer) GetData(ctx context.Context, request *cms.Request) (*cms.Response, error) {
+	if Config.Verbose > 0 {
+		log.Println("gRPC request", request)
+	}
+
+	// extract token from gRPC request
+	token := request.Data.Token
+	if !auth(token) {
+		msg := "Not authorized"
+		return nil, errors.New(msg)
+	}
+
+	response, err := backendGRPC.GetData(request)
+	if err != nil {
+		return nil, err
+	}
+	return response, nil
+}
+
 // grpc proxy server implementation
 func grpcServer() {
-	log.Fatal("Not implemented yet")
+
+	address := fmt.Sprintf("0.0.0.0:%d", Config.Port)
+	lis, err := net.Listen("tcp", address)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("gRPC server is listening on %v ...\n", address)
+
+	// start backend GRPC service (client)
+	backendGRPC, err = NewGRPCService(Config.GRPCAddress)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var srv *grpc.Server
+	if Config.ServerCrt != "" && Config.ServerKey != "" {
+		// check if provided crt/key files exists
+		serverCrt := checkFile(Config.ServerCrt)
+		serverKey := checkFile(Config.ServerKey)
+		creds, err := credentials.NewServerTLSFromFile(serverCrt, serverKey)
+		if err != nil {
+			log.Fatalf("Failed to generate credentials %v", err)
+		}
+		log.Println("start secure gRPC proxy server with backend gRPC", Config.GRPCAddress)
+		srv = grpc.NewServer(grpc.Creds(creds))
+	} else {
+		log.Println("start non-secure gRPC proxy server with backend gRPC", Config.GRPCAddress)
+		srv = grpc.NewServer()
+	}
+	cms.RegisterDataServiceServer(srv, &proxyServer{})
+	srv.Serve(lis)
+
 }
