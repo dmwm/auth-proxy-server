@@ -67,9 +67,7 @@ To start the service you'll need a proper configuration which is defined in
 ```
 
 ### References:
-[1] https://towardsdatascience.com/grpc-in-golang-bb40396eb8b1
-[2] https://grpc.io/docs/languages/go/basics/
-[3] https://pkg.go.dev/google.golang.org/grpc
-[4] https://github.com/vkuznet/mysvc
-[5] https://github.com/mwitkow/grpc-proxy
-[6] https://github.com/grpc/grpc-go/blob/master/Documentation/grpc-auth-support.md
+- [gRPC example](https://towardsdatascience.com/grpc-in-golang-bb40396eb8b1)
+- [gRPC tutorial](https://grpc.io/docs/languages/go/basics/)
+- [gRPC google documentation](https://pkg.go.dev/google.golang.org/grpc)
+- [gRPC authentication](https://github.com/grpc/grpc-go/blob/master/Documentation/grpc-auth-support.md)
