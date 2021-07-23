@@ -27,9 +27,9 @@ config.json
 mondb.json
 file.DB
 manager/token*
-grpc/grpc
-grpc/backend/client/client
-grpc/backend/server/server
+grpc/grpc-proxy-server*
+grpc/backend/client/grpc-client*
+grpc/backend/server/grpc-server*
 grpc/grpc.json
 grpc/config.json
 grpc/grpc-secure.json
