@@ -30,8 +30,11 @@ func (*server) GetData(ctx context.Context, request *cms.Request) (*cms.Response
 
 func main() {
 	var address string
-	flag.StringVar(&address, "address", "", "gRPC address, e.g. 0.0.0.0.:9999")
+	flag.StringVar(&address, "address", "", "gRPC address, e.g. 0.0.0.0:9999")
 	flag.Parse()
+	if address == "" {
+		log.Fatal("invalid gRPC address")
+	}
 	lis, err := net.Listen("tcp", address)
 	if err != nil {
 		log.Fatalf("Error %v", err)

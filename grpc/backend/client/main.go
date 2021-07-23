@@ -34,8 +34,12 @@ func NewGRPCService(connString, cert string) (GRPCService, error) {
 		// secure (TLS) gRPC connection
 		// for details see
 		// https://github.com/grpc/grpc-go/blob/master/Documentation/grpc-auth-support.md
-		// https://pkg.go.dev/google.golang.org/grpc/credentials#NewClientTLSFromCert
-		conn, err = grpc.Dial(connString, grpc.WithTransportCredentials(credentials.NewClientTLSFromCert(nil, "")))
+		// https://pkg.go.dev/google.golang.org/grpc/credentials
+		creds, err := credentials.NewClientTLSFromFile(cert, "")
+		if err != nil {
+			return nil, err
+		}
+		conn, err = grpc.Dial(connString, grpc.WithTransportCredentials(creds))
 	}
 
 	if err != nil {
@@ -58,11 +62,11 @@ func main() {
 	flag.StringVar(&address, "address", "", "gRPC address")
 	var token string
 	flag.StringVar(&token, "token", "", "gRPC authorization token")
-	var cert string
-	flag.StringVar(&cert, "cert", "", "client certificate")
+	var rootCA string
+	flag.StringVar(&rootCA, "rootCA", "", "root CA rootCAificate file(s) to validate server connections")
 	flag.Parse()
 
-	backendGRPC, err := NewGRPCService(address, cert)
+	backendGRPC, err := NewGRPCService(address, rootCA)
 	if err != nil {
 		log.Fatal(err)
 	}
