@@ -15,6 +15,7 @@ package main
 // https://gist.github.com/josemarjobs/23acc123b3cce1b251a5d5bafdca1140
 // https://www.thepolyglotdeveloper.com/2017/03/authenticate-a-golang-api-with-json-web-tokens/
 // https://github.com/dgrijalva/jwt-go
+// https://github.com/golang-jwt/jwt
 // https://godoc.org/github.com/dgrijalva/jwt-go#example-NewWithClaims--CustomClaimsType
 
 import (
@@ -34,7 +35,8 @@ import (
 	"time"
 
 	// jwt "github.com/cristalhq/jwt/v3"
-	jwt "github.com/dgrijalva/jwt-go"
+	//     jwt "github.com/dgrijalva/jwt-go"
+	jwt "github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
 )
 

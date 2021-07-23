@@ -192,7 +192,7 @@ func inspectTokenProviders(token string) (TokenAttributes, error) {
 // inspect token and extract token attributes
 func inspectToken(provider Provider, token string) (TokenAttributes, error) {
 	var attrs TokenAttributes
-	claims, err := tokenClaims2(provider, token)
+	claims, err := tokenClaims(provider, token)
 	if err != nil {
 		return attrs, err
 	}

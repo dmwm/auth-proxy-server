@@ -2,6 +2,7 @@ package main
 
 // https://github.com/pascaldekloe/jwt
 // https://github.com/dgrijalva/jwt-go
+// https://github.com/golang-jwt/jwt
 // https://github.com/MicahParks/keyfunc
 
 import (
@@ -18,10 +19,8 @@ import (
 	"time"
 
 	"github.com/pascaldekloe/jwt"
-
-	jwtgo "github.com/dgrijalva/jwt-go"
-
-	"github.com/MicahParks/keyfunc"
+	//     jwtgo "github.com/dgrijalva/jwt-go"
+	//     "github.com/MicahParks/keyfunc"
 )
 
 // JWKSKeys struct represent structure of JWKS Keys
@@ -138,6 +137,7 @@ func (p *Provider) Init(purl string) error {
 	return nil
 }
 
+/*
 // helper function to check given access token and return its claims
 // it is based on github.com/dgrijalva/jwt-go and github.com/MicahParks/keyfunc go packages
 func tokenClaims(provider Provider, accessToken string) (map[string]interface{}, error) {
@@ -165,6 +165,7 @@ func tokenClaims(provider Provider, accessToken string) (map[string]interface{},
 	}
 	return out, nil
 }
+*/
 
 // helper function to get RSA public key from given exponent and modulus
 // it is based on implementation of
@@ -203,7 +204,7 @@ func getPublicKey(exp, mod string) (*rsa.PublicKey, error) {
 
 // helper function to check access token and return claims map based on
 // github.com/pascaldekloe/jwt go package
-func tokenClaims2(provider Provider, token string) (map[string]interface{}, error) {
+func tokenClaims(provider Provider, token string) (map[string]interface{}, error) {
 	out := make(map[string]interface{})
 	// verify a JWT
 	claims, err := jwt.RSACheck([]byte(token), provider.PublicKey)
