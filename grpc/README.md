@@ -66,6 +66,109 @@ To start the service you'll need a proper configuration which is defined in
 }
 ```
 
+### Testing procedure
+To test http+gRPC proxy server we need to setup 3 pieces:
+##### Scenario I: http client
+In this case we need http+gRPC proxy server, the gRPC backend server and
+HTTP client. You may start the first two seaprately (in different terminals):
+# create gRPC proxy server config:
+cat > grpc-http.json << EOF
+{
+    "base": "",
+    "http_server": true,
+    "server_cert": "/path/hostcert.pem",
+    "server_key":  "/path/hostkey.pem",
+    "grpc_address": "0.0.0.0:9999",
+    "verbose": 1,
+    "port": 8443
+}
+EOF
+
+# compile the code if necessary (make) and start gRPC proxy server
+./grpc-proxy-server -config grpc-http.json
+...
+[2021-07-24 09:37:16.697304 -0400 EDT m=+0.004304882] server.go:82: Starting HTTPs server on :8443
+...
+```
+Then, start gRPC backend server:
+```
+# cd grpc/backend/server
+# compile code
+make
+# start gRPC server
+./grpc-server -address "0.0.0.0:9999"
+```
+Finally, we can use any HTTP based client to send our request, e.g.
+```
+curl -k -H "Authorization: bearer dymmy-token" https://localhost:8443/
+```
+
+
+##### Scenario II: gRPC client
+In this case we need gRPC proxy server, the gRPC backend server and gRPC
+client. You may start the first two separately (in different terminals):
+```
+# create secure gRPC proxy server config:
+cat > grpc-secure.json << EOF
+{
+    "base": "",
+    "http_server": false,
+    "server_cert": "/path/hostcert.pem",
+    "server_key":  "/path/hostkey.pem",
+    "grpc_address": "0.0.0.0:9999",
+    "verbose": 1,
+    "port": 8443
+}
+EOF
+
+# compile the code if necessary (make) and start gRPC proxy server
+./grpc-proxy-server -config grpc-secure.json
+...
+[2021-07-24 15:02:28.748320737 +0200 CEST m=+0.012208058] server.go:121: gRPC server is listening on 0.0.0.0:8443 ...
+[2021-07-24 15:02:28.752045754 +0200 CEST m=+0.015933077] server.go:138: start secure gRPC proxy server with backend gRPC 0.0.0.0:9999
+...
+```
+Then, start gRPC backend server:
+```
+# cd grpc/backend/server
+# compile code
+make
+# start gRPC server
+grpc-server -address "0.0.0.0:9999"
+```
+Finally, we can use `grpc-client` to test our proxy setup
+```
+# you'll need to replace <hostname> with actual hostname of gRPC proxy server
+./grpc-client -address "<hostame>:8443" -token "dummy-token" -rootCA=/path/rootCA.pem
+```
+
+If you want to disable security (development mode), you may start non-secure
+gRPC proxy server with the following config:
+```
+# non-secure gRPC proxy config
+cat > grpc-nonsecure.json << EOF
+{
+    "base": "",
+    "grpc_address": "0.0.0.0:9999",
+    "verbose": 1,
+    "port": 8443
+}
+EOF
+
+# start non-secure gRPC proxy server
+./grpc-proxy-server -config grpc.json
+...
+[2021-07-24 09:39:05.443806 -0400 EDT m=+0.003433299] server.go:121: gRPC server is listening on 0.0.0.0:8443 ...
+[2021-07-24 09:39:05.444003 -0400 EDT m=+0.003630668] server.go:141: start non-secure gRPC proxy server with backend gRPC 0.0.0.0:9999
+```
+and proceed as usual with gRPC client (in this case your client do not need
+rootCA option), e.g.:
+```
+# you'll need to replace <hostname> with actual hostname of gRPC proxy server
+./grpc-client -address "<hostame>:8443" -token "dummy-token"
+```
+
+
 ### References:
 - [gRPC example](https://towardsdatascience.com/grpc-in-golang-bb40396eb8b1)
 - [gRPC tutorial](https://grpc.io/docs/languages/go/basics/)
