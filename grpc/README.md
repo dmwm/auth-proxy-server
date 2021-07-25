@@ -11,13 +11,11 @@ client (HTTP) -> http+gRPC server (performs auth/authz) -> gRPC backend server
 In this case, the client can use HTTP POST request and provide necessary data.
 
 - gRPC proxy server which only talks gRPC protocol between gRPC client and gRPC backend
-server. For this we need to setup proper gRPC data format which will
-include authorization token, see cms/service.proto
+server.
 ```
 client (gRPC) -> gRPC server (performs auth/authz) -> gRPC backend server
 ```
-In this case, gRPC client should provide data with token where token will
-be part of gRPC data structure.
+In this case, gRPC client should provide data with token.
 
 To build the code we need to build proper gRPC service which can be
 found in cms area. The `service.proto` defines data representation used
@@ -174,3 +172,4 @@ rootCA option), e.g.:
 - [gRPC tutorial](https://grpc.io/docs/languages/go/basics/)
 - [gRPC google documentation](https://pkg.go.dev/google.golang.org/grpc)
 - [gRPC authentication](https://github.com/grpc/grpc-go/blob/master/Documentation/grpc-auth-support.md)
+- [gRPC oAuth](https://github.com/grpc/grpc-go/tree/master/examples/features/authentication)
