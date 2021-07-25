@@ -36,5 +36,4 @@ func RequestHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println("gRPC response", resp, err)
 	}
 	w.Write([]byte(resp.String()))
-	//     w.Write(grpcResult)
 }

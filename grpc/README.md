@@ -17,6 +17,11 @@ client (gRPC) -> gRPC server (performs auth/authz) -> gRPC backend server
 ```
 In this case, gRPC client should provide data with token.
 
+In addition, the communication between gRPC proxy server and backend one
+can be encrypted or not (so far in this repository it is not the case, but
+can be easily added to proxy server via additional grpc options, see example
+in backend/client area).
+
 To build the code we need to build proper gRPC service which can be
 found in cms area. The `service.proto` defines data representation used
 between gRPC parties. To build this code follow this command:
@@ -137,7 +142,7 @@ grpc-server -address "0.0.0.0:9999"
 Finally, we can use `grpc-client` to test our proxy setup
 ```
 # you'll need to replace <hostname> with actual hostname of gRPC proxy server
-./grpc-client -address "<hostame>:8443" -token "dummy-token" -rootCA=/path/rootCA.pem
+./grpc-client -address "<hostame>:8443" -token "some-secret-token" -rootCA=/path/rootCA.pem
 ```
 
 If you want to disable security (development mode), you may start non-secure
@@ -163,7 +168,7 @@ and proceed as usual with gRPC client (in this case your client do not need
 rootCA option), e.g.:
 ```
 # you'll need to replace <hostname> with actual hostname of gRPC proxy server
-./grpc-client -address "<hostame>:8443" -token "dummy-token"
+./grpc-client -address "<hostame>:8443" -token "some-secret-token"
 ```
 
 

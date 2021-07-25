@@ -4,8 +4,6 @@ package main
 //
 // Copyright (c) 2021 - Valentin Kuznetsov <vkuznet@gmail.com>
 //
-// references:
-// https://github.com/grpc/grpc-go/blob/master/examples/features/authentication/server/main.go
 
 import (
 	"context"
@@ -106,15 +104,6 @@ func (*proxyServer) GetData(ctx context.Context, request *cms.Request) (*cms.Res
 		log.Println("gRPC request", request)
 	}
 
-	/* with new gRPC options we don't need token in request
-	// extract token from gRPC request
-	token := request.Data.Token
-	if !auth(token) {
-		msg := "Not authorized"
-		return nil, errors.New(msg)
-	}
-	*/
-
 	response, err := backendGRPC.GetData(request)
 	if err != nil {
 		log.Println("backend error", err)
@@ -189,6 +178,7 @@ func ensureValidToken(ctx context.Context, req interface{}, info *grpc.UnaryServ
 		return nil, status.Errorf(codes.Unauthenticated, "invalid token")
 	}
 	log.Println("token is validated, context metadata", md)
+
 	// Continue execution of handler after ensuring a valid token.
 	return handler(ctx, req)
 }
