@@ -1,5 +1,9 @@
 package main
 
+// http+gRPC prpxy server
+//
+// Copyright (c) 2021 - Valentin Kuznetsov <vkuznet@gmail.com>
+
 import (
 	"flag"
 	"log"

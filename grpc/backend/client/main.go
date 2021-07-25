@@ -1,5 +1,10 @@
 package main
 
+// gRPC client example based on auth-proxy-server/grpc/cms representation
+//
+// Copyright (c) 2021 - Valentin Kuznetsov <vkuznet@gmail.com>
+//
+
 import (
 	"context"
 	"flag"
@@ -7,8 +12,10 @@ import (
 	"time"
 
 	"github.com/vkuznet/auth-proxy-server/grpc/cms"
+	"golang.org/x/oauth2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/oauth"
 )
 
 var defaultRequestTimeout = time.Second * 10
@@ -22,13 +29,33 @@ type grpcService struct {
 	grpcClient cms.DataServiceClient
 }
 
+// fetchToken simulates a token lookup and omits the details of proper token
+// acquisition. For examples of how to acquire an OAuth2 token, see:
+// https://godoc.org/golang.org/x/oauth2
+func fetchToken(token string) *oauth2.Token {
+	log.Println("client token", token)
+	return &oauth2.Token{
+		AccessToken: "some-secret-token",
+	}
+}
+
 // NewGRPCService creates a new gRPC user service connection using the specified connection string.
-func NewGRPCService(connString, cert string) (GRPCService, error) {
+func NewGRPCService(connString, cert, token string) (GRPCService, error) {
 	var err error
 	var conn *grpc.ClientConn
+	var opts []grpc.DialOption
+
+	// Set up the credentials for the connection.
+	perRPC := oauth.NewOauthAccess(fetchToken(token))
 	if cert == "" {
-		// insecure gRPC connection
-		conn, err = grpc.Dial(connString, grpc.WithInsecure())
+		opts = []grpc.DialOption{
+			// In addition to the following grpc.DialOption, callers may also use
+			// the grpc.CallOption grpc.PerRPCCredentials with the RPC invocation
+			// itself.
+			// See: https://godoc.org/google.golang.org/grpc#PerRPCCredentials
+			grpc.WithPerRPCCredentials(perRPC),
+		}
+		opts = append(opts, grpc.WithBlock())
 	} else {
 
 		// secure (TLS) gRPC connection
@@ -39,9 +66,20 @@ func NewGRPCService(connString, cert string) (GRPCService, error) {
 		if err != nil {
 			return nil, err
 		}
-		conn, err = grpc.Dial(connString, grpc.WithTransportCredentials(creds))
+		opts = []grpc.DialOption{
+			// In addition to the following grpc.DialOption, callers may also use
+			// the grpc.CallOption grpc.PerRPCCredentials with the RPC invocation
+			// itself.
+			// See: https://godoc.org/google.golang.org/grpc#PerRPCCredentials
+			grpc.WithPerRPCCredentials(perRPC),
+			// oauth.NewOauthAccess requires the configuration of transport
+			// credentials.
+			grpc.WithTransportCredentials(creds),
+		}
+		opts = append(opts, grpc.WithBlock())
 	}
 
+	conn, err = grpc.Dial(connString, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +104,7 @@ func main() {
 	flag.StringVar(&rootCA, "rootCA", "", "root CA rootCAificate file(s) to validate server connections")
 	flag.Parse()
 
-	backendGRPC, err := NewGRPCService(address, rootCA)
+	backendGRPC, err := NewGRPCService(address, rootCA, token)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -1,19 +1,29 @@
 package main
 
+// server provides http+gRPC and pure gRPC server implementations
+//
+// Copyright (c) 2021 - Valentin Kuznetsov <vkuznet@gmail.com>
+//
+// references:
+// https://github.com/grpc/grpc-go/blob/master/examples/features/authentication/server/main.go
+
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/vkuznet/auth-proxy-server/grpc/cms"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 )
 
 // Configuration stores server configuration parameters
@@ -96,15 +106,18 @@ func (*proxyServer) GetData(ctx context.Context, request *cms.Request) (*cms.Res
 		log.Println("gRPC request", request)
 	}
 
+	/* with new gRPC options we don't need token in request
 	// extract token from gRPC request
 	token := request.Data.Token
 	if !auth(token) {
 		msg := "Not authorized"
 		return nil, errors.New(msg)
 	}
+	*/
 
 	response, err := backendGRPC.GetData(request)
 	if err != nil {
+		log.Println("backend error", err)
 		return nil, err
 	}
 	return response, nil
@@ -126,7 +139,12 @@ func grpcServer() {
 		log.Fatal(err)
 	}
 
-	var srv *grpc.Server
+	// gRPC server options
+	var opts []grpc.ServerOption
+
+	// always require authentication token
+	opts = append(opts, grpc.UnaryInterceptor(ensureValidToken))
+
 	if Config.ServerCrt != "" && Config.ServerKey != "" {
 		// check if provided crt/key files exists
 		serverCrt := checkFile(Config.ServerCrt)
@@ -136,12 +154,41 @@ func grpcServer() {
 			log.Fatalf("Failed to generate credentials %v", err)
 		}
 		log.Println("start secure gRPC proxy server with backend gRPC", Config.GRPCAddress)
-		srv = grpc.NewServer(grpc.Creds(creds))
+		opts = append(opts, grpc.Creds(creds))
 	} else {
 		log.Println("start non-secure gRPC proxy server with backend gRPC", Config.GRPCAddress)
-		srv = grpc.NewServer()
 	}
+	srv := grpc.NewServer(opts...)
 	cms.RegisterDataServiceServer(srv, &proxyServer{})
 	srv.Serve(lis)
 
+}
+
+// helper function to validate the authorization.
+func valid(authorization []string) bool {
+	if len(authorization) < 1 {
+		return false
+	}
+	token := strings.TrimPrefix(authorization[0], "Bearer ")
+	return auth(token)
+}
+
+// ensureValidToken ensures a valid token exists within a request's metadata. If
+// the token is missing or invalid, the interceptor blocks execution of the
+// handler and returns an error. Otherwise, the interceptor invokes the unary
+// handler.
+func ensureValidToken(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, status.Errorf(codes.InvalidArgument, "missing metadata")
+	}
+	// The keys within metadata.MD are normalized to lowercase.
+	// See: https://godoc.org/google.golang.org/grpc/metadata#New
+	if !valid(md["authorization"]) {
+		log.Println("context metadata", md)
+		return nil, status.Errorf(codes.Unauthenticated, "invalid token")
+	}
+	log.Println("token is validated, context metadata", md)
+	// Continue execution of handler after ensuring a valid token.
+	return handler(ctx, req)
 }

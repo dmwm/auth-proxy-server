@@ -1,5 +1,9 @@
 package main
 
+// grpc module provides gRPC service
+//
+// Copyright (c) 2021 - Valentin Kuznetsov <vkuznet@gmail.com>
+
 import (
 	"context"
 	"time"

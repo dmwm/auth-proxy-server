@@ -1,18 +1,15 @@
 package main
 
+// http handlers
+//
+// Copyright (c) 2021 - Valentin Kuznetsov <vkuznet@gmail.com>
+
 import (
 	"log"
 	"net/http"
 
 	"github.com/vkuznet/auth-proxy-server/grpc/cms"
 )
-
-func auth(token string) bool {
-	if token != "" {
-		return true
-	}
-	return false
-}
 
 // RequestHandler performs reverse proxy action on incoming user request
 func RequestHandler(w http.ResponseWriter, r *http.Request) {
