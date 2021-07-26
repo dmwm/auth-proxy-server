@@ -19,8 +19,8 @@ require (
 	github.com/thomasdarimont/go-kc-example v0.0.0-20170529223628-e3951d8faa4c
 	github.com/tklauser/go-sysconf v0.3.5 // indirect
 	github.com/vkuznet/TokenManager v0.0.1 // indirect
-	github.com/vkuznet/auth-proxy-server/auth v0.0.0-20210726182926-60782173c11c
-	github.com/vkuznet/auth-proxy-server/cric v0.0.0-20210726182926-60782173c11c
+	github.com/vkuznet/auth-proxy-server/auth v0.0.0-20210726200103-cffa690dda9b
+	github.com/vkuznet/auth-proxy-server/cric v0.0.0-20210726200103-cffa690dda9b
 	golang.org/x/crypto v0.0.0-20210317152858-513c2a44f670
 	golang.org/x/oauth2 v0.0.0-20210313182246-cd4f82c27b84
 	gopkg.in/square/go-jose.v2 v2.5.1 // indirect

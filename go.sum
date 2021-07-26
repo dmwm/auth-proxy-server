@@ -153,10 +153,10 @@ github.com/tklauser/numcpus v0.2.2 h1:oyhllyrScuYI6g+h/zUvNXNp1wy7x8qQy3t/piefld
 github.com/tklauser/numcpus v0.2.2/go.mod h1:x3qojaO3uyYt0i56EW/VUYs7uBvdl2fkfZFu0T9wgjM=
 github.com/vkuznet/TokenManager v0.0.1 h1:cWGMpEHN2Idw75VsKW4pTsyZ8+v59lJW4YfJb3jUdHI=
 github.com/vkuznet/TokenManager v0.0.1/go.mod h1:FeJx3eiTF4bHgUqfdrN9uDpckI5RTzam3SNZ2KEnWP0=
-github.com/vkuznet/auth-proxy-server/auth v0.0.0-20210726182926-60782173c11c h1:tpQvGsk+gvKBl3U8RWWI3L+LN6clqJrGAvP+/DBifmI=
-github.com/vkuznet/auth-proxy-server/auth v0.0.0-20210726182926-60782173c11c/go.mod h1:4o7LB5cxgJ8Mb7RIZ46D4wrxAuZGCWGHq4e/+RnXKhA=
-github.com/vkuznet/auth-proxy-server/cric v0.0.0-20210726182926-60782173c11c h1:R3nXR83KJ7epxcdoWFbsv7YIHPryWGhMuAUM2q8TpZw=
-github.com/vkuznet/auth-proxy-server/cric v0.0.0-20210726182926-60782173c11c/go.mod h1:OvroOpAhAEBJYwdisIrMKAK5WQxr2tR1ncFGqRcWo0s=
+github.com/vkuznet/auth-proxy-server/auth v0.0.0-20210726200103-cffa690dda9b h1:FwXiPWhnyZobfXhdpxhQn59JlUomoTeq7B+qSzy+Cvk=
+github.com/vkuznet/auth-proxy-server/auth v0.0.0-20210726200103-cffa690dda9b/go.mod h1:4o7LB5cxgJ8Mb7RIZ46D4wrxAuZGCWGHq4e/+RnXKhA=
+github.com/vkuznet/auth-proxy-server/cric v0.0.0-20210726200103-cffa690dda9b h1:hpnaGzGXac0Ft3nIXV7575N21ReFs0C5vDKkUs9CqEQ=
+github.com/vkuznet/auth-proxy-server/cric v0.0.0-20210726200103-cffa690dda9b/go.mod h1:OvroOpAhAEBJYwdisIrMKAK5WQxr2tR1ncFGqRcWo0s=
 github.com/vkuznet/x509proxy v0.0.0-20191014143623-163039704c67 h1:7s/FGCnCgfaJxmyeE+k18s5Bpx1TIrss4sMesjqRJsI=
 github.com/vkuznet/x509proxy v0.0.0-20191014143623-163039704c67/go.mod h1:n8gnqWgHpPWW+DyA66Zam8qQshAmDxVVmSmObyR6M8g=
 github.com/yuin/goldmark v1.1.25/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=

@@ -347,16 +347,7 @@ func main() {
 	}
 
 	// initialize all particiapted providers
-	auth.OAuthProviders = make(map[string]auth.Provider)
-	for _, purl := range Config.Providers {
-		log.Println("initialize provider ", purl)
-		p := auth.Provider{}
-		err := p.Init(purl, Config.Verbose)
-		if err != nil {
-			log.Fatalf("fail to initialize %s error %v", p.URL, err)
-		}
-		auth.OAuthProviders[purl] = p
-	}
+	auth.Init(Config.Providers, Config.Verbose)
 
 	CMSAuth.Init(Config.Hmac)
 
