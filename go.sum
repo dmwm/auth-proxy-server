@@ -45,8 +45,8 @@ github.com/coreos/go-oidc v2.2.1+incompatible h1:mh48q/BqXqgjVHpy2ZY7WnWAbenxRjs
 github.com/coreos/go-oidc v2.2.1+incompatible/go.mod h1:CgnwVTmzoESiwO9qyAFEMiHoZ1nMCKZlZ9V6mm3/LKc=
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/dmwm/cmsauth v0.0.0-20210614180517-01f2d7ce5a8a h1:Ih4sLDtKffZUd8PqGJxAiOyWMsdGr+yG9A7UYtdMsoE=
-github.com/dmwm/cmsauth v0.0.0-20210614180517-01f2d7ce5a8a/go.mod h1:jOh1zpUS1B1/qMAV/qjhHHKXcUB+vH3KhNQNG9q7fp4=
+github.com/dmwm/cmsauth v0.0.0-20210719153116-ae60676e374b h1:pcY4985auxBBhSy8htynwOdSVa0/5h2zV7MO8n6AZ9U=
+github.com/dmwm/cmsauth v0.0.0-20210719153116-ae60676e374b/go.mod h1:+ybphq48TVfrBjWKn7QZFsweZZlHI/m7QlfWMrgRiPY=
 github.com/envoyproxy/go-control-plane v0.9.0/go.mod h1:YTl/9mNaCwkRvm6d1a2C3ymFceY/DCBVvsKhRF0iEA4=
 github.com/envoyproxy/go-control-plane v0.9.1-0.20191026205805-5f8ba28d4473/go.mod h1:YTl/9mNaCwkRvm6d1a2C3ymFceY/DCBVvsKhRF0iEA4=
 github.com/envoyproxy/go-control-plane v0.9.4/go.mod h1:6rpuAdCZL397s3pYoYcLgu1mIlRU8Am5FuJP05cCM98=
@@ -153,6 +153,12 @@ github.com/tklauser/numcpus v0.2.2 h1:oyhllyrScuYI6g+h/zUvNXNp1wy7x8qQy3t/piefld
 github.com/tklauser/numcpus v0.2.2/go.mod h1:x3qojaO3uyYt0i56EW/VUYs7uBvdl2fkfZFu0T9wgjM=
 github.com/vkuznet/TokenManager v0.0.1 h1:cWGMpEHN2Idw75VsKW4pTsyZ8+v59lJW4YfJb3jUdHI=
 github.com/vkuznet/TokenManager v0.0.1/go.mod h1:FeJx3eiTF4bHgUqfdrN9uDpckI5RTzam3SNZ2KEnWP0=
+github.com/vkuznet/auth-proxy-server/auth v0.0.0-20210726182926-60782173c11c h1:tpQvGsk+gvKBl3U8RWWI3L+LN6clqJrGAvP+/DBifmI=
+github.com/vkuznet/auth-proxy-server/auth v0.0.0-20210726182926-60782173c11c/go.mod h1:4o7LB5cxgJ8Mb7RIZ46D4wrxAuZGCWGHq4e/+RnXKhA=
+github.com/vkuznet/auth-proxy-server/cric v0.0.0-20210726182926-60782173c11c h1:R3nXR83KJ7epxcdoWFbsv7YIHPryWGhMuAUM2q8TpZw=
+github.com/vkuznet/auth-proxy-server/cric v0.0.0-20210726182926-60782173c11c/go.mod h1:OvroOpAhAEBJYwdisIrMKAK5WQxr2tR1ncFGqRcWo0s=
+github.com/vkuznet/x509proxy v0.0.0-20191014143623-163039704c67 h1:7s/FGCnCgfaJxmyeE+k18s5Bpx1TIrss4sMesjqRJsI=
+github.com/vkuznet/x509proxy v0.0.0-20191014143623-163039704c67/go.mod h1:n8gnqWgHpPWW+DyA66Zam8qQshAmDxVVmSmObyR6M8g=
 github.com/yuin/goldmark v1.1.25/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.1.32/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
