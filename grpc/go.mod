@@ -7,7 +7,8 @@ require (
 	github.com/jonboulle/clockwork v0.2.2 // indirect
 	github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible
 	github.com/lestrrat-go/strftime v1.0.5 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
-	golang.org/x/net v0.0.0-20200822124328-c89045814202
+	github.com/vkuznet/auth-proxy-server/auth v0.0.0-20210726182926-60782173c11c // indirect
+	github.com/vkuznet/auth-proxy-server/cric v0.0.0-20210726183039-dc2ddad27e65 // indirect
+	golang.org/x/net v0.0.0-20210226172049-e18ecbb05110
 	google.golang.org/grpc v1.39.0
 )

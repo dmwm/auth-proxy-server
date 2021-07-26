@@ -12,6 +12,7 @@ import (
 	_ "net/http/pprof" // profiler, see https://golang.org/pkg/net/http/pprof/
 
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
+	"github.com/vkuznet/auth-proxy-server/auth"
 )
 
 // main function
@@ -39,6 +40,21 @@ func main() {
 	}
 	if Config.Verbose > 0 {
 		log.Printf("%+v\n", Config)
+	}
+
+	// initialize all particiapted providers
+	auth.OAuthProviders = make(map[string]auth.Provider)
+	for _, purl := range Config.Providers {
+		log.Println("initialize provider ", purl)
+		p := auth.Provider{}
+		err := p.Init(purl, Config.Verbose)
+		if err != nil {
+			log.Fatalf("fail to initialize %s error %v", p.URL, err)
+		}
+		auth.OAuthProviders[purl] = p
+	}
+	if Config.Verbose > 0 {
+		log.Printf("OAuth providers %+v", auth.OAuthProviders)
 	}
 
 	// start proxy server

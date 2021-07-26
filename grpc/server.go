@@ -16,6 +16,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/vkuznet/auth-proxy-server/cric"
 	"github.com/vkuznet/auth-proxy-server/grpc/cms"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -26,14 +27,19 @@ import (
 
 // Configuration stores server configuration parameters
 type Configuration struct {
-	Port        int    `json:"port"`         // server port number
-	Base        string `json:"base"`         // base URL
-	Verbose     int    `json:"verbose"`      // verbose output
-	ServerCrt   string `json:"server_cert"`  // path to server crt file
-	ServerKey   string `json:"server_key"`   // path to server key file
-	LogFile     string `json:"log_file"`     // log file
-	HttpServer  bool   `json:"http_server"`  // run http service or not
-	GRPCAddress string `json:"grpc_address"` // address of gRPC backend server
+	Port               int      `json:"port"`         // server port number
+	Base               string   `json:"base"`         // base URL
+	Verbose            int      `json:"verbose"`      // verbose output
+	ServerCrt          string   `json:"server_cert"`  // path to server crt file
+	ServerKey          string   `json:"server_key"`   // path to server key file
+	LogFile            string   `json:"log_file"`     // log file
+	HttpServer         bool     `json:"http_server"`  // run http service or not
+	GRPCAddress        string   `json:"grpc_address"` // address of gRPC backend server
+	Providers          []string `json:"providers`     // list of JWKS providers
+	CricURL            string   `json:"cric_url"`     // CRIC URL
+	CricFile           string   `json:"cric_file"`    // name of the CRIC file
+	CricVerbose        int      `json:"cric_verbose"` // verbose output for cric
+	UpdateCricInterval int64    `json:"update_cric"`  // interval (in sec) to update cric records
 }
 
 // Config variable represents configuration object
@@ -122,6 +128,9 @@ func grpcServer() {
 	}
 	log.Printf("gRPC server is listening on %v ...\n", address)
 
+	// update CRIC records based on user ID
+	go cric.UpdateCricRecords("id", Config.CricFile, Config.CricURL, Config.UpdateCricInterval, Config.CricVerbose)
+
 	// start backend GRPC service (client)
 	backendGRPC, err = NewGRPCService(Config.GRPCAddress)
 	if err != nil {
@@ -159,7 +168,7 @@ func valid(authorization []string) bool {
 		return false
 	}
 	token := strings.TrimPrefix(authorization[0], "Bearer ")
-	return auth(token)
+	return validate(token, Config.Providers, Config.Verbose)
 }
 
 // ensureValidToken ensures a valid token exists within a request's metadata. If

@@ -35,7 +35,7 @@ type grpcService struct {
 func fetchToken(token string) *oauth2.Token {
 	log.Println("client token", token)
 	return &oauth2.Token{
-		AccessToken: "some-secret-token",
+		AccessToken: token,
 	}
 }
 
@@ -48,12 +48,10 @@ func NewGRPCService(connString, cert, token string) (GRPCService, error) {
 	// Set up the credentials for the connection.
 	perRPC := oauth.NewOauthAccess(fetchToken(token))
 	if cert == "" {
+		creds := credentials.NewClientTLSFromCert(nil, "")
 		opts = []grpc.DialOption{
-			// In addition to the following grpc.DialOption, callers may also use
-			// the grpc.CallOption grpc.PerRPCCredentials with the RPC invocation
-			// itself.
-			// See: https://godoc.org/google.golang.org/grpc#PerRPCCredentials
 			grpc.WithPerRPCCredentials(perRPC),
+			grpc.WithTransportCredentials(creds),
 		}
 		opts = append(opts, grpc.WithBlock())
 	} else {
@@ -67,13 +65,7 @@ func NewGRPCService(connString, cert, token string) (GRPCService, error) {
 			return nil, err
 		}
 		opts = []grpc.DialOption{
-			// In addition to the following grpc.DialOption, callers may also use
-			// the grpc.CallOption grpc.PerRPCCredentials with the RPC invocation
-			// itself.
-			// See: https://godoc.org/google.golang.org/grpc#PerRPCCredentials
 			grpc.WithPerRPCCredentials(perRPC),
-			// oauth.NewOauthAccess requires the configuration of transport
-			// credentials.
 			grpc.WithTransportCredentials(creds),
 		}
 		opts = append(opts, grpc.WithBlock())
@@ -103,6 +95,7 @@ func main() {
 	var rootCA string
 	flag.StringVar(&rootCA, "rootCA", "", "root CA rootCAificate file(s) to validate server connections")
 	flag.Parse()
+	log.SetFlags(log.Lshortfile)
 
 	backendGRPC, err := NewGRPCService(address, rootCA, token)
 	if err != nil {
