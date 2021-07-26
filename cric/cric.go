@@ -84,7 +84,7 @@ func UpdateCricRecords(key, cricFile, cricURL string, cricUpdateInterval int64, 
 			}
 			log.Printf("obtain CRIC records from %s, %v", cricFile, err)
 		} else {
-			log.Println("Untable to get CRIC records no file or no url was provided")
+			log.Println("Unable to get CRIC records no file or no url was provided")
 		}
 		if err != nil {
 			log.Printf("Unable to update CRIC records: %v", err)
