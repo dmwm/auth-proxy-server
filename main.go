@@ -53,6 +53,8 @@ import (
 	"github.com/dmwm/cmsauth"
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
 	"github.com/shirou/gopsutil/cpu"
+	"github.com/vkuznet/auth-proxy-server/auth"
+	"github.com/vkuznet/auth-proxy-server/cric"
 )
 
 // StartTime of the server
@@ -66,9 +68,6 @@ var NumLogicalCores int
 
 // CMSAuth structure to create CMS Auth headers
 var CMSAuth cmsauth.CMSAuth
-
-// OAuthProviders contains maps of all participated providers
-var OAuthProviders map[string]Provider
 
 // version of the code
 var version string
@@ -348,28 +347,28 @@ func main() {
 	}
 
 	// initialize all particiapted providers
-	OAuthProviders = make(map[string]Provider)
+	auth.OAuthProviders = make(map[string]auth.Provider)
 	for _, purl := range Config.Providers {
 		log.Println("initialize provider ", purl)
-		p := Provider{}
-		err := p.Init(purl)
+		p := auth.Provider{}
+		err := p.Init(purl, Config.Verbose)
 		if err != nil {
 			log.Fatalf("fail to initialize %s error %v", p.URL, err)
 		}
-		OAuthProviders[purl] = p
+		auth.OAuthProviders[purl] = p
 	}
 
 	CMSAuth.Init(Config.Hmac)
 
 	// start our servers
 	if useX509 {
-		go UpdateCricRecords("dn", Config.CricFile, Config.CricURL, Config.UpdateCricInterval, Config.CricVerbose)
+		go cric.UpdateCricRecords("dn", Config.CricFile, Config.CricURL, Config.UpdateCricInterval, Config.CricVerbose)
 		x509ProxyServer()
 		return
 	} else if scitokens {
 		scitokensServer()
 		return
 	}
-	go UpdateCricRecords("id", Config.CricFile, Config.CricURL, Config.UpdateCricInterval, Config.CricVerbose)
+	go cric.UpdateCricRecords("id", Config.CricFile, Config.CricURL, Config.UpdateCricInterval, Config.CricVerbose)
 	oauthProxyServer()
 }

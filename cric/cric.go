@@ -1,4 +1,4 @@
-package main
+package cric
 
 // cric module
 //
@@ -6,6 +6,8 @@ package main
 //
 
 import (
+	"errors"
+	"fmt"
 	"log"
 	"reflect"
 	"regexp"
@@ -128,4 +130,16 @@ func updateCMSRecords(cricRecords cmsauth.CricRecords) {
 			}
 		}
 	}
+}
+
+// FindUser finds user info in cric records for given cert subject
+func FindUser(subjects []string) (cmsauth.CricEntry, error) {
+	for _, s := range subjects {
+		s = strings.Replace(s, "CN=", "", -1)
+		if r, ok := cmsRecords[s]; ok {
+			return r, nil
+		}
+	}
+	msg := fmt.Sprintf("user not found: %v\n", subjects)
+	return cmsauth.CricEntry{}, errors.New(msg)
 }

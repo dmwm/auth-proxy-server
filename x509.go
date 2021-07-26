@@ -14,6 +14,7 @@ import (
 	"time"
 
 	_ "github.com/thomasdarimont/go-kc-example/session_memory"
+	"github.com/vkuznet/auth-proxy-server/cric"
 )
 
 // TotalX509GetRequests counts total number of GET requests received by the server
@@ -43,7 +44,7 @@ func x509RequestHandler(w http.ResponseWriter, r *http.Request) {
 	if Config.Verbose > 3 {
 		level = true
 	}
-	CMSAuth.SetCMSHeaders(r, userData, CricRecords, level)
+	CMSAuth.SetCMSHeaders(r, userData, cric.CricRecords, level)
 	if r.Header.Get("Cms-Auth-Cert") == "" {
 		if dn, ok := userData["dn"]; ok {
 			r.Header.Set("Cms-Auth-Cert", dn.(string))

@@ -1,4 +1,4 @@
-package main
+package auth
 
 // https://github.com/pascaldekloe/jwt
 // https://github.com/dgrijalva/jwt-go
@@ -73,7 +73,7 @@ func (p *Provider) String() string {
 }
 
 // Init function initialize provider configuration
-func (p *Provider) Init(purl string) error {
+func (p *Provider) Init(purl string, verbose int) error {
 	resp, err := http.Get(fmt.Sprintf("%s/.well-known/openid-configuration", purl))
 	if err != nil {
 		log.Println("unable to contact ", purl, " error ", err)
@@ -93,7 +93,7 @@ func (p *Provider) Init(purl string) error {
 	}
 	p.URL = purl
 	p.Configuration = conf
-	if Config.Verbose > 0 {
+	if verbose > 0 {
 		log.Println("provider configuration", conf)
 	}
 
@@ -131,7 +131,7 @@ func (p *Provider) Init(purl string) error {
 		return err
 	}
 	p.PublicKey = pub
-	if Config.Verbose > 0 {
+	if verbose > 0 {
 		log.Println("\n", p.String())
 	}
 	return nil

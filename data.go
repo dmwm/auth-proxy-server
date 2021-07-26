@@ -6,8 +6,6 @@ package main
 //
 
 import (
-	"fmt"
-
 	"github.com/shirou/gopsutil/load"
 	"github.com/shirou/gopsutil/net"
 	"github.com/shirou/gopsutil/process"
@@ -101,37 +99,6 @@ type LogRecord struct {
 // ServerSettings controls server parameters
 type ServerSettings struct {
 	Verbose int `json:"verbose"` // verbosity output
-}
-
-// TokenAttributes contains structure of access token attributes
-type TokenAttributes struct {
-	UserName     string `json:"username"`      // user name
-	Active       bool   `json:"active"`        // is token active or not
-	SessionState string `json:"session_state"` // session state fields
-	ClientID     string `json:"clientId"`      // client id
-	Email        string `json:"email"`         // client email address
-	Scope        string `json:"scope"`         // scope of the token
-	Expiration   int64  `json:"exp"`           // token expiration
-	ClientHost   string `json:"clientHost"`    // client host
-}
-
-// TokenInfo contains information about all tokens
-type TokenInfo struct {
-	AccessToken   string `json:"access_token"`       // access token
-	AccessExpire  int64  `json:"expires_in"`         // access token expiration
-	RefreshToken  string `json:"refresh_token"`      // refresh token
-	RefreshExpire int64  `json:"refresh_expires_in"` // refresh token expireation
-	IDToken       string `json:"id_token"`           // id token
-}
-
-// String convert TokenInfo into html snippet
-func (t *TokenInfo) String() string {
-	var s string
-	s = fmt.Sprintf("%s\nAccessToken:\n%s", s, t.AccessToken)
-	s = fmt.Sprintf("%s\nAccessExpire: %d", s, t.AccessExpire)
-	s = fmt.Sprintf("%s\nRefreshToken:\n%s", s, t.RefreshToken)
-	s = fmt.Sprintf("%s\nRefreshExpire: %d", s, t.RefreshExpire)
-	return s
 }
 
 // Memory structure keeps track of server memory

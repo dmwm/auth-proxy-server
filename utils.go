@@ -20,7 +20,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dmwm/cmsauth"
+	"github.com/vkuznet/auth-proxy-server/cric"
 )
 
 // helper function to check if given file name exists
@@ -240,18 +240,6 @@ func findCN(subject string) (string, error) {
 	return "", errors.New("no user CN is found in subject: " + subject)
 }
 
-// helper function to find user info in cric records for given cert subject
-func findUser(subjects []string) (cmsauth.CricEntry, error) {
-	for _, s := range subjects {
-		s = strings.Replace(s, "CN=", "", -1)
-		if r, ok := cmsRecords[s]; ok {
-			return r, nil
-		}
-	}
-	msg := fmt.Sprintf("user not found: %v\n", subjects)
-	return cmsauth.CricEntry{}, errors.New(msg)
-}
-
 // helper function to get user data from TLS request
 func getUserData(r *http.Request) map[string]interface{} {
 	userData := make(map[string]interface{})
@@ -278,7 +266,7 @@ func getUserData(r *http.Request) map[string]interface{} {
 			}
 			subjects = append(subjects, s)
 		}
-		rec, err := findUser(subjects)
+		rec, err := cric.FindUser(subjects)
 		if Config.Verbose > 0 {
 			log.Printf("found user %+v error=%v elapsed time %v\n", rec, err, time.Since(start))
 		}

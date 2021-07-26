@@ -46,6 +46,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/thomasdarimont/go-kc-example/session"
 	_ "github.com/thomasdarimont/go-kc-example/session_memory"
+	"github.com/vkuznet/auth-proxy-server/auth"
+	"github.com/vkuznet/auth-proxy-server/cric"
 	"golang.org/x/oauth2"
 )
 
@@ -80,7 +82,7 @@ func init() {
 }
 
 // helper function to verify/validate given token
-func introspectToken(token string) (TokenAttributes, error) {
+func introspectToken(token string) (auth.TokenAttributes, error) {
 	verifyURL := fmt.Sprintf("%s/introspect", AuthTokenURL)
 	form := url.Values{}
 	form.Add("token", token)
@@ -89,7 +91,7 @@ func introspectToken(token string) (TokenAttributes, error) {
 	r, err := http.NewRequest("POST", verifyURL, strings.NewReader(form.Encode()))
 	if err != nil {
 		msg := fmt.Sprintf("unable to POST request to %s, %v", verifyURL, err)
-		return TokenAttributes{}, errors.New(msg)
+		return auth.TokenAttributes{}, errors.New(msg)
 	}
 	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	r.Header.Add("User-Agent", "go-client")
@@ -105,29 +107,29 @@ func introspectToken(token string) (TokenAttributes, error) {
 	}
 	if err != nil {
 		msg := fmt.Sprintf("validate error: %+v", err)
-		return TokenAttributes{}, errors.New(msg)
+		return auth.TokenAttributes{}, errors.New(msg)
 	}
 	defer resp.Body.Close()
-	var tokenAttributes TokenAttributes
+	var tokenAttributes auth.TokenAttributes
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		msg := fmt.Sprintf("unable to read response body %s error %v", string(data), err)
-		return TokenAttributes{}, errors.New(msg)
+		return auth.TokenAttributes{}, errors.New(msg)
 	}
 	err = json.Unmarshal(data, &tokenAttributes)
 	if err != nil {
 		msg := fmt.Sprintf("unable to decode response body, error %v", err)
-		return TokenAttributes{}, errors.New(msg)
+		return auth.TokenAttributes{}, errors.New(msg)
 	}
 	return tokenAttributes, nil
 
 }
 
 // helper function to renew access token of the client
-func renewToken(token string, r *http.Request) (TokenInfo, error) {
+func renewToken(token string, r *http.Request) (auth.TokenInfo, error) {
 	if token == "" {
 		msg := fmt.Sprintf("empty authorization token")
-		return TokenInfo{}, errors.New(msg)
+		return auth.TokenInfo{}, errors.New(msg)
 	}
 	form := url.Values{}
 	form.Add("refresh_token", token)
@@ -137,7 +139,7 @@ func renewToken(token string, r *http.Request) (TokenInfo, error) {
 	r, err := http.NewRequest("POST", AuthTokenURL, strings.NewReader(form.Encode()))
 	if err != nil {
 		msg := fmt.Sprintf("unable to POST request to %s, %v", AuthTokenURL, err)
-		return TokenInfo{}, errors.New(msg)
+		return auth.TokenInfo{}, errors.New(msg)
 	}
 	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	r.Header.Add("User-Agent", "go-client")
@@ -153,92 +155,21 @@ func renewToken(token string, r *http.Request) (TokenInfo, error) {
 	}
 	if err != nil {
 		msg := fmt.Sprintf("validate error: %+v", err)
-		return TokenInfo{}, errors.New(msg)
+		return auth.TokenInfo{}, errors.New(msg)
 	}
 	defer resp.Body.Close()
-	var tokenInfo TokenInfo
+	var tokenInfo auth.TokenInfo
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		msg := fmt.Sprintf("unable to read response body %s error %v", string(data), err)
-		return TokenInfo{}, errors.New(msg)
+		return auth.TokenInfo{}, errors.New(msg)
 	}
 	err = json.Unmarshal(data, &tokenInfo)
 	if err != nil {
 		msg := fmt.Sprintf("unable to decode response body, error %v", err)
-		return TokenInfo{}, errors.New(msg)
+		return auth.TokenInfo{}, errors.New(msg)
 	}
 	return tokenInfo, nil
-}
-
-// InspectTokenProviders inspects token against all participated providers and return
-// TokenAttributes
-func InspectTokenProviders(token string, verbose int) (TokenAttributes, error) {
-	for _, purl := range Config.Providers {
-		if p, ok := OAuthProviders[purl]; ok {
-			attrs, err := InspectToken(p, token, verbose)
-			if err == nil {
-				if Config.Verbose > 0 {
-					log.Println("token is validated with provider ", purl)
-				}
-				return attrs, nil
-			} else {
-				log.Println("provider", p.URL, " token error ", err)
-			}
-		}
-	}
-	msg := fmt.Sprintf("Token is not valid with participated providers: %v", Config.Providers)
-	return TokenAttributes{}, errors.New(msg)
-}
-
-// InspectToken extracts token attributes
-func InspectToken(provider Provider, token string, verbose int) (TokenAttributes, error) {
-	var attrs TokenAttributes
-	claims, err := tokenClaims(provider, token)
-	if err != nil {
-		return attrs, err
-	}
-	if verbose > 1 {
-		log.Println("token claims", claims)
-	}
-	for k, v := range claims {
-		if k == "email" {
-			attrs.Email = fmt.Sprintf("%v", v)
-		}
-		if k == "cern_upn" || k == "preferred_username" {
-			attrs.UserName = fmt.Sprintf("%v", v)
-		}
-		if k == "cern_person_id" {
-			attrs.ClientID = fmt.Sprintf("%v", v)
-		}
-		if k == "session_state" {
-			attrs.SessionState = fmt.Sprintf("%v", v)
-		}
-		if k == "exp" {
-			switch val := v.(type) {
-			case float64:
-				attrs.Expiration = int64(val)
-			case int64:
-				attrs.Expiration = val
-			}
-		}
-		if k == "scope" {
-			attrs.Scope = fmt.Sprintf("%v", v)
-		}
-		if k == "cern_roles" {
-			s := fmt.Sprintf("%v", v)
-			s = strings.Replace(s, "[", "", -1)
-			s = strings.Replace(s, "]", "", -1)
-			attrs.Scope = s
-		}
-	}
-	attrs.Active = true
-	if verbose > 1 {
-		if err := printJSON(attrs, "token attributes"); err != nil {
-			msg := fmt.Sprintf("Failed to output token attributes: %v", err)
-			log.Println(msg)
-		}
-	}
-	return attrs, err
 }
 
 // helper function to get token from http request
@@ -254,15 +185,15 @@ func getToken(r *http.Request) string {
 
 // helper function to check access token of the client
 // it is done via introspect auth end-point
-func checkAccessToken(r *http.Request) (TokenAttributes, error) {
+func checkAccessToken(r *http.Request) (auth.TokenAttributes, error) {
 	// extract token from a request
 	token := getToken(r)
 	if token == "" {
-		return TokenAttributes{}, errors.New("no token present in HTTP request")
+		return auth.TokenAttributes{}, errors.New("no token present in HTTP request")
 	}
 
 	// first, we inspect our token
-	attrs, err := InspectTokenProviders(token, Config.Verbose)
+	attrs, err := auth.InspectTokenProviders(token, Config.Providers, Config.Verbose)
 	if err == nil {
 		if attrs.ClientHost == "" {
 			attrs.ClientHost = r.Referer()
@@ -508,7 +439,7 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 			rtexp = sess.Get("refreshExpire").(int64)
 		}
 		sessLock.Unlock()
-		tokenInfo := TokenInfo{AccessToken: token, RefreshToken: rtoken, AccessExpire: texp, RefreshExpire: rtexp, IDToken: token}
+		tokenInfo := auth.TokenInfo{AccessToken: token, RefreshToken: rtoken, AccessExpire: texp, RefreshExpire: rtexp, IDToken: token}
 		if !strings.Contains(strings.ToLower(r.Header.Get("Accept")), "json") {
 			w.Write([]byte(tokenInfo.String()))
 			return
@@ -558,7 +489,7 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 		if Config.Verbose > 3 {
 			level = true
 		}
-		CMSAuth.SetCMSHeadersByKey(r, userData, CricRecords, "id", "oauth", level)
+		CMSAuth.SetCMSHeadersByKey(r, userData, cric.CricRecords, "id", "oauth", level)
 		if Config.Verbose > 0 {
 			printHTTPRequest(r, "cms headers")
 		}
