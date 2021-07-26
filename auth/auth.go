@@ -41,6 +41,22 @@ func (t *TokenInfo) String() string {
 	return s
 }
 
+// Init initializes map of OAuth providers
+func Init(providers []string, verbose int) {
+	OAuthProviders = make(map[string]Provider)
+	for _, purl := range providers {
+		if verbose > 0 {
+			log.Println("initialize provider ", purl)
+		}
+		p := Provider{}
+		err := p.Init(purl, verbose)
+		if err != nil {
+			log.Fatalf("fail to initialize %s error %v", p.URL, err)
+		}
+		OAuthProviders[purl] = p
+	}
+}
+
 // InspectTokenProviders inspects token against all participated providers and return
 // TokenAttributes
 func InspectTokenProviders(token string, providers []string, verbose int) (TokenAttributes, error) {
