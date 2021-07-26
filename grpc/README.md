@@ -44,28 +44,26 @@ To start the service you'll need a proper configuration which is defined in
     "server_cert": "/Users/vk/certificates/tls.crt",
     "server_key": "/Users/vk/certificates/tls.key",
     "grpc_address": "0.0.0.0:9999",
+    "providers": [... list of OAuth providers ...],
+    "cric_url": "CRIC_URL_HERE",
+    "cric_file": "/path/cric.json (optional)",
+    "update_cric": 36000,
     "verbose": 1,
     "port": 8443
 }
-# Configuration for secure gRPC proxy server
+# Configuration for secure gRPC proxy server:
 {
-    "base": "",
+    ...
     "http_server": false,
-    "server_cert": "/Users/vk/certificates/tls.crt",
-    "server_key": "/Users/vk/certificates/tls.key",
-    "grpc_address": "0.0.0.0:9999",
-    "verbose": 1,
-    "port": 8443
+    ...
 }
-# Configuration for non-secure gRPC proxy server
+# Configuration for non-secure gRPC proxy server:
 {
-    "base": "",
+    ...
     "http_server": false,
     "server_cert": "",
     "server_key": "",
-    "grpc_address": "0.0.0.0:9999",
-    "verbose": 1,
-    "port": 8888
+    ...
 }
 ```
 
@@ -82,6 +80,10 @@ cat > grpc-http.json << EOF
     "server_cert": "/path/hostcert.pem",
     "server_key":  "/path/hostkey.pem",
     "grpc_address": "0.0.0.0:9999",
+    "providers": [... list of OAuth providers ...],
+    "cric_url": "CRIC_URL_HERE",
+    "cric_file": "/path/cric.json (optional)",
+    "update_cric": 36000,
     "verbose": 1,
     "port": 8443
 }
@@ -119,6 +121,10 @@ cat > grpc-secure.json << EOF
     "server_cert": "/path/hostcert.pem",
     "server_key":  "/path/hostkey.pem",
     "grpc_address": "0.0.0.0:9999",
+    "providers": [... list of OAuth providers ...],
+    "cric_url": "CRIC_URL_HERE",
+    "cric_file": "/path/cric.json (optional)",
+    "update_cric": 36000,
     "verbose": 1,
     "port": 8443
 }
