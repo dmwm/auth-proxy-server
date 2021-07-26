@@ -170,11 +170,12 @@ func renewToken(token string, r *http.Request) (TokenInfo, error) {
 	return tokenInfo, nil
 }
 
-// helper function to inspect token against all participated providers
-func inspectTokenProviders(token string) (TokenAttributes, error) {
+// InspectTokenProviders inspects token against all participated providers and return
+// TokenAttributes
+func InspectTokenProviders(token string) (TokenAttributes, error) {
 	for _, purl := range Config.Providers {
 		if p, ok := OAuthProviders[purl]; ok {
-			attrs, err := inspectToken(p, token)
+			attrs, err := InspectToken(p, token)
 			if err == nil {
 				if Config.Verbose > 0 {
 					log.Println("token is validated with provider ", purl)
@@ -189,8 +190,8 @@ func inspectTokenProviders(token string) (TokenAttributes, error) {
 	return TokenAttributes{}, errors.New(msg)
 }
 
-// inspect token and extract token attributes
-func inspectToken(provider Provider, token string) (TokenAttributes, error) {
+// InspectToken extracts token attributes
+func InspectToken(provider Provider, token string) (TokenAttributes, error) {
 	var attrs TokenAttributes
 	claims, err := tokenClaims(provider, token)
 	if err != nil {
@@ -261,7 +262,7 @@ func checkAccessToken(r *http.Request) (TokenAttributes, error) {
 	}
 
 	// first, we inspect our token
-	attrs, err := inspectTokenProviders(token)
+	attrs, err := InspectTokenProviders(token)
 	if err == nil {
 		if attrs.ClientHost == "" {
 			attrs.ClientHost = r.Referer()
