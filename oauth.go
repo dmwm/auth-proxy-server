@@ -172,10 +172,10 @@ func renewToken(token string, r *http.Request) (TokenInfo, error) {
 
 // InspectTokenProviders inspects token against all participated providers and return
 // TokenAttributes
-func InspectTokenProviders(token string) (TokenAttributes, error) {
+func InspectTokenProviders(token string, verbose int) (TokenAttributes, error) {
 	for _, purl := range Config.Providers {
 		if p, ok := OAuthProviders[purl]; ok {
-			attrs, err := InspectToken(p, token)
+			attrs, err := InspectToken(p, token, verbose)
 			if err == nil {
 				if Config.Verbose > 0 {
 					log.Println("token is validated with provider ", purl)
@@ -191,13 +191,13 @@ func InspectTokenProviders(token string) (TokenAttributes, error) {
 }
 
 // InspectToken extracts token attributes
-func InspectToken(provider Provider, token string) (TokenAttributes, error) {
+func InspectToken(provider Provider, token string, verbose int) (TokenAttributes, error) {
 	var attrs TokenAttributes
 	claims, err := tokenClaims(provider, token)
 	if err != nil {
 		return attrs, err
 	}
-	if Config.Verbose > 1 {
+	if verbose > 1 {
 		log.Println("token claims", claims)
 	}
 	for k, v := range claims {
@@ -232,7 +232,7 @@ func InspectToken(provider Provider, token string) (TokenAttributes, error) {
 		}
 	}
 	attrs.Active = true
-	if Config.Verbose > 1 {
+	if verbose > 1 {
 		if err := printJSON(attrs, "token attributes"); err != nil {
 			msg := fmt.Sprintf("Failed to output token attributes: %v", err)
 			log.Println(msg)
@@ -262,7 +262,7 @@ func checkAccessToken(r *http.Request) (TokenAttributes, error) {
 	}
 
 	// first, we inspect our token
-	attrs, err := InspectTokenProviders(token)
+	attrs, err := InspectTokenProviders(token, Config.Verbose)
 	if err == nil {
 		if attrs.ClientHost == "" {
 			attrs.ClientHost = r.Referer()

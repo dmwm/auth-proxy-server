@@ -28,25 +28,25 @@ var cmsRecordsLock sync.RWMutex
 // int pattern
 var intPattern = regexp.MustCompile(`^\d+$`)
 
-// helper function to periodically update cric records
+// UpdateCricRecords periodically updates cric records
 // should be run as goroutine
-func updateCricRecords(key string) {
+func UpdateCricRecords(key, cricFile, cricURL string, cricUpdateInterval int64, cricVerbose int) {
 	log.Println("update cric records with", key, "as a key")
 	var err error
 	cricRecords := make(cmsauth.CricRecords)
 	verbose := false
-	if Config.CricVerbose > 0 {
+	if cricVerbose > 0 {
 		verbose = true
 	}
 	// if cric file is given read it first, then if we have
 	// cric url we'll update it from there
-	if Config.CricFile != "" {
+	if cricFile != "" {
 		if key == "id" {
-			cricRecords, err = cmsauth.ParseCricByKey(Config.CricFile, "id", verbose)
+			cricRecords, err = cmsauth.ParseCricByKey(cricFile, "id", verbose)
 		} else {
-			cricRecords, err = cmsauth.ParseCric(Config.CricFile, verbose)
+			cricRecords, err = cmsauth.ParseCric(cricFile, verbose)
 		}
-		log.Printf("obtain CRIC records from %s, %v", Config.CricFile, err)
+		log.Printf("obtain CRIC records from %s, %v", cricFile, err)
 		if err != nil {
 			log.Printf("Unable to update CRIC records: %v", err)
 		} else {
@@ -62,25 +62,25 @@ func updateCricRecords(key string) {
 		}
 	}
 	for {
-		interval := Config.UpdateCricInterval
+		interval := cricUpdateInterval
 		if interval == 0 {
 			interval = 3600
 		}
 		// parse cric records
-		if Config.CricURL != "" {
+		if cricURL != "" {
 			if key == "id" {
-				cricRecords, err = cmsauth.GetCricDataByKey(Config.CricURL, "id", verbose)
+				cricRecords, err = cmsauth.GetCricDataByKey(cricURL, "id", verbose)
 			} else {
-				cricRecords, err = cmsauth.GetCricData(Config.CricURL, verbose)
+				cricRecords, err = cmsauth.GetCricData(cricURL, verbose)
 			}
-			log.Printf("obtain CRIC records from %s, %v", Config.CricURL, err)
-		} else if Config.CricFile != "" {
+			log.Printf("obtain CRIC records from %s, %v", cricURL, err)
+		} else if cricFile != "" {
 			if key == "id" {
-				cricRecords, err = cmsauth.ParseCricByKey(Config.CricFile, "id", verbose)
+				cricRecords, err = cmsauth.ParseCricByKey(cricFile, "id", verbose)
 			} else {
-				cricRecords, err = cmsauth.ParseCric(Config.CricFile, verbose)
+				cricRecords, err = cmsauth.ParseCric(cricFile, verbose)
 			}
-			log.Printf("obtain CRIC records from %s, %v", Config.CricFile, err)
+			log.Printf("obtain CRIC records from %s, %v", cricFile, err)
 		} else {
 			log.Println("Untable to get CRIC records no file or no url was provided")
 		}
@@ -96,11 +96,11 @@ func updateCricRecords(key string) {
 				updateCMSRecords(cricRecords)
 			}
 			log.Println("Updated cms records", len(cmsRecords))
-			if Config.Verbose > 2 {
+			if cricVerbose > 2 {
 				for k, v := range cmsRecords {
 					log.Printf("key=%s value=%s record=%+v\n", key, k, v)
 				}
-			} else if Config.Verbose > 0 {
+			} else if cricVerbose > 0 {
 				for k, v := range cmsRecords {
 					log.Printf("key=%s value=%s record=%+v\n", key, k, v)
 					break // break to avoid lots of CRIC record printous

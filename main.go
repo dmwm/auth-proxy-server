@@ -363,13 +363,13 @@ func main() {
 
 	// start our servers
 	if useX509 {
-		go updateCricRecords("dn")
+		go UpdateCricRecords("dn", Config.CricFile, Config.CricURL, Config.UpdateCricInterval, Config.CricVerbose)
 		x509ProxyServer()
 		return
 	} else if scitokens {
 		scitokensServer()
 		return
 	}
-	go updateCricRecords("id")
+	go UpdateCricRecords("id", Config.CricFile, Config.CricURL, Config.UpdateCricInterval, Config.CricVerbose)
 	oauthProxyServer()
 }
