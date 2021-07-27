@@ -48,12 +48,7 @@ func NewGRPCService(connString, cert, token string) (GRPCService, error) {
 	// Set up the credentials for the connection.
 	perRPC := oauth.NewOauthAccess(fetchToken(token))
 	if cert == "" {
-		creds := credentials.NewClientTLSFromCert(nil, "")
-		opts = []grpc.DialOption{
-			grpc.WithPerRPCCredentials(perRPC),
-			grpc.WithTransportCredentials(creds),
-		}
-		opts = append(opts, grpc.WithBlock())
+		opts = append(opts, grpc.WithInsecure())
 	} else {
 
 		// secure (TLS) gRPC connection
