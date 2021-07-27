@@ -183,7 +183,7 @@ func ensureValidToken(ctx context.Context, req interface{}, info *grpc.UnaryServ
 	// The keys within metadata.MD are normalized to lowercase.
 	// See: https://godoc.org/google.golang.org/grpc/metadata#New
 	if !valid(md["authorization"]) {
-		log.Println("context metadata", md)
+		log.Println("invalid token, context metadata", md)
 		return nil, status.Errorf(codes.Unauthenticated, "invalid token")
 	}
 	log.Println("token is validated, context metadata", md)
