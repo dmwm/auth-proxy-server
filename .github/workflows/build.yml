@@ -24,7 +24,7 @@ jobs:
       run: |
         mkdir auth-proxy-tools_{amd64,darwin,power8,arm64,windows}
         echo "AMD64 build"
-        make build_amd64;   mv auth-proxy-server auth-token token-manager auth-proxy-tools_linux
+        make build_amd64;   mv auth-proxy-server auth-token token-manager auth-proxy-tools_amd64
 
         echo "Darwin build"
         make build_darwin;  mv auth-proxy-server auth-token token-manager auth-proxy-tools_darwin
