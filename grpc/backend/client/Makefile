@@ -18,9 +18,9 @@ build:
 build_debug:
 	go clean; rm -rf pkg; CGO_ENABLED=0 go build -o grpc-client ${flags} -gcflags="-m -m"
 
-build_all: build_osx build_linux build
+build_amd64: build_linux
 
-build_osx:
+build_darwin:
 	go clean; rm -rf pkg grpc-client; GOOS=darwin CGO_ENABLED=0 go build -o grpc-client ${flags}
 
 build_linux:

@@ -15,51 +15,43 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v2
       with:
-        go-version: ^1.15
+        go-version: ^1.16
 
     - name: Check out code into the Go module directory
       uses: actions/checkout@v2
 
-    - name: Get dependencies
-      run: |
-        go get github.com/dmwm/cmsauth
-        go get github.com/vkuznet/x509proxy
-        go get github.com/vkuznet/lb-stomp
-        go get github.com/divan/expvarmon
-        go get github.com/lestrrat-go/file-rotatelogs
-        go get github.com/thomasdarimont/go-kc-example/session_memory
-        go get github.com/thomasdarimont/go-kc-example/session
-        go get github.com/coreos/go-oidc
-        go get github.com/google/uuid
-        go get golang.org/x/oauth2
-        go get github.com/shirou/gopsutil
-        go get github.com/dgrijalva/jwt-go
-
     - name: Build
       run: |
-        make
-        mkdir auth-proxy-tools
-        mv auth-proxy-server auth-token token-manager auth-proxy-tools
-        tar cfz auth-proxy-tools.tar.gz auth-proxy-tools
+        mkdir auth-proxy-tools_{amd64,darwin,power8,arm64,windows}
+        echo "AMD64 build"
+        make build_amd64;   mv auth-proxy-server auth-token token-manager auth-proxy-tools_linux
+
         echo "Darwin build"
-        make build_osx
-        mkdir auth-proxy-tools_darwin
-        mv auth-proxy-server auth-token token-manager auth-proxy-tools_darwin
-        tar cfz auth-proxy-tools_darwin.tar.gz auth-proxy-tools_darwin
+        make build_darwin;  mv auth-proxy-server auth-token token-manager auth-proxy-tools_darwin
+
         echo "Power8 build"
-        make build_power8
-        mkdir auth-proxy-tools_power8
-        mv auth-proxy-server auth-token token-manager auth-proxy-tools_power8
-        tar cfz auth-proxy-tools_power8.tar.gz auth-proxy-tools_power8
+        make build_power8;  mv auth-proxy-server auth-token token-manager auth-proxy-tools_power8
+
         echo "ARM64 build"
-        make build_arm64
-        mkdir auth-proxy-tools_arm64
-        mv auth-proxy-server auth-token token-manager auth-proxy-tools_arm64
-        tar cfz auth-proxy-tools_arm64.tar.gz auth-proxy-tools_arm64
+        make build_arm64;   mv auth-proxy-server auth-token token-manager auth-proxy-tools_arm64
+
         echo "Windows build"
-        make build_windows
-        mkdir auth-proxy-tools_windows
-        mv auth-proxy-server auth-token token-manager auth-proxy-tools_windows
+        make build_windows; mv auth-proxy-server auth-token token-manager auth-proxy-tools_windows
+
+        echo "gRPC server build"
+        cd grpc
+        make build_amd64;   mv grpc-proxy-server ../auth-proxy-tools_amd64
+        make build_darwin;  mv grpc-proxy-server ../auth-proxy-tools_darwin
+        make build_power8;  mv grpc-proxy-server ../auth-proxy-tools_power8
+        make build_arm64;   mv grpc-proxy-server ../auth-proxy-tools_arm64
+        make build_windows; mv grpc-proxy-server ../auth-proxy-tools_windows
+        cd -
+
+        echo "Tar all builds"
+        tar cfz auth-proxy-tools_amd64.tar.gz auth-proxy-tools_amd64
+        tar cfz auth-proxy-tools_darwin.tar.gz auth-proxy-tools_darwin
+        tar cfz auth-proxy-tools_power8.tar.gz auth-proxy-tools_power8
+        tar cfz auth-proxy-tools_arm64.tar.gz auth-proxy-tools_arm64
         tar cfz auth-proxy-tools_windows.tar.gz auth-proxy-tools_windows
 
     - name: Create Release

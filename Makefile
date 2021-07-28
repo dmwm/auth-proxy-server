@@ -24,9 +24,9 @@ build_token:
 build_debug:
 	go clean; rm -rf pkg; CGO_ENABLED=0 go build -o auth-proxy-server ${flags} -gcflags="-m -m"
 
-build_all: build_osx build_linux build
+build_amd64: build_linux
 
-build_osx:
+build_darwin:
 	go clean; rm -rf pkg auth-proxy-server; GOOS=darwin CGO_ENABLED=0 go build -o auth-proxy-server ${flags}
 	GOOS=darwin CGO_ENABLED=0 go build -o auth-token ${flags} client/auth-token.go
 	GOOS=darwin CGO_ENABLED=0 go build -o token-manager ${flags} manager/token.go
