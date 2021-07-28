@@ -65,15 +65,15 @@ jobs:
         draft: false
         prerelease: false
 
-    - name: Upload binary
+    - name: Upload amd64 binary
       id: upload-auth-proxy-server
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./auth-proxy-tools.tar.gz
-        asset_name: auth-proxy-tools.tar.gz
+        asset_path: ./auth-proxy-tools_amd64.tar.gz
+        asset_name: auth-proxy-tools_amd64.tar.gz
         asset_content_type: application/octet-stream
 
     - name: Upload darwin binary
@@ -119,7 +119,6 @@ jobs:
         asset_path: ./auth-proxy-tools_windows.tar.gz
         asset_name: auth-proxy-tools_windows.tar.gz
         asset_content_type: application/octet-stream
-
 
     - name: Get the Ref
       id: get-ref
