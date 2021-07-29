@@ -1,4 +1,4 @@
-module github.com/vkuznet/auth-proxy-server/auth/logging
+module github.com/vkuznet/auth-proxy-server/logging
 
 go 1.16
 
