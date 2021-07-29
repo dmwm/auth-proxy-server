@@ -38,6 +38,7 @@ import (
 	//     jwt "github.com/dgrijalva/jwt-go"
 	jwt "github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
+	"github.com/vkuznet/auth-proxy-server/logging"
 )
 
 // server private/public keys to be used for signing
@@ -161,7 +162,7 @@ func scitokensHandler(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	status := http.StatusOK
 	tstamp := int64(start.UnixNano() / 1000000) // use milliseconds for MONIT
-	defer logRequest(w, r, start, "scitokens", &status, tstamp)
+	defer logging.LogRequest(w, r, start, "scitokens", &status, tstamp)
 
 	err := r.ParseForm()
 	if err != nil {

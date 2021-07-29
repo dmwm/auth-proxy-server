@@ -9,6 +9,7 @@ require (
 	github.com/lestrrat-go/strftime v1.0.5 // indirect
 	github.com/vkuznet/auth-proxy-server/auth v0.0.0-20210726200103-cffa690dda9b
 	github.com/vkuznet/auth-proxy-server/cric v0.0.0-20210726200103-cffa690dda9b
+	github.com/vkuznet/auth-proxy-server/logging v0.0.0-20210729183901-75d8831dd7bb // indirect
 	golang.org/x/net v0.0.0-20210226172049-e18ecbb05110
 	google.golang.org/grpc v1.39.0
 )

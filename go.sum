@@ -124,8 +124,8 @@ github.com/lestrrat-go/envload v0.0.0-20180220234015-a3eb8ddeffcc h1:RKf14vYWi2t
 github.com/lestrrat-go/envload v0.0.0-20180220234015-a3eb8ddeffcc/go.mod h1:kopuH9ugFRkIXf3YoqHKyrJ9YfUFsckUU9S7B+XP+is=
 github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible h1:Y6sqxHMyB1D2YSzWkLibYKgg+SwmyFU9dF2hn6MdTj4=
 github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible/go.mod h1:ZQnN8lSECaebrkQytbHj4xNgtg8CR7RYXnPok8e0EHA=
-github.com/lestrrat-go/strftime v1.0.4 h1:T1Rb9EPkAhgxKqbcMIPguPq8glqXTA1koF8n9BHElA8=
-github.com/lestrrat-go/strftime v1.0.4/go.mod h1:E1nN3pCbtMSu1yjSVeyuRFVm/U0xoR76fd03sz+Qz4g=
+github.com/lestrrat-go/strftime v1.0.5 h1:A7H3tT8DhTz8u65w+JRpiBxM4dINQhUXAZnhBa2xeOE=
+github.com/lestrrat-go/strftime v1.0.5/go.mod h1:E1nN3pCbtMSu1yjSVeyuRFVm/U0xoR76fd03sz+Qz4g=
 github.com/pascaldekloe/jwt v1.10.0 h1:ktcIUV4TPvh404R5dIBEnPCsSwj0sqi3/0+XafE5gJs=
 github.com/pascaldekloe/jwt v1.10.0/go.mod h1:TKhllgThT7TOP5rGr2zMLKEDZRAgJfBbtKyVeRsNB9A=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
@@ -157,6 +157,8 @@ github.com/vkuznet/auth-proxy-server/auth v0.0.0-20210726200103-cffa690dda9b h1:
 github.com/vkuznet/auth-proxy-server/auth v0.0.0-20210726200103-cffa690dda9b/go.mod h1:4o7LB5cxgJ8Mb7RIZ46D4wrxAuZGCWGHq4e/+RnXKhA=
 github.com/vkuznet/auth-proxy-server/cric v0.0.0-20210726200103-cffa690dda9b h1:hpnaGzGXac0Ft3nIXV7575N21ReFs0C5vDKkUs9CqEQ=
 github.com/vkuznet/auth-proxy-server/cric v0.0.0-20210726200103-cffa690dda9b/go.mod h1:OvroOpAhAEBJYwdisIrMKAK5WQxr2tR1ncFGqRcWo0s=
+github.com/vkuznet/auth-proxy-server/logging v0.0.0-20210729183901-75d8831dd7bb h1:XbvJ7t15jUi0ObhJ4SYzQDdeLvvx+TMlzlqzA2ISdPQ=
+github.com/vkuznet/auth-proxy-server/logging v0.0.0-20210729183901-75d8831dd7bb/go.mod h1:rEHBafUXWUWp8o4zkvTooUDTHDhV4oj4trnO1fI2l4k=
 github.com/vkuznet/x509proxy v0.0.0-20191014143623-163039704c67 h1:7s/FGCnCgfaJxmyeE+k18s5Bpx1TIrss4sMesjqRJsI=
 github.com/vkuznet/x509proxy v0.0.0-20191014143623-163039704c67/go.mod h1:n8gnqWgHpPWW+DyA66Zam8qQshAmDxVVmSmObyR6M8g=
 github.com/yuin/goldmark v1.1.25/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=

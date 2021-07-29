@@ -57,45 +57,6 @@ type Configuration struct {
 	MaxTLSVersion       string          `json:"maxTLSVersion"`          // maximum TLS version
 }
 
-// HTTPRecord provides http record we send to logs endpoint
-type HTTPRecord struct {
-	Producer  string    `json:"producer"`  // name of the producer
-	Type      string    `json:"type"`      // type of metric
-	Timestamp int64     `json:"timestamp"` // UTC milliseconds
-	Host      string    `json:"host"`      // used to add extra information about the node submitting your data
-	Data      LogRecord `json:"data"`      // log record data
-}
-
-// LogRecord represents data we can send to StompAMQ or HTTP endpoint
-type LogRecord struct {
-	Method         string  `json:"method"`           // http.Request HTTP method
-	URI            string  `json:"uri"`              // http.RequestURI
-	API            string  `json:"api"`              // http service API being used
-	System         string  `json:"system"`           // cmsweb service name
-	ClientIP       string  `json:"clientip"`         // client IP address
-	BytesSend      int64   `json:"bytes_send"`       // number of bytes send with HTTP request
-	BytesReceived  int64   `json:"bytes_received"`   // number of bytes received with HTTP request
-	Proto          string  `json:"proto"`            // http.Request protocol
-	Status         int64   `json:"status"`           // http.Request status code
-	ContentLength  int64   `json:"content_length"`   // http.Request content-length
-	AuthProto      string  `json:"auth_proto"`       // authentication protocol
-	Cipher         string  `json:"cipher"`           // TLS cipher name
-	CmsAuthCert    string  `json:"cms_auth_cert"`    // cms auth certificate, user DN
-	CmsLoginName   string  `json:"cms_login_name"`   // cms login name, user DN
-	CmsAuth        string  `json:"cms_auth"`         // cms auth method
-	Referer        string  `json:"referer"`          // http referer
-	UserAgent      string  `json:"user_agent"`       // http user-agent field
-	XForwardedHost string  `json:"x_forwarded_host"` // http.Request X-Forwarded-Host
-	XForwardedFor  string  `json:"x_forwarded_for"`  // http.Request X-Forwarded-For
-	RemoteAddr     string  `json:"remote_addr"`      // http.Request remote address
-	ResponseStatus string  `json:"response_status"`  // http.Response status
-	ResponseTime   float64 `json:"response_time"`    // http response time
-	RequestTime    float64 `json:"request_time"`     // http request time
-	Timestamp      int64   `json:"timestamp"`        // record timestamp
-	RecTimestamp   int64   `json:"rec_timestamp"`    // timestamp for backward compatibility with apache
-	RecDate        string  `json:"rec_date"`         // timestamp for backward compatibility with apache
-}
-
 // ServerSettings controls server parameters
 type ServerSettings struct {
 	Verbose int `json:"verbose"` // verbosity output

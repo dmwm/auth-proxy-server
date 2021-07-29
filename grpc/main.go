@@ -13,6 +13,7 @@ import (
 
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
 	"github.com/vkuznet/auth-proxy-server/auth"
+	"github.com/vkuznet/auth-proxy-server/logging"
 )
 
 // main function
@@ -30,11 +31,11 @@ func main() {
 	if Config.Verbose > 0 {
 		log.SetFlags(log.Lshortfile)
 	}
-	log.SetOutput(new(logWriter))
+	log.SetOutput(new(logging.LogWriter))
 	if Config.LogFile != "" {
 		rl, err := rotatelogs.New(Config.LogFile + "-%Y%m%d")
 		if err == nil {
-			rotlogs := rotateLogWriter{RotateLogs: rl}
+			rotlogs := logging.RotateLogWriter{RotateLogs: rl}
 			log.SetOutput(rotlogs)
 		}
 	}

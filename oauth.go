@@ -48,6 +48,7 @@ import (
 	_ "github.com/thomasdarimont/go-kc-example/session_memory"
 	"github.com/vkuznet/auth-proxy-server/auth"
 	"github.com/vkuznet/auth-proxy-server/cric"
+	"github.com/vkuznet/auth-proxy-server/logging"
 	"golang.org/x/oauth2"
 )
 
@@ -360,8 +361,8 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	attrs, err := checkAccessToken(r)
-	// add logRequest after we set cms headers in HTTP request
-	defer logRequest(w, r, start, "CERN-SSO-OAuth2-OICD", &status, tstamp)
+	// add LogRequest after we set cms headers in HTTP request
+	defer logging.LogRequest(w, r, start, "CERN-SSO-OAuth2-OICD", &status, tstamp)
 	if err != nil {
 		// there is no proper authentication yet, redirect users to auth callback
 		aurl := OAuth2Config.AuthCodeURL(oauthState)

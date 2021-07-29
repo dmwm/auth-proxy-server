@@ -15,6 +15,7 @@ import (
 
 	_ "github.com/thomasdarimont/go-kc-example/session_memory"
 	"github.com/vkuznet/auth-proxy-server/cric"
+	"github.com/vkuznet/auth-proxy-server/logging"
 )
 
 // TotalX509GetRequests counts total number of GET requests received by the server
@@ -53,8 +54,8 @@ func x509RequestHandler(w http.ResponseWriter, r *http.Request) {
 	if Config.Verbose > 0 {
 		printHTTPRequest(r, "cms headers")
 	}
-	// add logRequest after we set cms headers in HTTP request
-	defer logRequest(w, r, start, "x509", &status, tstamp)
+	// add LogRequest after we set cms headers in HTTP request
+	defer logging.LogRequest(w, r, start, "x509", &status, tstamp)
 	if _, ok := userData["name"]; !ok {
 		log.Println("unauthorized access, user not found in CRIC DB")
 		status = http.StatusUnauthorized
