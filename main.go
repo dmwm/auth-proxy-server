@@ -329,6 +329,10 @@ func main() {
 			log.SetOutput(rotlogs)
 		}
 	}
+	// initialize logging module
+	logging.CMSMonitType = Config.MonitType
+	logging.CMSMonitProducer = Config.MonitProducer
+
 	if Config.Verbose > 0 {
 		log.Printf("%+v\n", Config)
 	}
@@ -350,6 +354,7 @@ func main() {
 	// initialize all particiapted providers
 	auth.Init(Config.Providers, Config.Verbose)
 
+	// initialize cmsauth module
 	CMSAuth.Init(Config.Hmac)
 
 	// start our servers

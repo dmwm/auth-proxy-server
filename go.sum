@@ -157,8 +157,8 @@ github.com/vkuznet/auth-proxy-server/auth v0.0.0-20210726200103-cffa690dda9b h1:
 github.com/vkuznet/auth-proxy-server/auth v0.0.0-20210726200103-cffa690dda9b/go.mod h1:4o7LB5cxgJ8Mb7RIZ46D4wrxAuZGCWGHq4e/+RnXKhA=
 github.com/vkuznet/auth-proxy-server/cric v0.0.0-20210726200103-cffa690dda9b h1:hpnaGzGXac0Ft3nIXV7575N21ReFs0C5vDKkUs9CqEQ=
 github.com/vkuznet/auth-proxy-server/cric v0.0.0-20210726200103-cffa690dda9b/go.mod h1:OvroOpAhAEBJYwdisIrMKAK5WQxr2tR1ncFGqRcWo0s=
-github.com/vkuznet/auth-proxy-server/logging v0.0.0-20210729183901-75d8831dd7bb h1:XbvJ7t15jUi0ObhJ4SYzQDdeLvvx+TMlzlqzA2ISdPQ=
-github.com/vkuznet/auth-proxy-server/logging v0.0.0-20210729183901-75d8831dd7bb/go.mod h1:rEHBafUXWUWp8o4zkvTooUDTHDhV4oj4trnO1fI2l4k=
+github.com/vkuznet/auth-proxy-server/logging v0.0.0-20210730112749-785f5559039f h1:Vssoux4/lQTLRwdLYkZLHdZEPTREFTwIzEkEFMHLfaU=
+github.com/vkuznet/auth-proxy-server/logging v0.0.0-20210730112749-785f5559039f/go.mod h1:rEHBafUXWUWp8o4zkvTooUDTHDhV4oj4trnO1fI2l4k=
 github.com/vkuznet/x509proxy v0.0.0-20191014143623-163039704c67 h1:7s/FGCnCgfaJxmyeE+k18s5Bpx1TIrss4sMesjqRJsI=
 github.com/vkuznet/x509proxy v0.0.0-20191014143623-163039704c67/go.mod h1:n8gnqWgHpPWW+DyA66Zam8qQshAmDxVVmSmObyR6M8g=
 github.com/yuin/goldmark v1.1.25/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=

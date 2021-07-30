@@ -18,7 +18,7 @@ require (
 	github.com/vkuznet/TokenManager v0.0.1 // indirect
 	github.com/vkuznet/auth-proxy-server/auth v0.0.0-20210726200103-cffa690dda9b
 	github.com/vkuznet/auth-proxy-server/cric v0.0.0-20210726200103-cffa690dda9b
-	github.com/vkuznet/auth-proxy-server/logging v0.0.0-20210729183901-75d8831dd7bb
+	github.com/vkuznet/auth-proxy-server/logging v0.0.0-20210730112749-785f5559039f
 	golang.org/x/crypto v0.0.0-20210317152858-513c2a44f670
 	golang.org/x/oauth2 v0.0.0-20210313182246-cd4f82c27b84
 	gopkg.in/square/go-jose.v2 v2.5.1 // indirect

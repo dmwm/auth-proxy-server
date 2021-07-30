@@ -55,7 +55,7 @@ func x509RequestHandler(w http.ResponseWriter, r *http.Request) {
 		printHTTPRequest(r, "cms headers")
 	}
 	// add LogRequest after we set cms headers in HTTP request
-	defer logging.LogRequest(w, r, start, "x509", &status, tstamp)
+	defer logging.LogRequest(w, r, start, "x509", &status, tstamp, 0)
 	if _, ok := userData["name"]; !ok {
 		log.Println("unauthorized access, user not found in CRIC DB")
 		status = http.StatusUnauthorized

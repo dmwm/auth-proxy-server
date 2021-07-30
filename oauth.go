@@ -362,7 +362,7 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 
 	attrs, err := checkAccessToken(r)
 	// add LogRequest after we set cms headers in HTTP request
-	defer logging.LogRequest(w, r, start, "CERN-SSO-OAuth2-OICD", &status, tstamp)
+	defer logging.LogRequest(w, r, start, "CERN-SSO-OAuth2-OICD", &status, tstamp, 0)
 	if err != nil {
 		// there is no proper authentication yet, redirect users to auth callback
 		aurl := OAuth2Config.AuthCodeURL(oauthState)

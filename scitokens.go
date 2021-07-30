@@ -162,7 +162,7 @@ func scitokensHandler(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	status := http.StatusOK
 	tstamp := int64(start.UnixNano() / 1000000) // use milliseconds for MONIT
-	defer logging.LogRequest(w, r, start, "scitokens", &status, tstamp)
+	defer logging.LogRequest(w, r, start, "scitokens", &status, tstamp, 0)
 
 	err := r.ParseForm()
 	if err != nil {
