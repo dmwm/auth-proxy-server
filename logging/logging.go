@@ -67,9 +67,6 @@ type LogRecord struct {
 // UTC flag represents UTC time zone for log messages
 var UTC bool
 
-// PrintMonitRecord yields MONIT records
-var PrintMonitRecord bool
-
 // helper function to produce UTC time prefixed output
 func utcMsg(data []byte) string {
 	var msg string
