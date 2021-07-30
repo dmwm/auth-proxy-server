@@ -169,12 +169,12 @@ func LogRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 		} else if r.TLS.Version == tls.VersionSSL30 {
 			aproto = "SSL30"
 		} else {
-			aproto = fmt.Sprintf("TLS version: %+v", r.TLS.Version)
+			aproto = fmt.Sprintf("TLS-%+v", r.TLS.Version)
 		}
 		cipher = tls.CipherSuiteName(r.TLS.CipherSuite)
 	} else {
-		aproto = fmt.Sprintf("No TLS")
-		cipher = "None"
+		aproto = fmt.Sprintf("no-TLS")
+		cipher = "cipher-none"
 	}
 	if cauth == "" {
 		cauth = fmt.Sprintf("%v", r.Header.Get("Cms-Authn-Method"))
@@ -204,7 +204,11 @@ func LogRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 	}
 	addr := fmt.Sprintf("[X-Forwarded-For: %v] [X-Forwarded-Host: %v] [remoteAddr: %v]", xff, r.Header.Get("X-Forwarded-Host"), r.RemoteAddr)
 	refMsg := fmt.Sprintf("[ref: \"%s\" \"%v\"]", referer, r.Header.Get("User-Agent"))
-	respMsg := fmt.Sprintf("[req: %v resp: %v]", time.Since(start), respHeader.Get("Response-Time"))
+	respTime := "0"
+	if respHeader.Get("Response-Time") != "" {
+		respTime = fmt.Sprintf("%sv", respHeader.Get("Response-Time"))
+	}
+	respMsg := fmt.Sprintf("[req: %v proxy-resp: %v]", time.Since(start), respTime)
 	log.Printf("%s %s %s %s %d %s %s %s %s\n", addr, r.Method, r.RequestURI, r.Proto, *status, dataMsg, authMsg, refMsg, respMsg)
 	if CMSMonitType == "" || CMSMonitProducer == "" {
 		return
