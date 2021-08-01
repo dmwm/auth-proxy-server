@@ -7,8 +7,8 @@ package main
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"log"
+	"os"
 	"path/filepath"
 )
 
@@ -17,7 +17,7 @@ var Config Configuration
 
 // helper function to parse server configuration file
 func parseConfig(configFile string) error {
-	data, err := ioutil.ReadFile(filepath.Clean(configFile))
+	data, err := os.ReadFile(filepath.Clean(configFile))
 	if err != nil {
 		log.Println("Unable to read", err)
 		return err

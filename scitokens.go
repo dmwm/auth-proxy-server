@@ -26,7 +26,7 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -142,7 +142,7 @@ func getIssuer(r *http.Request) (string, string) {
 // read public JWKS data
 func readPublicJWKS(fname string) (PublicJWKSKey, error) {
 	var p PublicJWKSKey
-	data, err := ioutil.ReadFile(filepath.Clean(fname))
+	data, err := os.ReadFile(filepath.Clean(fname))
 	if err != nil {
 		log.Printf("unable to read, file: %s, error: %v\n", fname, err)
 		return p, err
@@ -234,7 +234,7 @@ func getRSAKey(fname string) (*rsa.PrivateKey, error) {
 			log.Fatal(err)
 		}
 		defer file.Close()
-		pemString, err := ioutil.ReadAll(file)
+		pemString, err := io.ReadAll(file)
 		if err != nil {
 			log.Fatal(err)
 		}

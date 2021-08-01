@@ -34,7 +34,7 @@ import (
 	"flag"
 	"fmt"
 	"html/template"
-	"io/ioutil"
+	"io"
 	"log"
 	"math/rand"
 	"net/http"
@@ -82,7 +82,7 @@ func (t *transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 	if err != nil {
 		return nil, err
 	}
-	b, err := ioutil.ReadAll(resp.Body)
+	b, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -91,7 +91,7 @@ func (t *transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 		return nil, err
 	}
 	b = bytes.Replace(b, []byte("server"), []byte("schmerver"), -1)
-	body := ioutil.NopCloser(bytes.NewReader(b))
+	body := io.NopCloser(bytes.NewReader(b))
 	resp.Body = body
 	resp.ContentLength = int64(len(b))
 	resp.Header.Set("Content-Length", strconv.Itoa(len(b)))
@@ -230,7 +230,7 @@ func redirect(w http.ResponseWriter, r *http.Request) {
 				fname = fmt.Sprintf("%s/index.html", Config.DocumentRoot)
 			}
 			if _, err := os.Stat(fname); err == nil {
-				body, err := ioutil.ReadFile(filepath.Clean(fname))
+				body, err := os.ReadFile(filepath.Clean(fname))
 				if err == nil {
 					data := []byte(body)
 					w.Write(data)
@@ -261,7 +261,7 @@ func settingsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 	var s = ServerSettings{}
-	data, err := ioutil.ReadAll(r.Body)
+	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		log.Printf("unable to read incoming request body %s error %v", string(data), err)
 		w.WriteHeader(http.StatusInternalServerError)

@@ -74,7 +74,7 @@ func getServer(serverCrt, serverKey string, customVerify bool) (*http.Server, er
 	}
 	for _, finfo := range files {
 		fname := fmt.Sprintf("%s/%s", Config.RootCAs, finfo.Name())
-		caCert, err := ioutil.ReadFile(filepath.Clean(fname))
+		caCert, err := os.ReadFile(filepath.Clean(fname))
 		if err != nil {
 			if Config.Verbose > 1 {
 				log.Printf("Unable to read %s\n", fname)

@@ -32,7 +32,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"net/http/httputil"
@@ -112,7 +112,7 @@ func introspectToken(token string) (auth.TokenAttributes, error) {
 	}
 	defer resp.Body.Close()
 	var tokenAttributes auth.TokenAttributes
-	data, err := ioutil.ReadAll(resp.Body)
+	data, err := io.ReadAll(resp.Body)
 	if err != nil {
 		msg := fmt.Sprintf("unable to read response body %s error %v", string(data), err)
 		return auth.TokenAttributes{}, errors.New(msg)
@@ -160,7 +160,7 @@ func renewToken(token string, r *http.Request) (auth.TokenInfo, error) {
 	}
 	defer resp.Body.Close()
 	var tokenInfo auth.TokenInfo
-	data, err := ioutil.ReadAll(resp.Body)
+	data, err := io.ReadAll(resp.Body)
 	if err != nil {
 		msg := fmt.Sprintf("unable to read response body %s error %v", string(data), err)
 		return auth.TokenInfo{}, errors.New(msg)

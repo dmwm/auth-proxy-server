@@ -11,7 +11,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"math/big"
 	"net/http"
@@ -80,7 +79,7 @@ func (p *Provider) Init(purl string, verbose int) error {
 		return err
 	}
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Println("unable to read body of HTTP response ", err)
 		return err
@@ -105,7 +104,7 @@ func (p *Provider) Init(purl string, verbose int) error {
 		return err
 	}
 	defer resp2.Body.Close()
-	body2, err := ioutil.ReadAll(resp2.Body)
+	body2, err := io.ReadAll(resp2.Body)
 	if err != nil {
 		log.Println("unable to read body of HTTP response ", err)
 		return err

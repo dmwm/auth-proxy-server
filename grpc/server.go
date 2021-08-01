@@ -9,7 +9,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
@@ -47,7 +46,7 @@ var Config Configuration
 
 // helper function to parse configuration
 func parseConfig(configFile string) error {
-	data, err := ioutil.ReadFile(configFile)
+	data, err := os.ReadFile(configFile)
 	if err != nil {
 		log.Println("Unable to read", err)
 		return err

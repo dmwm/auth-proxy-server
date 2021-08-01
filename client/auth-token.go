@@ -8,7 +8,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"net/http/httputil"
@@ -33,7 +33,7 @@ func call(aurl string, formData url.Values, verbose bool) map[string]interface{}
 	}
 	defer resp.Body.Close()
 	var rec map[string]interface{}
-	data, err := ioutil.ReadAll(resp.Body)
+	data, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Fatalf("unable to read incoming request body %s error %v", string(data), err)
 	}
