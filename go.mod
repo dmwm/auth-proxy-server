@@ -5,7 +5,7 @@ go 1.16
 require (
 	github.com/StackExchange/wmi v1.2.1 // indirect
 	github.com/coreos/go-oidc v2.2.1+incompatible
-	github.com/dmwm/cmsauth v0.0.0-20210801171713-57cb9b909db0
+	github.com/dmwm/cmsauth v0.0.0-20210802115144-6a4971fa8b26
 	github.com/go-ole/go-ole v1.2.5 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/golang/protobuf v1.5.2 // indirect
@@ -17,9 +17,9 @@ require (
 	github.com/thomasdarimont/go-kc-example v0.0.0-20170529223628-e3951d8faa4c
 	github.com/tklauser/go-sysconf v0.3.7 // indirect
 	github.com/vkuznet/TokenManager v0.0.1 // indirect
-	github.com/vkuznet/auth-proxy-server/auth v0.0.0-20210801185242-f43234225c85
-	github.com/vkuznet/auth-proxy-server/cric v0.0.0-20210801185242-f43234225c85
-	github.com/vkuznet/auth-proxy-server/logging v0.0.0-20210801185242-f43234225c85
+	github.com/vkuznet/auth-proxy-server/auth v0.0.0-20210802115209-6c40520fa435
+	github.com/vkuznet/auth-proxy-server/cric v0.0.0-20210802115209-6c40520fa435
+	github.com/vkuznet/auth-proxy-server/logging v0.0.0-20210802115209-6c40520fa435
 	github.com/vkuznet/x509proxy v0.0.0-20210801171832-e47b94db99b6 // indirect
 	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97
 	golang.org/x/net v0.0.0-20210726213435-c6fcb2dbf985 // indirect
