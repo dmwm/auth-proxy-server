@@ -17,7 +17,7 @@ require (
 	github.com/thomasdarimont/go-kc-example v0.0.0-20170529223628-e3951d8faa4c
 	github.com/tklauser/go-sysconf v0.3.7 // indirect
 	github.com/vkuznet/TokenManager v0.0.1 // indirect
-	github.com/vkuznet/auth-proxy-server/auth v0.0.0-20210802115209-6c40520fa435
+	github.com/vkuznet/auth-proxy-server/auth v0.0.0-20210802124307-61bb79216539
 	github.com/vkuznet/auth-proxy-server/cric v0.0.0-20210802115209-6c40520fa435
 	github.com/vkuznet/auth-proxy-server/logging v0.0.0-20210802115209-6c40520fa435
 	github.com/vkuznet/x509proxy v0.0.0-20210801171832-e47b94db99b6 // indirect

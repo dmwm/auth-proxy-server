@@ -180,6 +180,8 @@ github.com/vkuznet/auth-proxy-server/auth v0.0.0-20210801185242-f43234225c85 h1:
 github.com/vkuznet/auth-proxy-server/auth v0.0.0-20210801185242-f43234225c85/go.mod h1:4o7LB5cxgJ8Mb7RIZ46D4wrxAuZGCWGHq4e/+RnXKhA=
 github.com/vkuznet/auth-proxy-server/auth v0.0.0-20210802115209-6c40520fa435 h1:3aKJwcod7CLGMEVDE9LcrTdglaZq4YAyxYqXgoqg/dM=
 github.com/vkuznet/auth-proxy-server/auth v0.0.0-20210802115209-6c40520fa435/go.mod h1:4o7LB5cxgJ8Mb7RIZ46D4wrxAuZGCWGHq4e/+RnXKhA=
+github.com/vkuznet/auth-proxy-server/auth v0.0.0-20210802124307-61bb79216539 h1:LMVGslcKvb9cGgt2VimYTyV5m8lpAJliU/8TbT0E2hM=
+github.com/vkuznet/auth-proxy-server/auth v0.0.0-20210802124307-61bb79216539/go.mod h1:4o7LB5cxgJ8Mb7RIZ46D4wrxAuZGCWGHq4e/+RnXKhA=
 github.com/vkuznet/auth-proxy-server/cric v0.0.0-20210801175628-19e410639bef h1:cnV3GyeYjbcUBgzaCOQWWYYjKiq6apae9mGtrwsfuWQ=
 github.com/vkuznet/auth-proxy-server/cric v0.0.0-20210801175628-19e410639bef/go.mod h1:OvroOpAhAEBJYwdisIrMKAK5WQxr2tR1ncFGqRcWo0s=
 github.com/vkuznet/auth-proxy-server/cric v0.0.0-20210801185242-f43234225c85 h1:MN6b/Cz7lc4283SMzpfZT2pHlnvwdR8gGum92JZkEYE=
