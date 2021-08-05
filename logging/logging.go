@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -209,7 +210,11 @@ func LogRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 		respTime = fmt.Sprintf("%sv", respHeader.Get("Response-Time"))
 	}
 	respMsg := fmt.Sprintf("[req: %v proxy-resp: %v]", time.Since(start), respTime)
-	log.Printf("%s %s %s %s %d %s %s %s %s\n", addr, r.Method, r.RequestURI, r.Proto, *status, dataMsg, authMsg, refMsg, respMsg)
+	uri, err := url.QueryUnescape(r.URL.RequestURI())
+	if err != nil {
+		uri = r.RequestURI
+	}
+	log.Printf("%s %s %s %s %d %s %s %s %s\n", addr, r.Method, uri, r.Proto, *status, dataMsg, authMsg, refMsg, respMsg)
 	if CMSMonitType == "" || CMSMonitProducer == "" {
 		return
 	}
@@ -219,7 +224,7 @@ func LogRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 	bytesRecv, _ = strconv.ParseInt(respHeader.Get("Content-Length"), 10, 64)
 	rec := LogRecord{
 		Method:         r.Method,
-		URI:            r.RequestURI,
+		URI:            uri,
 		API:            getAPI(r.RequestURI),
 		System:         getSystem(r.RequestURI),
 		BytesSend:      bytesSend,
