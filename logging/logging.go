@@ -142,7 +142,10 @@ func LoggingMiddleware(h http.Handler) http.Handler {
 			responseData:   responseData,
 		}
 		h.ServeHTTP(&lrw, r) // inject our implementation of http.ResponseWriter
-		cauth := "HTTP auth" // TODO: need to capture it somehow
+		cauth := r.Header.Get("Cms-Authn-Method")
+		if cauth == "" {
+			cauth = "no-auth-method"
+		}
 		LogRequest(w, r, start, cauth, &responseData.status, tstamp, responseData.size)
 
 	}
@@ -180,13 +183,16 @@ func LogRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 	if cauth == "" {
 		cauth = fmt.Sprintf("%v", r.Header.Get("Cms-Authn-Method"))
 	}
+	if cauth == "" {
+		cauth = "no-auth-method"
+	}
 	authCert := r.Header.Get("Cms-Auth-Cert")
 	if authCert == "" {
-		authCert = "NA"
+		authCert = "no-auth-cert"
 	}
 	loginName := r.Header.Get("Cms-Authn-Login")
 	if loginName == "" {
-		loginName = "NA"
+		loginName = "no-auth-login"
 	}
 	authMsg := fmt.Sprintf("[auth: %v %v \"%v\" %v %v]", aproto, cipher, authCert, loginName, cauth)
 	respHeader := w.Header()
@@ -203,7 +209,8 @@ func LogRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 	} else if r.RemoteAddr != "" {
 		clientip = strings.Split(r.RemoteAddr, ":")[0]
 	}
-	addr := fmt.Sprintf("[X-Forwarded-For: %v] [X-Forwarded-Host: %v] [remoteAddr: %v]", xff, r.Header.Get("X-Forwarded-Host"), r.RemoteAddr)
+	addr := fmt.Sprintf("[remoteAddr: %v] [X-Forwarded-For: %v] [X-Forwarded-Host: %v]", r.RemoteAddr, xff, r.Header.Get("X-Forwarded-Host"))
+	//     addr := fmt.Sprintf("[X-Forwarded-For: %v] [X-Forwarded-Host: %v] [remoteAddr: %v]", xff, r.Header.Get("X-Forwarded-Host"), r.RemoteAddr)
 	refMsg := fmt.Sprintf("[ref: \"%s\" \"%v\"]", referer, r.Header.Get("User-Agent"))
 	respTime := "0"
 	if respHeader.Get("Response-Time") != "" {
@@ -214,7 +221,8 @@ func LogRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 	if err != nil {
 		uri = r.RequestURI
 	}
-	log.Printf("%s %s %s %s %d %s %s %s %s\n", addr, r.Method, uri, r.Proto, *status, dataMsg, authMsg, refMsg, respMsg)
+	log.Printf("%s %d %s %s %s %s %s %s %s\n", r.Proto, *status, r.Method, uri, dataMsg, addr, dataMsg, authMsg, refMsg, respMsg)
+	//     log.Printf("%s %s %s %s %d %s %s %s %s\n", addr, r.Method, uri, r.Proto, *status, dataMsg, authMsg, refMsg, respMsg)
 	if CMSMonitType == "" || CMSMonitProducer == "" {
 		return
 	}
