@@ -221,7 +221,7 @@ func LogRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 	if err != nil {
 		uri = r.RequestURI
 	}
-	log.Printf("%s %d %s %s %s %s %s %s %s\n", r.Proto, *status, r.Method, uri, dataMsg, addr, dataMsg, authMsg, refMsg, respMsg)
+	log.Printf("%s %d %s %s %s %s %s %s %s\n", r.Proto, *status, r.Method, uri, dataMsg, addr, authMsg, refMsg, respMsg)
 	//     log.Printf("%s %s %s %s %d %s %s %s %s\n", addr, r.Method, uri, r.Proto, *status, dataMsg, authMsg, refMsg, respMsg)
 	if CMSMonitType == "" || CMSMonitProducer == "" {
 		return
