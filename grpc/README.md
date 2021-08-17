@@ -72,6 +72,7 @@ To test http+gRPC proxy server we need to setup 3 pieces:
 ##### Scenario I: http client
 In this case we need http+gRPC proxy server, the gRPC backend server and
 HTTP client. You may start the first two seaprately (in different terminals):
+```
 # create gRPC proxy server config:
 cat > grpc-http.json << EOF
 {
