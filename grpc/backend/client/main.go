@@ -32,43 +32,64 @@ type grpcService struct {
 // fetchToken simulates a token lookup and omits the details of proper token
 // acquisition. For examples of how to acquire an OAuth2 token, see:
 // https://godoc.org/golang.org/x/oauth2
-func fetchToken(token string) *oauth2.Token {
-	log.Println("client token", token)
+func fetchToken(token string, verbose bool) *oauth2.Token {
+	if verbose {
+		log.Println("client token", token)
+	}
 	return &oauth2.Token{
 		AccessToken: token,
 	}
 }
 
 // NewGRPCService creates a new gRPC user service connection using the specified connection string.
-func NewGRPCService(connString, cert, token string) (GRPCService, error) {
+func NewGRPCService(ctx context.Context, connString, cert, domain, token string, verbose bool) (GRPCService, error) {
 	var err error
 	var conn *grpc.ClientConn
 	var opts []grpc.DialOption
 
 	// Set up the credentials for the connection.
-	perRPC := oauth.NewOauthAccess(fetchToken(token))
+	perRPC := oauth.NewOauthAccess(fetchToken(token, verbose))
 	if cert == "" {
-		opts = append(opts, grpc.WithInsecure())
+		if token != "" {
+			creds := credentials.NewClientTLSFromCert(nil, "")
+			if verbose {
+				log.Println("credentials", creds)
+			}
+			opts = []grpc.DialOption{
+				grpc.WithPerRPCCredentials(perRPC),
+				grpc.WithTransportCredentials(creds),
+				grpc.WithBlock(),
+			}
+		} else {
+			opts = append(opts, grpc.WithInsecure())
+		}
 	} else {
 
 		// secure (TLS) gRPC connection
 		// for details see
 		// https://github.com/grpc/grpc-go/blob/master/Documentation/grpc-auth-support.md
 		// https://pkg.go.dev/google.golang.org/grpc/credentials
-		creds, err := credentials.NewClientTLSFromFile(cert, "")
+		creds, err := credentials.NewClientTLSFromFile(cert, domain)
 		if err != nil {
 			return nil, err
+		}
+		if verbose {
+			log.Println("credentials", creds, err)
 		}
 		opts = []grpc.DialOption{
 			grpc.WithPerRPCCredentials(perRPC),
 			grpc.WithTransportCredentials(creds),
+			grpc.WithBlock(),
 		}
-		opts = append(opts, grpc.WithBlock())
 	}
 
-	conn, err = grpc.Dial(connString, opts...)
+	conn, err = grpc.DialContext(ctx, connString, opts...)
+	//     conn, err = grpc.Dial(connString, opts...)
 	if err != nil {
 		return nil, err
+	}
+	if verbose {
+		log.Println("gRPC connection", conn)
 	}
 	return &grpcService{grpcClient: cms.NewDataServiceClient(conn)}, nil
 }
@@ -89,10 +110,19 @@ func main() {
 	flag.StringVar(&token, "token", "", "gRPC authorization token")
 	var rootCA string
 	flag.StringVar(&rootCA, "rootCA", "", "root CA rootCAificate file(s) to validate server connections")
+	var domain string
+	flag.StringVar(&domain, "domain", "", "domain name matching root CA")
+	var verbose bool
+	flag.BoolVar(&verbose, "verbose", false, "turn on verbose output")
 	flag.Parse()
 	log.SetFlags(log.Lshortfile)
 
-	backendGRPC, err := NewGRPCService(address, rootCA, token)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer func() {
+		cancel()
+	}()
+
+	backendGRPC, err := NewGRPCService(ctx, address, rootCA, domain, token, verbose)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -100,6 +130,9 @@ func main() {
 	req := &cms.Request{Data: data}
 	resp, err := backendGRPC.GetData(req)
 	if err != nil {
+		if verbose {
+			log.Println("gRPC response", resp)
+		}
 		log.Fatal(err)
 	}
 	log.Println("gRPC response", resp.String())
