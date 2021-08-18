@@ -132,6 +132,24 @@ jobs:
         curl -ksLO https://raw.githubusercontent.com/dmwm/CMSKubernetes/master/docker/auth-proxy-server/Dockerfile
         sed -i -e "s,ENV TAG=.*,ENV TAG=${{steps.get-ref.outputs.tag}},g" Dockerfile
         docker build . --tag docker.pkg.github.com/vkuznet/auth-proxy-server/auth-proxy-server
+        docker tag docker.pkg.github.com/vkuznet/auth-proxy-server/auth-proxy-server registry.cern.ch/cmsweb/auth-proxy-server
+
+    - name: Login to registry.cern.ch
+      uses: docker/login-action@v1.6.0
+      with:
+        registry: registry.cern.ch
+        username: ${{ secrets.CERN_LOGIN }}
+        password: ${{ secrets.CERN_TOKEN }}
+
+    - name: Publish image to registry.cern.ch
+      uses: docker/build-push-action@v1
+      with:
+        username: ${{ secrets.CERN_LOGIN }}
+        password: ${{ secrets.CERN_TOKEN }}
+        registry: registry.cern.ch
+        repository: cmsweb/auth-proxy-server
+        tag_with_ref: true
+
       
     - name: Login to docker github registry
       uses: docker/login-action@v1.6.0
