@@ -507,6 +507,12 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// for /auth path we simply return status ok
+	if r.URL.Path == fmt.Sprintf("%s/auth", Config.Base) {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
 	// redirect HTTP requests
 	redirect(w, r)
 }
