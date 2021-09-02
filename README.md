@@ -1,7 +1,6 @@
 ### auth-proxy-server
 
-[![Build Status](https://travis-ci.org/vkuznet/auth-proxy-server.svg?branch=master)](https://travis-ci.org/vkuznet/auth-proxy-server)
-[![Build Status](https://github.com/vkuznet/pwm/actions/workflows/go.yml/badge.svg)](https://github.com/vkuznet/auth-proxy-server/actions/workflows/go.yml)
+[![Go CI build](https://github.com/vkuznet/auth-proxy-server/actions/workflows/go-ci.yml/badge.svg)](https://github.com/vkuznet/auth-proxy-server/actions/workflows/go-ci.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/vkuznet/auth-proxy-server)](https://goreportcard.com/report/github.com/vkuznet/auth-proxy-server)
 
 Go implementation of reverse proxy server with with OAuth OIDC or x509 authentication.
