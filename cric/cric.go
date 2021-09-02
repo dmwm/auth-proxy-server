@@ -58,7 +58,7 @@ func UpdateCricRecords(key, cricFile, cricURL string, cricUpdateInterval int64, 
 			if key == "id" {
 				cmsRecords = cricRecords
 			} else {
-				updateCMSRecords(cricRecords)
+				UpdateCMSRecords(cricRecords)
 			}
 			log.Println("Updated cms records", len(cmsRecords))
 		}
@@ -95,7 +95,7 @@ func UpdateCricRecords(key, cricFile, cricURL string, cricUpdateInterval int64, 
 			if key == "id" {
 				cmsRecords = cricRecords
 			} else {
-				updateCMSRecords(cricRecords)
+				UpdateCMSRecords(cricRecords)
 			}
 			log.Println("Updated cms records", len(cmsRecords))
 			if cricVerbose > 2 {
@@ -114,8 +114,8 @@ func UpdateCricRecords(key, cricFile, cricURL string, cricUpdateInterval int64, 
 	}
 }
 
-// helper function to create cmsRecords
-func updateCMSRecords(cricRecords cmsauth.CricRecords) {
+// UpdateCMSRecords updates CMS Records
+func UpdateCMSRecords(cricRecords cmsauth.CricRecords) {
 	cmsRecordsLock.Lock()
 	defer cmsRecordsLock.Unlock()
 	cmsRecords = make(cmsauth.CricRecords)
