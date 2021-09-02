@@ -1,6 +1,6 @@
 module github.com/vkuznet/auth-proxy-server
 
-go 1.16
+go 1.17
 
 require (
 	github.com/StackExchange/wmi v1.2.1 // indirect
@@ -28,4 +28,11 @@ require (
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
+)
+
+require (
+	github.com/lestrrat-go/strftime v1.0.5 // indirect
+	github.com/pascaldekloe/jwt v1.10.0 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
+	github.com/tklauser/numcpus v0.3.0 // indirect
 )
