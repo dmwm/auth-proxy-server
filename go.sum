@@ -157,6 +157,8 @@ github.com/tklauser/go-sysconf v0.3.9 h1:JeUVdAOWhhxVcU6Eqr/ATFHgXk/mmiItdKeJPev
 github.com/tklauser/go-sysconf v0.3.9/go.mod h1:11DU/5sG7UexIrp/O6g35hrWzu0JxlwQ3LSFUzyeuhs=
 github.com/tklauser/numcpus v0.3.0 h1:ILuRUQBtssgnxw0XXIjKUC56fgnOrFoQQ/4+DeU2biQ=
 github.com/tklauser/numcpus v0.3.0/go.mod h1:yFGUr7TUHQRAhyqBcEg0Ge34zDBAsIvJJcyE6boqnA8=
+github.com/vkuznet/TokenManager v0.0.1 h1:cWGMpEHN2Idw75VsKW4pTsyZ8+v59lJW4YfJb3jUdHI=
+github.com/vkuznet/TokenManager v0.0.1/go.mod h1:FeJx3eiTF4bHgUqfdrN9uDpckI5RTzam3SNZ2KEnWP0=
 github.com/vkuznet/auth-proxy-server/auth v0.0.0-20210902170254-0ca08acf67a5 h1:ylgq2DThKDZhx0H1ZnFI+rjb4DDtMgLtQZb1HXdLafU=
 github.com/vkuznet/auth-proxy-server/auth v0.0.0-20210902170254-0ca08acf67a5/go.mod h1:4o7LB5cxgJ8Mb7RIZ46D4wrxAuZGCWGHq4e/+RnXKhA=
 github.com/vkuznet/auth-proxy-server/auth v0.0.0-20210921141219-8a5ffd672a0d h1:EkjPVIbeCBRAMObDI/+gxwRmvqSVYlnCSG/MobF8v5U=
