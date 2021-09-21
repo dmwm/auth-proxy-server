@@ -5,7 +5,7 @@ go 1.17
 require (
 	github.com/StackExchange/wmi v1.2.1 // indirect
 	github.com/coreos/go-oidc v2.2.1+incompatible
-	github.com/dmwm/cmsauth v0.0.0-20210902170328-ab1b78fea4a6
+	github.com/dmwm/cmsauth v0.0.0-20210902172554-166499e72579
 	github.com/go-ole/go-ole v1.2.5 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/golang/protobuf v1.5.2 // indirect
@@ -16,14 +16,14 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/thomasdarimont/go-kc-example v0.0.0-20170529223628-e3951d8faa4c
 	github.com/tklauser/go-sysconf v0.3.9 // indirect
-	github.com/vkuznet/auth-proxy-server/auth v0.0.0-20210902170254-0ca08acf67a5
-	github.com/vkuznet/auth-proxy-server/cric v0.0.0-20210902170254-0ca08acf67a5
-	github.com/vkuznet/auth-proxy-server/logging v0.0.0-20210902170254-0ca08acf67a5
+	github.com/vkuznet/auth-proxy-server/auth v0.0.0-20210921141219-8a5ffd672a0d
+	github.com/vkuznet/auth-proxy-server/cric v0.0.0-20210921141219-8a5ffd672a0d
+	github.com/vkuznet/auth-proxy-server/logging v0.0.0-20210921141219-8a5ffd672a0d
 	github.com/vkuznet/x509proxy v0.0.0-20210801171832-e47b94db99b6 // indirect
-	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5
-	golang.org/x/net v0.0.0-20210902165921-8d991716f632 // indirect
+	golang.org/x/crypto v0.0.0-20210920023735-84f357641f63
+	golang.org/x/net v0.0.0-20210917221730-978cfadd31cf // indirect
 	golang.org/x/oauth2 v0.0.0-20210819190943-2bc19b11175f
-	golang.org/x/sys v0.0.0-20210902050250-f475640dd07b // indirect
+	golang.org/x/sys v0.0.0-20210921065528-437939a70204 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
