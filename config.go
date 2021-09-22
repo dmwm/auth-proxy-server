@@ -28,10 +28,20 @@ func parseConfig(configFile string) error {
 		return err
 	}
 	if Config.ClientID == "" {
-		log.Fatal("No ClientID found in configuration file")
+		v := os.Getenv("APS_CLIENT_ID")
+		if v != "" {
+			Config.ClientID = v
+		} else {
+			log.Fatal("No ClientID found in configuration file")
+		}
 	}
 	if Config.ClientSecret == "" {
-		log.Fatal("No ClientSecret found in configuration file")
+		v := os.Getenv("APS_CLIENT_SECRET")
+		if v != "" {
+			Config.ClientSecret = v
+		} else {
+			log.Fatal("No ClientSecret found in configuration file")
+		}
 	}
 	// default values
 	if Config.Port == 0 {
