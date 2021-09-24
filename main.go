@@ -357,6 +357,25 @@ func main() {
 	// initialize cmsauth module
 	CMSAuth.Init(Config.Hmac)
 
+	// get IAM users
+	if Config.IAMClientID != "" && Config.IAMClientSecret != "" {
+		IAMRenewInterval = time.Duration(3600) * time.Second
+		if Config.IAMRenewInterval > 0 {
+			IAMRenewInterval = time.Duration(Config.IAMRenewInterval) * time.Second
+		}
+		log.Println("obtain IAM data for", Config.IAMClientID, "renew in", IAMRenewInterval)
+		iam := IAMUserManager{
+			ClientID:     Config.IAMClientID,
+			ClientSecret: Config.IAMClientSecret,
+			URL:          "https://cms-auth.web.cern.ch",
+			Verbose:      2,
+		}
+		users, err := iam.GetUsers()
+		if err != nil {
+			log.Fatalf("unable to get IAM users, error %v", err)
+		}
+		log.Printf("IAM users\n:%v", users)
+	}
 	// start our servers
 	if useX509 {
 		go cric.UpdateCricRecords("dn", Config.CricFile, Config.CricURL, Config.UpdateCricInterval, Config.CricVerbose)
