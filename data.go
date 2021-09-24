@@ -29,6 +29,9 @@ type Configuration struct {
 	LogFile             string          `json:"log_file"`               // server log file
 	ClientID            string          `json:"client_id"`              // OICD client id
 	ClientSecret        string          `json:"client_secret"`          // OICD client secret
+	IAMClientID         string          `json:"iam_client_id"`          // OICD client id
+	IAMClientSecret     string          `json:"iam_client_secret"`      // OICD client secret
+	IAMRenewInterval    int             `json:"iam_renew_interval"`     // interval to renew IAM records
 	TargetURL           string          `json:"target_url"`             // proxy target url (where requests will go)
 	XForwardedHost      string          `json:"X-Forwarded-Host"`       // X-Forwarded-Host field of HTTP request
 	XContentTypeOptions string          `json:"X-Content-Type-Options"` // X-Content-Type-Options option
