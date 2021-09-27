@@ -17,6 +17,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/vkuznet/auth-proxy-server/auth"
 )
 
 // IAMRenewInterval represent renewal interval for IAMUsers
@@ -82,19 +84,22 @@ type IAMUser struct {
 	IndigoUser  IAMIndigoUser `json:"urn:indigo-dc:scim:schemas:IndigoUser"`
 }
 
+// IAMUserMap holds map of IAMUser based on their ID
+type IAMUserMap map[string]IAMUser
+
 // IAMUserManager holds IAMUser info in its cache
 type IAMUserManager struct {
-	URL          string    // IAM URL, e.g. https://cms-auth.web.cern.ch
-	ClientID     string    // IAM client id
-	ClientSecret string    // IAM client secret
-	BatchSize    int       // batch size to fetch IAM users' records
-	Users        []IAMUser // IAM user list
-	Expire       time.Time // expiration time stamp
-	Verbose      int       // verbose level
+	URL          string     // IAM URL, e.g. https://cms-auth.web.cern.ch
+	ClientID     string     // IAM client id
+	ClientSecret string     // IAM client secret
+	BatchSize    int        // batch size to fetch IAM users' records
+	Users        IAMUserMap // IAM users' map
+	Expire       time.Time  // expiration time stamp
+	Verbose      int        // verbose level
 }
 
 // GetUsers returns list of IAM users info
-func (m *IAMUserManager) GetUsers() ([]IAMUser, error) {
+func (m *IAMUserManager) GetUsers() (IAMUserMap, error) {
 	var lock = sync.Mutex{}
 	lock.Lock()
 	defer lock.Unlock()
@@ -191,18 +196,19 @@ type IAMScimResponse struct {
 	Resources    []IAMUser
 }
 
-// IAMUsers return list of IAM users for given token
-func IAMUsers(rurl, token string, batchSize, verbose int) ([]IAMUser, error) {
-	var users []IAMUser
+// IAMUsers returns IAM user map for given token
+func IAMUsers(rurl, token string, batchSize, verbose int) (IAMUserMap, error) {
+	uMap := make(IAMUserMap)
 	// get total number of users
 	curl := fmt.Sprintf("%s/scim/Users?count=1&attributes=totalResults", rurl)
 	iamScim, err := IAMScim(curl, token, verbose)
 	if err != nil {
-		log.Println("unable to process IAM request %s, error %v", curl, err)
-		return users, err
+		log.Printf("unable to process IAM request %s, error %v", curl, err)
+		return uMap, err
 	}
 
 	// send batch of requests to IAM
+	var users []IAMUser
 	var wg sync.WaitGroup
 	var failures int
 	if batchSize == 0 {
@@ -215,7 +221,7 @@ func IAMUsers(rurl, token string, batchSize, verbose int) ([]IAMUser, error) {
 			defer wg.Done()
 			iamScim, err := IAMScim(iurl, token, verbose)
 			if err != nil {
-				log.Println("unable to process request %s, error %v", iurl, err)
+				log.Printf("unable to process request %s, error %v", iurl, err)
 				failures += 1
 			}
 			for _, u := range iamScim.Resources {
@@ -225,9 +231,12 @@ func IAMUsers(rurl, token string, batchSize, verbose int) ([]IAMUser, error) {
 	}
 	wg.Wait()
 	if failures > 0 {
-		return users, errors.New("unable to process all IAM resources")
+		return uMap, errors.New("unable to process all IAM resources")
 	}
-	return users, nil
+	for _, u := range users {
+		uMap[u.ID] = u
+	}
+	return uMap, nil
 }
 
 // IAMScim returns list of IAM users for given token
@@ -273,4 +282,15 @@ func IAMScim(rurl, token string, verbose int) (IAMScimResponse, error) {
 	}
 
 	return rec, nil
+}
+
+// helper function to check validity of IAM token and return its attributes
+func checkIAMToken(token string, verbose int) (auth.TokenAttributes, error) {
+	purl := Config.IAMURL
+	if provider, ok := auth.OAuthProviders[purl]; ok {
+		attrs, err := auth.InspectToken(provider, token, verbose)
+		return attrs, err
+	}
+	msg := fmt.Sprintf("invalid IAM provider '%s'", purl)
+	return auth.TokenAttributes{}, errors.New(msg)
 }

@@ -29,6 +29,7 @@ type Configuration struct {
 	LogFile             string          `json:"log_file"`               // server log file
 	ClientID            string          `json:"client_id"`              // OICD client id
 	ClientSecret        string          `json:"client_secret"`          // OICD client secret
+	IAMURL              string          `json:"iam_url"`                // IAM URL
 	IAMClientID         string          `json:"iam_client_id"`          // IAM client id
 	IAMClientSecret     string          `json:"iam_client_secret"`      // IAM client secret
 	IAMBatchSize        int             `json:"iam_batch_size"`         // batch size for IAM requests

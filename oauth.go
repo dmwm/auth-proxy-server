@@ -77,7 +77,7 @@ var globalSessions *session.Manager
 var sessLock sync.RWMutex
 
 // iamUsers keeps track of IAM users' records
-var iamUsers []IAMUser
+var iamUsers IAMUserMap
 
 // initialize global session manager
 func init() {
@@ -98,7 +98,7 @@ func getIAMInfo() {
 			ClientID:     Config.IAMClientID,
 			ClientSecret: Config.IAMClientSecret,
 			BatchSize:    Config.IAMBatchSize,
-			URL:          "https://cms-auth.web.cern.ch",
+			URL:          Config.IAMURL,
 			Verbose:      Config.Verbose,
 		}
 		var err error
@@ -235,6 +235,16 @@ func checkAccessToken(r *http.Request) (auth.TokenAttributes, error) {
 	}
 
 	log.Println("unable to inspect token: ", err)
+	attrs, err = checkIAMToken(token, Config.Verbose)
+	if err == nil {
+		log.Println("found IAM token attributes %+v", attrs)
+		if _, ok := iamUsers[attrs.Sub]; ok {
+			r.Header.Set("scope", attrs.Scope)
+			r.Header.Set("client-host", attrs.ClientHost)
+			r.Header.Set("client-id", attrs.ClientID)
+			return attrs, nil
+		}
+	}
 
 	// if inspection fails, we'll try to send introspect request to auth provider
 	// to verify token
