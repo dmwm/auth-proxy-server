@@ -237,7 +237,7 @@ func checkAccessToken(r *http.Request) (auth.TokenAttributes, error) {
 	log.Println("unable to inspect token: ", err)
 	attrs, err = checkIAMToken(token, Config.Verbose)
 	if err == nil {
-		log.Println("found IAM token attributes %+v", attrs)
+		log.Printf("found IAM token attributes %+v", attrs)
 		if _, ok := iamUsers[attrs.Sub]; ok {
 			r.Header.Set("scope", attrs.Scope)
 			r.Header.Set("client-host", attrs.ClientHost)
