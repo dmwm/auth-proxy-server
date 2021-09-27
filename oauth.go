@@ -76,10 +76,39 @@ var globalSessions *session.Manager
 // sessLock keeps lock for sess updates
 var sessLock sync.RWMutex
 
+// iamUsers keeps track of IAM users' records
+var iamUsers []IAMUser
+
 // initialize global session manager
 func init() {
 	globalSessions, _ = session.NewManager("memory", "gosessionid", 3600)
 	go globalSessions.GC()
+}
+
+// helper function to get IAM info
+func getIAMInfo() {
+	// get IAM users
+	if Config.IAMClientID != "" && Config.IAMClientSecret != "" {
+		IAMRenewInterval = time.Duration(3600) * time.Second
+		if Config.IAMRenewInterval > 0 {
+			IAMRenewInterval = time.Duration(Config.IAMRenewInterval) * time.Second
+		}
+		log.Println("obtain IAM data for", Config.IAMClientID, "renew in", IAMRenewInterval)
+		iam := IAMUserManager{
+			ClientID:     Config.IAMClientID,
+			ClientSecret: Config.IAMClientSecret,
+			BatchSize:    Config.IAMBatchSize,
+			URL:          "https://cms-auth.web.cern.ch",
+			Verbose:      Config.Verbose,
+		}
+		var err error
+		tstamp := time.Now()
+		iamUsers, err = iam.GetUsers()
+		if err != nil {
+			log.Fatalf("unable to get IAM users, error %v", err)
+		}
+		log.Printf("Loaded IAM %d users in %s", len(iamUsers), time.Since(tstamp))
+	}
 }
 
 // helper function to verify/validate given token

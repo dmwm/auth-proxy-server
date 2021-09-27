@@ -56,5 +56,8 @@ func parseConfig(configFile string) error {
 	if Config.WriteTimeout == 0 {
 		Config.WriteTimeout = 300
 	}
+	if Config.IAMBatchSize == 0 {
+		Config.IAMBatchSize = 100
+	}
 	return nil
 }

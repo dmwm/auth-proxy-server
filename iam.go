@@ -7,6 +7,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -86,6 +87,7 @@ type IAMUserManager struct {
 	URL          string    // IAM URL, e.g. https://cms-auth.web.cern.ch
 	ClientID     string    // IAM client id
 	ClientSecret string    // IAM client secret
+	BatchSize    int       // batch size to fetch IAM users' records
 	Users        []IAMUser // IAM user list
 	Expire       time.Time // expiration time stamp
 	Verbose      int       // verbose level
@@ -106,7 +108,7 @@ func (m *IAMUserManager) GetUsers() ([]IAMUser, error) {
 		if m.Verbose > 0 {
 			log.Println("IAM token", token)
 		}
-		users, err := IAMUsers(m.URL, token, m.Verbose)
+		users, err := IAMUsers(m.URL, token, m.BatchSize, m.Verbose)
 		if err != nil {
 			log.Println("unable to get IAM users info", err)
 		}
@@ -190,10 +192,46 @@ type IAMScimResponse struct {
 }
 
 // IAMUsers return list of IAM users for given token
-func IAMUsers(rurl, token string, verbose int) ([]IAMUser, error) {
+func IAMUsers(rurl, token string, batchSize, verbose int) ([]IAMUser, error) {
 	var users []IAMUser
+	// get total number of users
+	curl := fmt.Sprintf("%s/scim/Users?count=1&attributes=totalResults", rurl)
+	iamScim, err := IAMScim(curl, token, verbose)
+	if err != nil {
+		log.Println("unable to process IAM request %s, error %v", curl, err)
+		return users, err
+	}
 
-	rurl = fmt.Sprintf("%s/scim/Users", rurl)
+	// send batch of requests to IAM
+	var wg sync.WaitGroup
+	var failures int
+	if batchSize == 0 {
+		batchSize = 100 // good default
+	}
+	for i := 0; i < iamScim.TotalResults; i = i + batchSize {
+		iurl := fmt.Sprintf("%s/scim/Users?startIndex=%d&count=%d", rurl, i, batchSize)
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			iamScim, err := IAMScim(iurl, token, verbose)
+			if err != nil {
+				log.Println("unable to process request %s, error %v", iurl, err)
+				failures += 1
+			}
+			for _, u := range iamScim.Resources {
+				users = append(users, u)
+			}
+		}()
+	}
+	wg.Wait()
+	if failures > 0 {
+		return users, errors.New("unable to process all IAM resources")
+	}
+	return users, nil
+}
+
+// IAMScim returns list of IAM users for given token
+func IAMScim(rurl, token string, verbose int) (IAMScimResponse, error) {
 
 	if verbose > 0 {
 		log.Println(rurl)
@@ -202,7 +240,7 @@ func IAMUsers(rurl, token string, verbose int) ([]IAMUser, error) {
 	if err != nil {
 		log.Fatalf("Unable to make GET request to %s, error: %s", rurl, err)
 	}
-	//     req.Header.Add("Accept", "application/json")
+	req.Header.Add("Accept", "application/scim+json")
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
 	if verbose > 1 {
 		dump, err := httputil.DumpRequestOut(req, true)
@@ -226,14 +264,13 @@ func IAMUsers(rurl, token string, verbose int) ([]IAMUser, error) {
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Println("unable to read response body", err)
-		return users, err
+		return rec, err
 	}
 	err = json.Unmarshal(data, &rec)
 	if err != nil {
 		log.Println("unable to unmarshal IAM response", err)
-		return users, nil
+		return rec, err
 	}
-	users = rec.Resources
 
-	return users, nil
+	return rec, nil
 }
