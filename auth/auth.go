@@ -12,6 +12,7 @@ var OAuthProviders map[string]Provider
 
 // TokenAttributes contains structure of access token attributes
 type TokenAttributes struct {
+	Sub          string `json:"sub"`           // user sub
 	UserName     string `json:"username"`      // user name
 	Active       bool   `json:"active"`        // is token active or not
 	SessionState string `json:"session_state"` // session state fields
