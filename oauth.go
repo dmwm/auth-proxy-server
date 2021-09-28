@@ -222,8 +222,24 @@ func checkAccessToken(r *http.Request) (auth.TokenAttributes, error) {
 		return auth.TokenAttributes{}, errors.New("no token present in HTTP request")
 	}
 
+	attrs, err := checkIAMToken(token, Config.Verbose)
+	if err == nil {
+		log.Printf("found IAM token attributes %+v", attrs)
+		if _, ok := iamUsers[attrs.Sub]; ok {
+			r.Header.Set("scope", attrs.Scope)
+			r.Header.Set("client-host", attrs.ClientHost)
+			r.Header.Set("client-id", attrs.ClientID)
+			if Config.Verbose > 0 {
+				log.Println("match checkIAMToken")
+			}
+			return attrs, nil
+		}
+	} else {
+		log.Println("fail to match AIM token, error", err)
+	}
+
 	// first, we inspect our token
-	attrs, err := auth.InspectTokenProviders(token, Config.Providers, Config.Verbose)
+	attrs, err = auth.InspectTokenProviders(token, Config.Providers, Config.Verbose)
 	if err == nil {
 		if attrs.ClientHost == "" {
 			attrs.ClientHost = r.Referer()
@@ -231,21 +247,13 @@ func checkAccessToken(r *http.Request) (auth.TokenAttributes, error) {
 		r.Header.Set("scope", attrs.Scope)
 		r.Header.Set("client-host", attrs.ClientHost)
 		r.Header.Set("client-id", attrs.ClientID)
+		if Config.Verbose > 0 {
+			log.Println("match InspectTokenProviders")
+		}
 		return attrs, nil
 	}
 
 	log.Println("unable to inspect token: ", err)
-	attrs, err = checkIAMToken(token, Config.Verbose)
-	if err == nil {
-		log.Printf("found IAM token attributes %+v", attrs)
-		if _, ok := iamUsers[attrs.Sub]; ok {
-			r.Header.Set("scope", attrs.Scope)
-			r.Header.Set("client-host", attrs.ClientHost)
-			r.Header.Set("client-id", attrs.ClientID)
-			return attrs, nil
-		}
-	}
-
 	// if inspection fails, we'll try to send introspect request to auth provider
 	// to verify token
 	attrs, err = introspectToken(token)
@@ -412,6 +420,10 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 		status = http.StatusFound
 		http.Redirect(w, r, aurl, status)
 		return
+	} else {
+		if Config.Verbose > 0 {
+			log.Printf("match checkAccessToken, attributes: %+v", attrs)
+		}
 	}
 
 	// if user wants to renew token

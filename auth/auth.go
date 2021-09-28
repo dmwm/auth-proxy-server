@@ -12,7 +12,9 @@ var OAuthProviders map[string]Provider
 
 // TokenAttributes contains structure of access token attributes
 type TokenAttributes struct {
-	Sub          string `json:"sub"`           // user sub
+	Subject      string `json:"sub"`           // token subject
+	Audiences    string `json:"aud"`           // token audience
+	Issuer       string `json:"iss"`           // token issuer
 	UserName     string `json:"username"`      // user name
 	Active       bool   `json:"active"`        // is token active or not
 	SessionState string `json:"session_state"` // session state fields
@@ -95,6 +97,9 @@ func InspectToken(provider Provider, token string, verbose int) (TokenAttributes
 		if k == "cern_upn" || k == "preferred_username" {
 			attrs.UserName = fmt.Sprintf("%v", v)
 		}
+		if k == "client_id" {
+			attrs.ClientID = fmt.Sprintf("%v", v)
+		}
 		if k == "cern_person_id" {
 			attrs.ClientID = fmt.Sprintf("%v", v)
 		}
@@ -112,6 +117,15 @@ func InspectToken(provider Provider, token string, verbose int) (TokenAttributes
 		if k == "scope" {
 			attrs.Scope = fmt.Sprintf("%v", v)
 		}
+		if k == "sub" {
+			attrs.Subject = fmt.Sprintf("%v", v)
+		}
+		if k == "iss" {
+			attrs.Issuer = fmt.Sprintf("%v", v)
+		}
+		if k == "aud" {
+			attrs.Audiences = fmt.Sprintf("%v", v)
+		}
 		if k == "cern_roles" {
 			s := fmt.Sprintf("%v", v)
 			s = strings.Replace(s, "[", "", -1)
@@ -125,3 +139,25 @@ func InspectToken(provider Provider, token string, verbose int) (TokenAttributes
 	}
 	return attrs, err
 }
+
+/*
+// Example of usage:
+func main() {
+	var token string
+	flag.StringVar(&token, "token", "", "token")
+	var purl string
+	flag.StringVar(&purl, "purl", "", "provider url")
+	flag.Parse()
+	verbose := 2
+	provider := Provider{}
+	err := provider.Init(purl, verbose)
+	if err != nil {
+		log.Fatalf("fail to initialize %s error %v", provider.URL, err)
+	}
+	attrs, err := InspectToken(provider, token, verbose)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("attributes %+v", attrs)
+}
+*/

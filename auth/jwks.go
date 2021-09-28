@@ -220,5 +220,8 @@ func tokenClaims(provider Provider, token string) (map[string]interface{}, error
 	}
 	t := claims.Registered.Expires.Time()
 	out["exp"] = t.Unix()
+	out["sub"] = claims.Subject
+	out["iss"] = claims.Issuer
+	out["aud"] = claims.Audiences
 	return out, nil
 }
