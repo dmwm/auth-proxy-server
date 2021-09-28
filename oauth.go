@@ -225,13 +225,22 @@ func checkAccessToken(r *http.Request) (auth.TokenAttributes, error) {
 	attrs, err := checkIAMToken(token, Config.Verbose)
 	if err == nil {
 		log.Printf("found IAM token attributes %+v", attrs)
-		if _, ok := iamUsers[attrs.Sub]; ok {
+		if user, ok := iamUsers[attrs.Subject]; ok {
 			r.Header.Set("scope", attrs.Scope)
 			r.Header.Set("client-host", attrs.ClientHost)
 			r.Header.Set("client-id", attrs.ClientID)
 			if Config.Verbose > 0 {
-				log.Println("match checkIAMToken")
+				log.Printf("match checkIAMToken, user info %+v", user)
 			}
+			r.Header.Set("Cms-Authn-Login", user.UserName)
+			var certs []string
+			for _, c := range user.IndigoUser.Certificates {
+				certs = append(certs, c.String())
+			}
+			r.Header.Set("Cms-Auth-Cert", fmt.Sprintf("%v", certs))
+			iamEmail := user.Emails[0]
+			attrs.Email = iamEmail.Value
+			attrs.UserName = user.UserName
 			return attrs, nil
 		}
 	} else {
