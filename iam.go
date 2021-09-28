@@ -56,6 +56,11 @@ type IAMCertificate struct {
 	HasProxyCertificate bool   `json:"hasProxyCertificate"`
 }
 
+// String returns certificate representation
+func (c *IAMCertificate) String() string {
+	return fmt.Sprintf("Subject:%s Issuer:%s", c.SubjectDN, c.IssuerDN)
+}
+
 // IAMIndigoUser represents indigo user structure
 type IAMIndigoUser struct {
 	Labels       []IAMLabel
