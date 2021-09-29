@@ -4,6 +4,8 @@ package main
 //
 // Copyright (c) 2021 - Valentin Kuznetsov <vkuznet@gmail.com>
 //
+// IAM documentation:
+// https://indigo-iam.github.io/v/v1.7.1/docs/reference/api/oauth-token-exchange/
 
 import (
 	"encoding/json"
