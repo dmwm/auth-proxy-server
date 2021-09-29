@@ -43,6 +43,29 @@ func parseConfig(configFile string) error {
 			log.Fatal("No ClientSecret found in configuration file")
 		}
 	}
+
+	// IAM settings
+	if Config.IAMClientID == "" {
+		v := os.Getenv("IAM_CLIENT_ID")
+		if v != "" {
+			Config.IAMClientID = v
+		}
+	}
+	if Config.IAMClientSecret == "" {
+		v := os.Getenv("IAM_CLIENT_SECRET")
+		if v != "" {
+			Config.IAMClientSecret = v
+		}
+	}
+	if Config.IAMURL == "" {
+		v := os.Getenv("IAM_URL")
+		if v != "" {
+			Config.IAMURL = v
+		} else {
+			Config.IAMURL = "https://cms-auth.web.cern.ch"
+		}
+	}
+
 	// default values
 	if Config.Port == 0 {
 		Config.Port = 8181
