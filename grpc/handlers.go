@@ -13,6 +13,9 @@ import (
 
 // RequestHandler performs reverse proxy action on incoming user request
 func RequestHandler(w http.ResponseWriter, r *http.Request) {
+	if Config.Verbose > 0 {
+		log.Printf("HTTP request: %+v", r)
+	}
 	token := r.Header.Get("Authorization")
 	if !validate(token, Config.Providers, Config.Verbose) {
 		msg := "Not authorized"
