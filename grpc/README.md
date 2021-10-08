@@ -178,6 +178,97 @@ rootCA option), e.g.:
 ./grpc-client -address "<hostame>:8443" -token "some-secret-token"
 ```
 
+### End-to-end encryption
+Here we describe how to setup gRPC proxy and gRPC client to server end-to-end
+encryption. To start we need to either obtain valid certificates or
+generate ones:
+```
+# Generate own self-signed certificates
+# https://stackoverflow.com/questions/64814173/how-do-i-use-sans-with-openssl-instead-of-common-name
+
+openssl genrsa -out rootCA.key 2048
+openssl req -new -x509 -days 365 -key rootCA.key -subj "/C=CN/ST=GD/L=SZ/O=Acme, Inc./CN=Acme Root CA" -out rootCA.crt
+
+openssl req -newkey rsa:2048 -nodes -keyout server.key -subj "/C=CN/ST=GD/L=SZ/O=Acme, Inc./CN=*.mydomain.com" -out server.csr
+openssl x509 -req -extfile <(printf "subjectAltName=DNS:mydomain.com,DNS:www.mydomain.com") -days 365 -in server.csr -CA rootCA.crt -CAkey rootCA.key -CAcreateserial -out server.crt
+```
+
+Now, let's take two sceinarious:
+
+#### End-to-end ecnription between gRPC client and gRPC server
+First, we run gRPC server on port 9999
+```
+cd backend/server
+make
+# adjust path of certificates
+./grpc-server -address "0.0.0.0:9999" -oauth \
+    -serverCrt /Users/vk/certificates/self/server.crt \
+    -serverKey /Users/vk/certificates/self/server.key
+```
+Then (in another window), we run gRPC client to connect to our server on port 9999
+```
+# obtain valid token
+token=....
+
+# visit client area and run the client
+cd backend/client
+./grpc-client -address "127.0.0.1:9999" \
+    -token=$token \
+    -rootCA=/Users/vk/certificates/self/rootCA.crt -domain="mydomain.com"
+```
+
+#### End-to-end ecnription between gRPC client and gRPC server via gRPC proxy server
+Here we need three pieces, the gRPC server, gRPC proxy and gRPC client:
+
+The gRPC server:
+```
+cd backend/server
+make
+# adjust path of certificates
+./grpc-server -address "0.0.0.0:9999" -oauth \
+    -serverCrt /Users/vk/certificates/self/server.crt \
+    -serverKey /Users/vk/certificates/self/server.key
+```
+
+Now, we start gRPC proxy server with the following config:
+```
+{
+    "base": "",
+    "http_server": false,
+    "providers": [...],
+    "cric_url": "https://someurl.com
+    "cric_file": "/Users/vk/certificates/cric.json",
+    "server_cert": "/Users/vk/certificates/self/server.crt",
+    "server_key": "/Users/vk/certificates/self/server.key",
+    "grpc_address": "0.0.0.0:9999",
+    "root_ca": "/Users/vk/certificates/self/rootCA.crt",
+    "domain": "mydomain.com",
+    "verbose": 1,
+    "port": 8443
+}
+```
+The config above defines IAM providers, cric parts, server certificates, root
+CA, and grpc server address. The proxy will start on port 8443
+```
+# compile proxy server
+make
+
+# start server
+./grpc-proxy-server -config grpc-secure.json
+```
+
+Finally, we can now run our client and point it to port of the proxy server
+(8443):
+```
+# obtain valid token
+token=....
+
+# visit client area and run the client
+cd backend/client
+./grpc-client -address "127.0.0.1:8443" \
+    -token=$token \
+    -rootCA=/Users/vk/certificates/self/rootCA.crt -domain="mydomain.com"
+```
 
 ### References:
 - [gRPC example](https://towardsdatascience.com/grpc-in-golang-bb40396eb8b1)
