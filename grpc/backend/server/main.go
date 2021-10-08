@@ -43,6 +43,11 @@ func main() {
 	var serverCrt string
 	flag.StringVar(&serverCrt, "serverCrt", "", "gRPC server crt file")
 	flag.Parse()
+
+	// set verbose log output
+	log.SetFlags(0)
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+
 	if address == "" {
 		log.Fatal("invalid gRPC address")
 	}
