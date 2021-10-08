@@ -31,5 +31,6 @@ func validate(token string, providers []string, verbose int) bool {
 		}
 		return true
 	}
+	log.Println("invalid cric authentication, attrs.ClientID", attrs.ClientID, "not found in cric records")
 	return false
 }
