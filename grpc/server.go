@@ -31,6 +31,8 @@ type Configuration struct {
 	Verbose            int      `json:"verbose"`      // verbose output
 	ServerCrt          string   `json:"server_cert"`  // path to server crt file
 	ServerKey          string   `json:"server_key"`   // path to server key file
+	RootCA             string   `json:"root_ca"`      // server root CA
+	Domain             string   `json:"domain"`       // server domain
 	LogFile            string   `json:"log_file"`     // log file
 	HttpServer         bool     `json:"http_server"`  // run http service or not
 	GRPCAddress        string   `json:"grpc_address"` // address of gRPC backend server
@@ -77,12 +79,8 @@ func grpcHttpServer() {
 	serverCrt := checkFile(Config.ServerCrt)
 	serverKey := checkFile(Config.ServerKey)
 
-	// initialize gRPC remote backend
-	var err error
-	backendGRPC, err = NewGRPCService(Config.GRPCAddress)
-	if err != nil {
-		log.Fatal(err)
-	}
+	// update CRIC records based on user ID
+	go cric.UpdateCricRecords("id", Config.CricFile, Config.CricURL, Config.UpdateCricInterval, Config.CricVerbose)
 
 	// the request handler
 	http.HandleFunc(fmt.Sprintf("%s/", Config.Base), RequestHandler)
@@ -109,6 +107,27 @@ func (*proxyServer) GetData(ctx context.Context, request *cms.Request) (*cms.Res
 		log.Println("gRPC request", request)
 	}
 
+	// initialize gRPC call to remote backend
+	var err error
+	if Config.RootCA == "" {
+		// non-secure connection
+		backendGRPC, err = NewGRPCServiceSimple(Config.GRPCAddress)
+	} else {
+		// fully secure connection with Token based authentication
+		token := request.Data.Token
+		backendGRPC, err = NewGRPCService(
+			ctx,
+			Config.GRPCAddress,
+			Config.RootCA,
+			Config.Domain,
+			token,
+			Config.Verbose,
+		)
+	}
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	response, err := backendGRPC.GetData(request)
 	if err != nil {
 		log.Println("backend error", err)
@@ -129,12 +148,6 @@ func grpcServer() {
 
 	// update CRIC records based on user ID
 	go cric.UpdateCricRecords("id", Config.CricFile, Config.CricURL, Config.UpdateCricInterval, Config.CricVerbose)
-
-	// start backend GRPC service (client)
-	backendGRPC, err = NewGRPCService(Config.GRPCAddress)
-	if err != nil {
-		log.Fatal(err)
-	}
 
 	// gRPC server options
 	var opts []grpc.ServerOption
@@ -163,11 +176,18 @@ func grpcServer() {
 
 // helper function to validate the authorization.
 func valid(authorization []string) bool {
+	if Config.Verbose > 0 {
+		log.Printf("validate authorization: %+v", authorization)
+	}
 	if len(authorization) < 1 {
 		return false
 	}
 	token := strings.TrimPrefix(authorization[0], "Bearer ")
-	return validate(token, Config.Providers, Config.Verbose)
+	status := validate(token, Config.Providers, Config.Verbose)
+	if Config.Verbose > 0 {
+		log.Println("validation status", status)
+	}
+	return status
 }
 
 // ensureValidToken ensures a valid token exists within a request's metadata. If
@@ -178,6 +198,9 @@ func ensureValidToken(ctx context.Context, req interface{}, info *grpc.UnaryServ
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		return nil, status.Errorf(codes.InvalidArgument, "missing metadata")
+	}
+	if Config.Verbose > 0 {
+		log.Printf("HTTP context metadata: %+v", md)
 	}
 	// The keys within metadata.MD are normalized to lowercase.
 	// See: https://godoc.org/google.golang.org/grpc/metadata#New

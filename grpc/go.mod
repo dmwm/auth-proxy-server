@@ -13,6 +13,7 @@ require (
 	github.com/vkuznet/auth-proxy-server/logging v0.0.0-20210808183632-ed2bd02b0f3a
 	github.com/vkuznet/x509proxy v0.0.0-20210801171832-e47b94db99b6 // indirect
 	golang.org/x/net v0.0.0-20210805182204-aaa1db679c0d
+	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d // indirect
 	golang.org/x/sys v0.0.0-20210809222454-d867a43fc93e // indirect
 	google.golang.org/genproto v0.0.0-20210809142519-0135a39c2737 // indirect
 	google.golang.org/grpc v1.39.1

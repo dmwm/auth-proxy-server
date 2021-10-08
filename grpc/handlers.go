@@ -5,8 +5,11 @@ package main
 // Copyright (c) 2021 - Valentin Kuznetsov <vkuznet@gmail.com>
 
 import (
+	"context"
 	"log"
 	"net/http"
+	"strings"
+	"time"
 
 	"github.com/vkuznet/auth-proxy-server/grpc/cms"
 )
@@ -16,7 +19,7 @@ func RequestHandler(w http.ResponseWriter, r *http.Request) {
 	if Config.Verbose > 0 {
 		log.Printf("HTTP request: %+v", r)
 	}
-	token := r.Header.Get("Authorization")
+	token := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
 	if !validate(token, Config.Providers, Config.Verbose) {
 		msg := "Not authorized"
 		status := http.StatusUnauthorized
@@ -28,6 +31,32 @@ func RequestHandler(w http.ResponseWriter, r *http.Request) {
 	req := &cms.Request{
 		Data: &cms.Data{Id: 1, Token: token},
 	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer func() {
+		cancel()
+	}()
+
+	// compose new GRPC service request
+	var err error
+	if Config.RootCA == "" {
+		// non-secure connection
+		backendGRPC, err = NewGRPCServiceSimple(Config.GRPCAddress)
+	} else {
+		// fully secure connection with Token based authentication
+		backendGRPC, err = NewGRPCService(
+			ctx,
+			Config.GRPCAddress,
+			Config.RootCA,
+			Config.Domain,
+			token,
+			Config.Verbose,
+		)
+	}
+	if err != nil {
+		log.Fatal(err)
+	}
+	// place GRPC request to backend GRPC server
 	resp, err := backendGRPC.GetData(req)
 
 	if err != nil {
