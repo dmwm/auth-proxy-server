@@ -270,6 +270,13 @@ cd backend/client
     -rootCA=/Users/vk/certificates/self/rootCA.crt -domain="mydomain.com"
 ```
 
+We can also start gRPC proxy server in HTTP mode. For that we need to add
+only `"http_server": true` to our proxy config file, and then use normal 
+HTTP client like curl:
+```
+curl -k -H "Authorization: Bearer $token" https://localhost:8443/
+```
+
 ### References:
 - [gRPC example](https://towardsdatascience.com/grpc-in-golang-bb40396eb8b1)
 - [gRPC tutorial](https://grpc.io/docs/languages/go/basics/)
