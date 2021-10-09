@@ -47,6 +47,11 @@ func Test_PathMatched(t *testing.T) {
 	result = PathMatched(rurl, path, false)
 	assert.Equal(t, result, true)
 
+	rurl = "/path/a/b/c/d?123"
+	path = "/path"
+	result = PathMatched(rurl, path, false)
+	assert.Equal(t, result, true)
+
 	// check strict path matching
 	rurl = "/couchdb/workqueue"
 	path = "/couchdb"
