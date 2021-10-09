@@ -14,6 +14,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -302,4 +303,37 @@ func InList(a string, list []string) bool {
 		return true
 	}
 	return false
+}
+
+// PatchMatched check if given paths are matched
+func PathMatched(rurl, path string, strict bool) bool {
+	log.Printf("PatchMatched rurl=%s path=%s strict=%v", rurl, path, strict)
+	if v, err := url.QueryUnescape(rurl); err == nil {
+		rurl = v
+	}
+	log.Printf("PatchMatched rurl=%s path=%s strict=%v", rurl, path, strict)
+	matched := false
+	if strings.HasSuffix(path, "/") {
+		if !strings.HasSuffix(rurl, "/") {
+			rurl += "/"
+		}
+	}
+	if strict {
+		if strings.HasPrefix(rurl, path) {
+			rest := strings.Replace(rurl, path, "", -1)
+			if len(rest) > 0 && string(rest[0]) == "/" {
+				rest = strings.Replace(rest, "/", "", 1)
+			}
+			// the rest of the path is just parameters and not sub-path of URI
+			if !strings.Contains(rest, "/") {
+				matched = true
+			}
+		}
+	} else {
+		if strings.HasPrefix(rurl, path) {
+			matched = true
+		}
+	}
+	log.Printf("PatchMatched rurl=%s path=%s strict=%v matched %v", rurl, path, strict, matched)
+	return matched
 }

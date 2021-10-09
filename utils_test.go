@@ -33,3 +33,33 @@ func Test_InList(t *testing.T) {
 	res = InList("c", list)
 	assert.Equal(t, res, false)
 }
+
+// Test_PathMatched function
+func Test_PathMatched(t *testing.T) {
+	// check path prefix matching
+	rurl := "/couchdb/workqueue"
+	path := "/couchdb"
+	result := PathMatched(rurl, path, false)
+	assert.Equal(t, result, true)
+
+	rurl = "/dbs/int/global/DBSReader/datasets?dataset=/aaa/bbb/ccc"
+	path = "/dbs/int/global/DBSReader"
+	result = PathMatched(rurl, path, false)
+	assert.Equal(t, result, true)
+
+	// check strict path matching
+	rurl = "/couchdb/workqueue"
+	path = "/couchdb"
+	result = PathMatched(rurl, path, true)
+	assert.Equal(t, result, true)
+
+	rurl = "/couchdb/workqueue?q=123"
+	path = "/couchdb"
+	result = PathMatched(rurl, path, true)
+	assert.Equal(t, result, true)
+
+	rurl = "/couchdb/workqueue/params"
+	path = "/couchdb"
+	result = PathMatched(rurl, path, true)
+	assert.Equal(t, result, false)
+}
