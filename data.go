@@ -17,6 +17,7 @@ type Ingress struct {
 	ServiceURL string `json:"service_url"` // service url
 	OldPath    string `json:"old_path"`    // path from url to be replaced with new_path
 	NewPath    string `json:"new_path"`    // path from url to replace old_path
+	Strict     bool   `json:"strict"`      // apply string matching
 }
 
 // Configuration stores server configuration parameters
