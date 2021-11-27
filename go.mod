@@ -16,14 +16,14 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/thomasdarimont/go-kc-example v0.0.0-20170529223628-e3951d8faa4c
 	github.com/tklauser/go-sysconf v0.3.9 // indirect
-	github.com/vkuznet/auth-proxy-server/auth v0.0.0-20211009195327-e0e63824b556
-	github.com/vkuznet/auth-proxy-server/cric v0.0.0-20211009195327-e0e63824b556
-	github.com/vkuznet/auth-proxy-server/logging v0.0.0-20211009195327-e0e63824b556
+	github.com/vkuznet/auth-proxy-server/auth v0.0.0-20211108132053-61a3126f4984
+	github.com/vkuznet/auth-proxy-server/cric v0.0.0-20211108132053-61a3126f4984
+	github.com/vkuznet/auth-proxy-server/logging v0.0.0-20211108132053-61a3126f4984
 	github.com/vkuznet/x509proxy v0.0.0-20210801171832-e47b94db99b6 // indirect
-	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
-	golang.org/x/net v0.0.0-20211105192438-b53810dc28af // indirect
+	golang.org/x/crypto v0.0.0-20211117183948-ae814b36b871
+	golang.org/x/net v0.0.0-20211123203042-d83791d6bcd9 // indirect
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8
-	golang.org/x/sys v0.0.0-20211107104306-e0b2ad06fe42 // indirect
+	golang.org/x/sys v0.0.0-20211124211545-fe61309f8881 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
