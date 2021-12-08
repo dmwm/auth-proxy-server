@@ -211,7 +211,11 @@ func LogRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 	}
 	addr := fmt.Sprintf("[remoteAddr: %v] [X-Forwarded-For: %v] [X-Forwarded-Host: %v]", r.RemoteAddr, xff, r.Header.Get("X-Forwarded-Host"))
 	//     addr := fmt.Sprintf("[X-Forwarded-For: %v] [X-Forwarded-Host: %v] [remoteAddr: %v]", xff, r.Header.Get("X-Forwarded-Host"), r.RemoteAddr)
-	refMsg := fmt.Sprintf("[ref: \"%s\" \"%v\"]", referer, r.Header.Get("User-Agent"))
+	ref, err := url.QueryUnescape(referer)
+	if err != nil {
+		ref = referer
+	}
+	refMsg := fmt.Sprintf("[ref: \"%v\" \"%v\"]", ref, r.Header.Get("User-Agent"))
 	respTime := "0"
 	if respHeader.Get("Response-Time") != "" {
 		respTime = fmt.Sprintf("%sv", respHeader.Get("Response-Time"))
