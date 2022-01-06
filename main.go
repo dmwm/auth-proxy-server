@@ -359,15 +359,19 @@ func main() {
 
 	// start our servers
 	if useX509 {
-		go cric.UpdateCricRecords("dn", Config.CricFile, Config.CricURL, Config.UpdateCricInterval, Config.CricVerbose)
+		if Config.CricURL != "" {
+			go cric.UpdateCricRecords("dn", Config.CricFile, Config.CricURL, Config.UpdateCricInterval, Config.CricVerbose)
+		}
 		x509ProxyServer()
 		return
 	} else if scitokens {
 		scitokensServer()
 		return
 	}
-	// Get CRIC records
-	go cric.UpdateCricRecords("id", Config.CricFile, Config.CricURL, Config.UpdateCricInterval, Config.CricVerbose)
+	if Config.CricURL != "" {
+		// Get CRIC records
+		go cric.UpdateCricRecords("id", Config.CricFile, Config.CricURL, Config.UpdateCricInterval, Config.CricVerbose)
+	}
 	// Get AIM records
 	go getIAMInfo()
 	// start OAuth server
