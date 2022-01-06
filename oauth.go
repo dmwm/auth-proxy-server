@@ -554,17 +554,17 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 		if Config.Verbose > 0 {
 			printHTTPRequest(r, "cms headers")
 		}
-	}
 
-	// check if cms credentials are in place
-	cmsLoginName := r.Header.Get("Cms-Authn-Login")
-	cmsAuthCert := r.Header.Get("Cms-Auth-Cert")
-	if cmsAuthCert == "" || cmsLoginName == "" {
-		log.Printf("request headers %+v\n", r.Header)
-		msg := fmt.Sprintf("not authorized access")
-		status = http.StatusUnauthorized
-		http.Error(w, msg, status)
-		return
+		// check if cms credentials are in place
+		cmsLoginName := r.Header.Get("Cms-Authn-Login")
+		cmsAuthCert := r.Header.Get("Cms-Auth-Cert")
+		if cmsAuthCert == "" || cmsLoginName == "" {
+			log.Printf("request headers %+v\n", r.Header)
+			msg := fmt.Sprintf("not authorized access")
+			status = http.StatusUnauthorized
+			http.Error(w, msg, status)
+			return
+		}
 	}
 
 	// for /auth path we simply return status ok
