@@ -584,13 +584,10 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 // If targetUrl is empty string it will redirect all request to
 // simple hello page.
 func oauthProxyServer() {
-	// check if provided crt/key files exists
-	serverCrt := checkFile(Config.ServerCrt)
-	serverKey := checkFile(Config.ServerKey)
 
 	// redirectURL defines where incoming requests will be redirected for authentication
 	redirectURL := fmt.Sprintf("http://localhost:%d/callback", Config.Port)
-	if serverCrt != "" {
+	if Config.ServerCrt != "" {
 		redirectURL = fmt.Sprintf("https://localhost:%d/callback", Config.Port)
 	}
 	if Config.RedirectURL != "" {
@@ -646,6 +643,10 @@ func oauthProxyServer() {
 		server := LetsEncryptServer(Config.DomainNames...)
 		log.Fatal(server.ListenAndServeTLS("", ""))
 	} else {
+		// check if provided crt/key files exists
+		serverCrt := checkFile(Config.ServerCrt)
+		serverKey := checkFile(Config.ServerKey)
+
 		server, err := getServer(serverCrt, serverKey, false)
 		if err != nil {
 			log.Fatalf("unable to start oauth server, error %v\n", err)

@@ -78,10 +78,6 @@ func x509RequestHandler(w http.ResponseWriter, r *http.Request) {
 
 // helper function to start x509 proxy server
 func x509ProxyServer() {
-	// check if provided crt/key files exists
-	serverCrt := checkFile(Config.ServerCrt)
-	serverKey := checkFile(Config.ServerKey)
-
 	// metrics handler
 	http.HandleFunc(fmt.Sprintf("%s/metrics", Config.Base), metricsHandler)
 
@@ -101,6 +97,10 @@ func x509ProxyServer() {
 		server := LetsEncryptServer(Config.DomainNames...)
 		log.Fatal(server.ListenAndServeTLS("", ""))
 	} else {
+		// check if provided crt/key files exists
+		serverCrt := checkFile(Config.ServerCrt)
+		serverKey := checkFile(Config.ServerKey)
+
 		server, err := getServer(serverCrt, serverKey, true)
 		if err != nil {
 			log.Fatalf("unable to start x509 server, error %v\n", err)
