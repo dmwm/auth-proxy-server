@@ -20,7 +20,7 @@ require (
 	github.com/vkuznet/auth-proxy-server/cric v0.0.0-20211108132053-61a3126f4984
 	github.com/vkuznet/auth-proxy-server/logging v0.0.0-20211108132053-61a3126f4984
 	github.com/vkuznet/x509proxy v0.0.0-20210801171832-e47b94db99b6 // indirect
-	golang.org/x/crypto v0.0.0-20211117183948-ae814b36b871
+	golang.org/x/crypto v0.0.0-20211215153901-e495a2d5b3d3
 	golang.org/x/net v0.0.0-20211123203042-d83791d6bcd9 // indirect
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8
 	golang.org/x/sys v0.0.0-20211124211545-fe61309f8881 // indirect
@@ -38,5 +38,6 @@ require (
 	github.com/tklauser/numcpus v0.3.0 // indirect
 	github.com/vkuznet/TokenManager v0.0.1 // indirect
 	golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1 // indirect
+	golang.org/x/text v0.3.6 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c // indirect
 )

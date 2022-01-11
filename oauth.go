@@ -642,9 +642,14 @@ func oauthProxyServer() {
 	http.HandleFunc("/", oauthRequestHandler)
 
 	// start HTTPs server
-	server, err := getServer(serverCrt, serverKey, false)
-	if err != nil {
-		log.Fatalf("unable to start oauth server, error %v\n", err)
+	if Config.LetsEncrypt {
+		server := LetsEncryptServer(Config.DomainNames...)
+		log.Fatal(server.ListenAndServeTLS("", ""))
+	} else {
+		server, err := getServer(serverCrt, serverKey, false)
+		if err != nil {
+			log.Fatalf("unable to start oauth server, error %v\n", err)
+		}
+		log.Fatal(server.ListenAndServeTLS(serverCrt, serverKey))
 	}
-	log.Fatal(server.ListenAndServeTLS(serverCrt, serverKey))
 }

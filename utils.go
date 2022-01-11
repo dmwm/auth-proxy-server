@@ -17,11 +17,14 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"regexp"
 	"runtime"
+	"sort"
 	"strings"
 	"time"
 
 	"github.com/vkuznet/auth-proxy-server/cric"
+	"golang.org/x/crypto/acme/autocert"
 )
 
 // helper function to check if given file name exists
@@ -216,6 +219,26 @@ func getServer(serverCrt, serverKey string, customVerify bool) (*http.Server, er
 	return server, nil
 }
 
+// LetsEncryptServer provides HTTPs server with Let's encrypt for
+// given domain names (hosts)
+func LetsEncryptServer(hosts ...string) *http.Server {
+	certManager := autocert.Manager{
+		Prompt:     autocert.AcceptTOS,
+		HostPolicy: autocert.HostWhitelist(hosts...),
+		Cache:      autocert.DirCache("certs"),
+	}
+
+	server := &http.Server{
+		Addr: ":https",
+		TLSConfig: &tls.Config{
+			GetCertificate: certManager.GetCertificate,
+		},
+	}
+	// start cert Manager goroutine
+	go http.ListenAndServe(":http", certManager.HTTPHandler(nil))
+	return server
+}
+
 // Stack retuns string representation of the stack function calls
 func Stack() string {
 	trace := make([]byte, 2048)
@@ -318,8 +341,14 @@ func PathMatched(rurl, path string, strict bool) bool {
 			rurl += "/"
 		}
 	}
+	var prefixMatch bool
+	if strings.Contains(path, ".") || strings.Contains(path, "*") || strings.Contains(path, "^") || strings.Contains(path, "$") {
+		prefixMatch, _ = regexp.MatchString(path, rurl)
+	} else {
+		prefixMatch = strings.HasPrefix(rurl, path)
+	}
 	if strict {
-		if strings.HasPrefix(rurl, path) {
+		if prefixMatch {
 			rest := strings.Replace(rurl, path, "", -1)
 			if len(rest) > 0 && string(rest[0]) == "/" {
 				rest = strings.Replace(rest, "/", "", 1)
@@ -330,10 +359,23 @@ func PathMatched(rurl, path string, strict bool) bool {
 			}
 		}
 	} else {
-		if strings.HasPrefix(rurl, path) {
+		if prefixMatch {
 			matched = true
 		}
 	}
 	log.Printf("PatchMatched rurl=%s path=%s strict=%v matched %v", rurl, path, strict, matched)
 	return matched
+}
+
+// helper function to parse ingress rules
+func RedirectRules(ingressRules []Ingress) (map[string]Ingress, []string) {
+	rmap := make(map[string]Ingress)
+	var rules []string
+	for _, rec := range ingressRules {
+		rules = append(rules, rec.Path)
+		rmap[rec.Path] = rec
+	}
+	// sort rules according to length of the path
+	sort.Sort(sort.Reverse(sort.StringSlice(rules)))
+	return rmap, rules
 }

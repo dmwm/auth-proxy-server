@@ -184,9 +184,12 @@ func srvURL(surl string) string {
 
 // helper function to redirect HTTP requests based on configuration ingress rules
 func redirect(w http.ResponseWriter, r *http.Request) {
-	// if Configuration provides Ingress rules we'll use them
-	// to redirect user request
-	for _, rec := range Config.Ingress {
+	// get redirect rule map and rules (in reverse order)
+	// here the reverse order will provide /path/rse /path/aaa followed by /path, etc.
+	// such that we can match the /path as last reserve
+	rmap, rules := RedirectRules(Config.Ingress)
+	for _, key := range rules {
+		rec := rmap[key]
 		// check that request URL path had ingress path with slash
 		if PathMatched(r.URL.Path, rec.Path, rec.Strict) {
 			if Config.Verbose > 0 {

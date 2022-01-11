@@ -97,9 +97,14 @@ func x509ProxyServer() {
 	http.HandleFunc("/", x509RequestHandler)
 
 	// start HTTPS server
-	server, err := getServer(serverCrt, serverKey, true)
-	if err != nil {
-		log.Fatalf("unable to start x509 server, error %v\n", err)
+	if Config.LetsEncrypt {
+		server := LetsEncryptServer(Config.DomainNames...)
+		log.Fatal(server.ListenAndServeTLS("", ""))
+	} else {
+		server, err := getServer(serverCrt, serverKey, true)
+		if err != nil {
+			log.Fatalf("unable to start x509 server, error %v\n", err)
+		}
+		log.Fatal(server.ListenAndServeTLS(serverCrt, serverKey))
 	}
-	log.Fatal(server.ListenAndServeTLS(serverCrt, serverKey))
 }

@@ -67,4 +67,54 @@ func Test_PathMatched(t *testing.T) {
 	path = "/couchdb"
 	result = PathMatched(rurl, path, true)
 	assert.Equal(t, result, false)
+
+	rurl = "/ms-unmerged/bla"
+	path = "/ms-unmerged/"
+	result = PathMatched(rurl, path, false)
+	assert.Equal(t, result, true)
+
+	// strict rule should match path exactly
+	rurl = "/ms-unmerged/bla&rse=t1"
+	path = "/ms-unmerged/"
+	result = PathMatched(rurl, path, true)
+	assert.Equal(t, result, false)
+
+	// with loose strict rule the provided rurl can match the path
+	rurl = "/ms-unmerged/bla&rse=t1"
+	path = "/ms-unmerged/"
+	result = PathMatched(rurl, path, false)
+	assert.Equal(t, result, true)
+
+	rurl = "/ms-unmerged/bla&rse=t1"
+	path = "/ms-unmerged/.*rse=t1"
+	result = PathMatched(rurl, path, false)
+	assert.Equal(t, result, true)
+
+	rurl = "/ms-unmerged/bla&rse=t1&foo=1"
+	path = "/ms-unmerged/.*rse=t1"
+	result = PathMatched(rurl, path, false)
+	assert.Equal(t, result, true)
+
+	// but we can't match rurl with strict rule
+	rurl = "/ms-unmerged/bla&rse=t1&foo=1"
+	path = "/ms-unmerged/.*rse=t1"
+	result = PathMatched(rurl, path, true)
+	assert.Equal(t, result, false)
+
+	rurl = "/ms-unmerged/bla&rse=t2"
+	path = "/ms-unmerged/.*rse=t1"
+	result = PathMatched(rurl, path, false)
+	assert.Equal(t, result, false)
+}
+
+// Test_RedirectRules test RedirectRules API
+func Test_RedirectRules(t *testing.T) {
+	var ingressRules []Ingress
+	ingressRules = append(ingressRules, Ingress{Path: "/path/aaa"})
+	ingressRules = append(ingressRules, Ingress{Path: "/path/"})
+	ingressRules = append(ingressRules, Ingress{Path: "/path/rse"})
+	rmap, rules := RedirectRules(ingressRules)
+	expect := []string{"/path/rse", "/path/aaa", "/path/"}
+	assert.Equal(t, rules, expect)
+	assert.Equal(t, len(rmap), len(rules))
 }
