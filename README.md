@@ -45,7 +45,7 @@ services and it is based on path matching. Each entry contains `path`,
 ```
     {
       "path": "/couchdb/_utils",
-      "service_url": "http://vocms0731.cern.ch:5984",
+      "service_url": "http://couch.host.com:5984",
       "old_path": "/couchdb",
       "new_path": ""
     },
@@ -53,6 +53,17 @@ services and it is based on path matching. Each entry contains `path`,
 The `path` represents HTTP path of the request, the `service_url` points to
 backend server URL, the `old_path` and `new_path` reflects how to treat given
 path of the request. The former part is replaced with later path value.
+
+We provide support for regexp rules in path redirections, for instance,
+we can define the following:
+```
+    {
+      "path": "/path/.*rse=t1",
+      "service_url": "http://some.host.com",
+    },
+```
+It will match the following patterns `/path/bla&rse=1`, but will not match
+`/path`.
 
 The `log_file` controls writing logs to provided log file, the logs will be
 rotated on daily basis.  The `cric_url` and `cric_file` controls CRIC usage. If
