@@ -365,7 +365,7 @@ func main() {
 
 	// start our servers
 	if useX509 {
-		if Config.CricURL != "" {
+		if Config.CricURL != "" || Config.CricFile != "" {
 			go cric.UpdateCricRecords("dn", Config.CricFile, Config.CricURL, Config.UpdateCricInterval, Config.CricVerbose)
 		}
 		x509ProxyServer()
@@ -374,7 +374,7 @@ func main() {
 		scitokensServer()
 		return
 	}
-	if Config.CricURL != "" {
+	if Config.CricURL != "" || Config.CricFile != "" {
 		// Get CRIC records
 		go cric.UpdateCricRecords("id", Config.CricFile, Config.CricURL, Config.UpdateCricInterval, Config.CricVerbose)
 	}
