@@ -40,6 +40,10 @@ func x509RequestHandler(w http.ResponseWriter, r *http.Request) {
 	status := http.StatusOK
 	tstamp := int64(start.UnixNano() / 1000000) // use milliseconds for MONIT
 	userData := getUserData(r)
+	if Config.Verbose > 0 {
+		log.Println("userData", userData)
+	}
+
 	// set CMS headers based on provided user certificate
 	level := false
 	if Config.Verbose > 3 {
@@ -95,6 +99,7 @@ func x509ProxyServer() {
 	// start HTTPS server
 	if Config.LetsEncrypt {
 		server := LetsEncryptServer(Config.DomainNames...)
+		log.Println("Start X509 HTTPs server with LetsEncrypt", Config.DomainNames)
 		log.Fatal(server.ListenAndServeTLS("", ""))
 	} else {
 		// check if provided crt/key files exists
@@ -105,6 +110,7 @@ func x509ProxyServer() {
 		if err != nil {
 			log.Fatalf("unable to start x509 server, error %v\n", err)
 		}
+		log.Println("Start X509 HTTPs server with", serverCrt, serverKey)
 		log.Fatal(server.ListenAndServeTLS(serverCrt, serverKey))
 	}
 }

@@ -67,14 +67,14 @@ func printHTTPRequest(r *http.Request, msg string) {
 	log.Printf("\n\nFinding value of \"Accept\" %q\n", r.Header["Accept"])
 }
 
-// helper function to construct http server with TLS
-func getServer(serverCrt, serverKey string, customVerify bool) (*http.Server, error) {
-	// start HTTP or HTTPs server based on provided configuration
+// RootCAs returns cert pool of our root CAs
+func RootCAs() *x509.CertPool {
+	log.Println("Load RootCAs from", Config.RootCAs)
 	rootCAs := x509.NewCertPool()
 	files, err := ioutil.ReadDir(Config.RootCAs)
 	if err != nil {
 		log.Printf("Unable to list files in '%s', error: %v\n", Config.RootCAs, err)
-		return nil, err
+		return rootCAs
 	}
 	for _, finfo := range files {
 		fname := fmt.Sprintf("%s/%s", Config.RootCAs, finfo.Name())
@@ -93,6 +93,84 @@ func getServer(serverCrt, serverKey string, customVerify bool) (*http.Server, er
 			log.Println("Load CA file", fname)
 		}
 	}
+	return rootCAs
+}
+
+// global rootCAs
+var _rootCAs *x509.CertPool
+
+// VerifyPeerCertificate function provides custom verification of client's
+// certificate, see details
+// https://golang.org/pkg/crypto/tls/#example_Config_verifyPeerCertificate
+// https://www.example-code.com/golang/cert.asp
+// https://golang.org/pkg/crypto/x509/pkix/#Extension
+func VerifyPeerCertificate(certificates [][]byte, _ [][]*x509.Certificate) error {
+	if Config.Verbose > 1 {
+		log.Println("call custom tlsConfig.VerifyPeerCertificate")
+	}
+	certs := make([]*x509.Certificate, len(certificates))
+	for i, asn1Data := range certificates {
+		cert, err := x509.ParseCertificate(asn1Data)
+		if err != nil {
+			return errors.New("tls: failed to parse certificate from server: " + err.Error())
+		}
+		if Config.Verbose > 1 {
+			log.Println("Issuer", cert.Issuer)
+			log.Println("Subject", cert.Subject)
+			log.Println("emails", cert.EmailAddresses)
+		}
+		// check validity of user certificate
+		tstamp := time.Now().Unix()
+		if cert.NotBefore.Unix() > tstamp || cert.NotAfter.Unix() < tstamp {
+			msg := fmt.Sprintf("Expired user certificate, valid from %v to %v\n", cert.NotBefore, cert.NotAfter)
+			return errors.New(msg)
+		}
+		// dump cert UnhandledCriticalExtensions
+		for _, ext := range cert.UnhandledCriticalExtensions {
+			if Config.Verbose > 1 {
+				log.Printf("Cetificate extension: %+v\n", ext)
+			}
+			continue
+		}
+		if len(cert.UnhandledCriticalExtensions) == 0 && cert != nil {
+			certs[i] = cert
+		}
+	}
+	if Config.Verbose > 1 {
+		log.Println("### number of certs", len(certs))
+		for _, cert := range certs {
+			if cert != nil {
+				log.Printf("issuer %v subject %v valid from %v till %v\n", cert.Issuer, cert.Subject, cert.NotBefore, cert.NotAfter)
+			}
+		}
+	}
+	opts := x509.VerifyOptions{
+		Roots:         _rootCAs,
+		Intermediates: x509.NewCertPool(),
+		KeyUsages:     []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
+	}
+	if len(certs) > 0 && certs[0] != nil {
+		for _, cert := range certs[1:] {
+			opts.Intermediates.AddCert(cert)
+		}
+		_, err := certs[0].Verify(opts)
+		return err
+	}
+	for _, cert := range certs {
+		if cert == nil {
+			continue
+		}
+		_, err := cert.Verify(opts)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// helper function to construct http server with TLS
+func getServer(serverCrt, serverKey string, customVerify bool) (*http.Server, error) {
+	// start HTTP or HTTPs server based on provided configuration
 
 	var tlsConfig *tls.Config
 	// see go doc tls.VersionTLS13 for different versions
@@ -115,7 +193,7 @@ func getServer(serverCrt, serverKey string, customVerify bool) (*http.Server, er
 	} else if Config.MaxTLSVersion == "tls13" {
 		maxVer = tls.VersionTLS13
 	}
-	log.Println("set tlsConfig with min version", minVer)
+	log.Printf("set tlsConfig with min=%d max=%d versions", minVer, maxVer)
 	// if we do not require custom verification we'll load server crt/key and present to client
 	if customVerify == false {
 		cert, err := tls.LoadX509KeyPair(serverCrt, serverKey)
@@ -126,7 +204,7 @@ func getServer(serverCrt, serverKey string, customVerify bool) (*http.Server, er
 		tlsConfig = &tls.Config{
 			MinVersion:   uint16(minVer),
 			MaxVersion:   uint16(maxVer),
-			RootCAs:      rootCAs,
+			RootCAs:      _rootCAs,
 			Certificates: []tls.Certificate{cert},
 		}
 	} else { // otherwise we'll perform custom verification of client's certificates
@@ -137,75 +215,9 @@ func getServer(serverCrt, serverKey string, customVerify bool) (*http.Server, er
 			MaxVersion:         uint16(maxVer),
 			InsecureSkipVerify: true,
 			ClientAuth:         tls.RequestClientCert,
-			RootCAs:            rootCAs,
+			RootCAs:            _rootCAs,
 		}
-		// see concrete example here:
-		// https://golang.org/pkg/crypto/tls/#example_Config_verifyPeerCertificate
-		// https://www.example-code.com/golang/cert.asp
-		// https://golang.org/pkg/crypto/x509/pkix/#Extension
-		tlsConfig.VerifyPeerCertificate = func(certificates [][]byte, _ [][]*x509.Certificate) error {
-			if Config.Verbose > 1 {
-				log.Println("call custom tlsConfig.VerifyPeerCertificate")
-			}
-			certs := make([]*x509.Certificate, len(certificates))
-			for i, asn1Data := range certificates {
-				cert, err := x509.ParseCertificate(asn1Data)
-				if err != nil {
-					return errors.New("tls: failed to parse certificate from server: " + err.Error())
-				}
-				if Config.Verbose > 1 {
-					log.Println("Issuer", cert.Issuer)
-					log.Println("Subject", cert.Subject)
-					log.Println("emails", cert.EmailAddresses)
-				}
-				// check validity of user certificate
-				tstamp := time.Now().Unix()
-				if cert.NotBefore.Unix() > tstamp || cert.NotAfter.Unix() < tstamp {
-					msg := fmt.Sprintf("Expired user certificate, valid from %v to %v\n", cert.NotBefore, cert.NotAfter)
-					return errors.New(msg)
-				}
-				// dump cert UnhandledCriticalExtensions
-				for _, ext := range cert.UnhandledCriticalExtensions {
-					if Config.Verbose > 1 {
-						log.Printf("Cetificate extension: %+v\n", ext)
-					}
-					continue
-				}
-				if len(cert.UnhandledCriticalExtensions) == 0 && cert != nil {
-					certs[i] = cert
-				}
-			}
-			if Config.Verbose > 1 {
-				log.Println("### number of certs", len(certs))
-				for _, cert := range certs {
-					if cert != nil {
-						log.Printf("issuer %v subject %v valid from %v till %v\n", cert.Issuer, cert.Subject, cert.NotBefore, cert.NotAfter)
-					}
-				}
-			}
-			opts := x509.VerifyOptions{
-				Roots:         rootCAs,
-				Intermediates: x509.NewCertPool(),
-				KeyUsages:     []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
-			}
-			if len(certs) > 0 && certs[0] != nil {
-				for _, cert := range certs[1:] {
-					opts.Intermediates.AddCert(cert)
-				}
-				_, err := certs[0].Verify(opts)
-				return err
-			}
-			for _, cert := range certs {
-				if cert == nil {
-					continue
-				}
-				_, err := cert.Verify(opts)
-				if err != nil {
-					return err
-				}
-			}
-			return nil
-		}
+		tlsConfig.VerifyPeerCertificate = VerifyPeerCertificate
 	}
 	addr := fmt.Sprintf(":%d", Config.Port)
 	server := &http.Server{
@@ -222,20 +234,34 @@ func getServer(serverCrt, serverKey string, customVerify bool) (*http.Server, er
 // LetsEncryptServer provides HTTPs server with Let's encrypt for
 // given domain names (hosts)
 func LetsEncryptServer(hosts ...string) *http.Server {
+	// setup LetsEncrypt cert manager
 	certManager := autocert.Manager{
 		Prompt:     autocert.AcceptTOS,
 		HostPolicy: autocert.HostWhitelist(hosts...),
 		Cache:      autocert.DirCache("certs"),
 	}
 
+	tlsConfig := &tls.Config{
+		// Set InsecureSkipVerify to skip the default validation we are
+		// replacing. This will not disable VerifyPeerCertificate.
+		InsecureSkipVerify: true,
+		ClientAuth:         tls.RequestClientCert,
+		RootCAs:            _rootCAs,
+		GetCertificate:     certManager.GetCertificate,
+	}
+	tlsConfig.VerifyPeerCertificate = VerifyPeerCertificate
+
+	// start HTTP server with our rootCAs and LetsEncrypt certificates
 	server := &http.Server{
-		Addr: ":https",
-		TLSConfig: &tls.Config{
-			GetCertificate: certManager.GetCertificate,
-		},
+		Addr:      ":https",
+		TLSConfig: tlsConfig,
+		//         TLSConfig: &tls.Config{
+		//             GetCertificate:     certManager.GetCertificate,
+		//         },
 	}
 	// start cert Manager goroutine
 	go http.ListenAndServe(":http", certManager.HTTPHandler(nil))
+	log.Println("Starting LetsEncrypt HTTPs server")
 	return server
 }
 
@@ -268,15 +294,26 @@ func findCN(subject string) (string, error) {
 func getUserData(r *http.Request) map[string]interface{} {
 	userData := make(map[string]interface{})
 	if r.TLS == nil {
+		if Config.Verbose > 0 {
+			log.Printf("HTTP request does not support TLS, %+v", r)
+		}
 		return userData
 	}
 	certs := r.TLS.PeerCertificates
+	if Config.Verbose > 0 {
+		log.Printf("found %d peer certificates in HTTP request", len(certs))
+		log.Printf("HTTP request %+v", r)
+		log.Printf("HTTP request TLS %+v", r.TLS)
+	}
 	for _, asn1Data := range certs {
 		cert, err := x509.ParseCertificate(asn1Data.Raw)
 		if err != nil {
 			log.Println("x509RequestHandler tls: failed to parse certificate from server: " + err.Error())
 		}
 		if len(cert.UnhandledCriticalExtensions) > 0 {
+			if Config.Verbose > 0 {
+				log.Println("cert.UnhandledCriticalExtensions equal to", len(cert.UnhandledCriticalExtensions))
+			}
 			continue
 		}
 		start := time.Now()
@@ -289,6 +326,9 @@ func getUserData(r *http.Request) map[string]interface{} {
 				log.Println("cert subject", s)
 			}
 			subjects = append(subjects, s)
+		}
+		if Config.Verbose > 0 {
+			log.Println("cert subjects", subjects)
 		}
 		rec, err := cric.FindUser(subjects)
 		if Config.Verbose > 0 {

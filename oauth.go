@@ -641,6 +641,7 @@ func oauthProxyServer() {
 	// start HTTPs server
 	if Config.LetsEncrypt {
 		server := LetsEncryptServer(Config.DomainNames...)
+		log.Println("Start OAuth HTTPs server with LetsEncrypt", Config.DomainNames)
 		log.Fatal(server.ListenAndServeTLS("", ""))
 	} else {
 		// check if provided crt/key files exists

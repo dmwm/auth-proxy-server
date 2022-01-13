@@ -340,6 +340,9 @@ func main() {
 		log.Printf("%+v\n", Config)
 	}
 
+	// read RootCAs once
+	_rootCAs = RootCAs()
+
 	// setup StartTime and metrics last update time
 	StartTime = time.Now()
 	MetricsLastUpdateTime = time.Now()

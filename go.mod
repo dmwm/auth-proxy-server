@@ -16,11 +16,11 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/thomasdarimont/go-kc-example v0.0.0-20170529223628-e3951d8faa4c
 	github.com/tklauser/go-sysconf v0.3.9 // indirect
-	github.com/vkuznet/auth-proxy-server/auth v0.0.0-20220111151419-9dc8dfa65541
-	github.com/vkuznet/auth-proxy-server/cric v0.0.0-20220111151419-9dc8dfa65541
-	github.com/vkuznet/auth-proxy-server/logging v0.0.0-20220111151419-9dc8dfa65541
+	github.com/vkuznet/auth-proxy-server/auth v0.0.0-20220113115019-b39467ff0a7e
+	github.com/vkuznet/auth-proxy-server/cric v0.0.0-20220113115019-b39467ff0a7e
+	github.com/vkuznet/auth-proxy-server/logging v0.0.0-20220113115019-b39467ff0a7e
 	github.com/vkuznet/x509proxy v0.0.0-20210801171832-e47b94db99b6 // indirect
-	golang.org/x/crypto v0.0.0-20211215153901-e495a2d5b3d3
+	golang.org/x/crypto v0.0.0-20220112180741-5e0467b6c7ce
 	golang.org/x/net v0.0.0-20220111093109-d55c255bac03 // indirect
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8
 	golang.org/x/sys v0.0.0-20220111092808-5a964db01320 // indirect
