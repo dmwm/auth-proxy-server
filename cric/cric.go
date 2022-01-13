@@ -63,6 +63,7 @@ func UpdateCricRecords(key, cricFile, cricURL string, cricUpdateInterval int64, 
 			log.Println("Updated cms records", len(cmsRecords))
 		}
 	}
+	iter := 0
 	for {
 		interval := cricUpdateInterval
 		if interval == 0 {
@@ -70,12 +71,23 @@ func UpdateCricRecords(key, cricFile, cricURL string, cricUpdateInterval int64, 
 		}
 		// parse cric records
 		if cricURL != "" {
-			if key == "id" {
-				cricRecords, err = cmsauth.GetCricDataByKey(cricURL, "id", verbose)
+			// if cricFile is given on first iteration use it
+			// then switch to cricURL, it is necessary for Let's Encrypt negotiation
+			if cricFile != "" && iter == 0 {
+				if key == "id" {
+					cricRecords, err = cmsauth.ParseCricByKey(cricFile, "id", verbose)
+				} else {
+					cricRecords, err = cmsauth.ParseCric(cricFile, verbose)
+				}
+				log.Printf("obtain CRIC records from %s, %v", cricFile, err)
 			} else {
-				cricRecords, err = cmsauth.GetCricData(cricURL, verbose)
+				if key == "id" {
+					cricRecords, err = cmsauth.GetCricDataByKey(cricURL, "id", verbose)
+				} else {
+					cricRecords, err = cmsauth.GetCricData(cricURL, verbose)
+				}
+				log.Printf("obtain CRIC records from %s, %v", cricURL, err)
 			}
-			log.Printf("obtain CRIC records from %s, %v", cricURL, err)
 		} else if cricFile != "" {
 			if key == "id" {
 				cricRecords, err = cmsauth.ParseCricByKey(cricFile, "id", verbose)
@@ -111,6 +123,7 @@ func UpdateCricRecords(key, cricFile, cricURL string, cricUpdateInterval int64, 
 		}
 		d := time.Duration(interval) * time.Second
 		time.Sleep(d) // sleep for next iteration
+		iter += 1
 	}
 }
 
