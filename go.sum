@@ -49,6 +49,10 @@ github.com/dmwm/cmsauth v0.0.0-20210902172554-166499e72579 h1:zab7dyp218nvZd8F3M
 github.com/dmwm/cmsauth v0.0.0-20210902172554-166499e72579/go.mod h1:TC1wDcaqoLxdESgkWahbggwrhuqLBEn9TnOyfVjGeOE=
 github.com/dmwm/cmsauth v0.0.0-20211208190746-4666f3e7a7aa h1:1L5vO4DpPWOdaN8evgA6wWL2c+ictf70DUbLcseXljg=
 github.com/dmwm/cmsauth v0.0.0-20211208190746-4666f3e7a7aa/go.mod h1:srkPo6iPp6d/T+/ZprqYBFXl/B6fF5ejjNuyP7CT39s=
+github.com/dmwm/cmsauth v0.0.0-20220115122544-c7e15a1986c1 h1:IDKArMrMWavDPV8Cy4TPl84jyzDyj+kUEIxSDiCL8uo=
+github.com/dmwm/cmsauth v0.0.0-20220115122544-c7e15a1986c1/go.mod h1:srkPo6iPp6d/T+/ZprqYBFXl/B6fF5ejjNuyP7CT39s=
+github.com/dmwm/cmsauth v0.0.0-20220120183156-5495692d4ca7 h1:WyafcR16VfLiLA7LxjqnO2mxzzhukKtkW4Ts2Gcvw5Q=
+github.com/dmwm/cmsauth v0.0.0-20220120183156-5495692d4ca7/go.mod h1:srkPo6iPp6d/T+/ZprqYBFXl/B6fF5ejjNuyP7CT39s=
 github.com/envoyproxy/go-control-plane v0.9.0/go.mod h1:YTl/9mNaCwkRvm6d1a2C3ymFceY/DCBVvsKhRF0iEA4=
 github.com/envoyproxy/go-control-plane v0.9.1-0.20191026205805-5f8ba28d4473/go.mod h1:YTl/9mNaCwkRvm6d1a2C3ymFceY/DCBVvsKhRF0iEA4=
 github.com/envoyproxy/go-control-plane v0.9.4/go.mod h1:6rpuAdCZL397s3pYoYcLgu1mIlRU8Am5FuJP05cCM98=
@@ -178,6 +182,8 @@ github.com/vkuznet/auth-proxy-server/auth v0.0.0-20220111151419-9dc8dfa65541 h1:
 github.com/vkuznet/auth-proxy-server/auth v0.0.0-20220111151419-9dc8dfa65541/go.mod h1:jr+4XDinkJS6ufG/VQxuKwLaQWyiqMq86ybOj09zHlA=
 github.com/vkuznet/auth-proxy-server/auth v0.0.0-20220113115019-b39467ff0a7e h1:F4OpV48tAuX5uwG+6Es6gXMjxpKXvohge7n2yq5jdr0=
 github.com/vkuznet/auth-proxy-server/auth v0.0.0-20220113115019-b39467ff0a7e/go.mod h1:jr+4XDinkJS6ufG/VQxuKwLaQWyiqMq86ybOj09zHlA=
+github.com/vkuznet/auth-proxy-server/auth v0.0.0-20220113155702-c024cbf817e5 h1:vliv2v6xHajnd4MBxaGW3VBq+HEEMMPu3o1j6fPu2js=
+github.com/vkuznet/auth-proxy-server/auth v0.0.0-20220113155702-c024cbf817e5/go.mod h1:jr+4XDinkJS6ufG/VQxuKwLaQWyiqMq86ybOj09zHlA=
 github.com/vkuznet/auth-proxy-server/cric v0.0.0-20210921141219-8a5ffd672a0d h1:mAa9co5Sb5lN796GkRu188c8Jm1vgJshUOWrHnHOb40=
 github.com/vkuznet/auth-proxy-server/cric v0.0.0-20210921141219-8a5ffd672a0d/go.mod h1:oZHYrCYGRR2XUoByGkZwu7jNBtHsgznYvDutJBhttLM=
 github.com/vkuznet/auth-proxy-server/cric v0.0.0-20210927152403-bd73fdada09e h1:e82InqQcdR3BuioCfDEMjj0k2dkwjU1lV4p9bgV4ev0=
@@ -192,6 +198,10 @@ github.com/vkuznet/auth-proxy-server/cric v0.0.0-20220111151419-9dc8dfa65541 h1:
 github.com/vkuznet/auth-proxy-server/cric v0.0.0-20220111151419-9dc8dfa65541/go.mod h1:oZHYrCYGRR2XUoByGkZwu7jNBtHsgznYvDutJBhttLM=
 github.com/vkuznet/auth-proxy-server/cric v0.0.0-20220113115019-b39467ff0a7e h1:6QdY2wo01Lm8yD6yU8mSpIgD45WZIAdT/NxPW8Hixjo=
 github.com/vkuznet/auth-proxy-server/cric v0.0.0-20220113115019-b39467ff0a7e/go.mod h1:yP3Sl6/oZgNaQ9BA36+NPWn7rEt7CA9kd6fDfUgkgNc=
+github.com/vkuznet/auth-proxy-server/cric v0.0.0-20220113155702-c024cbf817e5 h1:lpqXvCZxmhmtBsDLU+S9S1A0IK+pTLL8GBZACusYHfE=
+github.com/vkuznet/auth-proxy-server/cric v0.0.0-20220113155702-c024cbf817e5/go.mod h1:yP3Sl6/oZgNaQ9BA36+NPWn7rEt7CA9kd6fDfUgkgNc=
+github.com/vkuznet/auth-proxy-server/cric v0.0.0-20220120183350-7191dc40591d h1:epn5lJJQP5Alc7Df2XYdQLGmMo/NrY+T5CeQNO3cYEs=
+github.com/vkuznet/auth-proxy-server/cric v0.0.0-20220120183350-7191dc40591d/go.mod h1:Bs7ewwB4q+Zl76Go4QOgtmAz++glyoRP7h3LkhH72u4=
 github.com/vkuznet/auth-proxy-server/logging v0.0.0-20210921141219-8a5ffd672a0d h1:RB2r6z9x28G2rBdQvU8cpu7V95WdgNj9S8+UzxLFXBU=
 github.com/vkuznet/auth-proxy-server/logging v0.0.0-20210921141219-8a5ffd672a0d/go.mod h1:rEHBafUXWUWp8o4zkvTooUDTHDhV4oj4trnO1fI2l4k=
 github.com/vkuznet/auth-proxy-server/logging v0.0.0-20210927152403-bd73fdada09e h1:e+WMNegDbquc8CNvOyEYZ+y/VGRjIE59hHNidHMWN/s=
@@ -206,6 +216,10 @@ github.com/vkuznet/auth-proxy-server/logging v0.0.0-20220111151419-9dc8dfa65541 
 github.com/vkuznet/auth-proxy-server/logging v0.0.0-20220111151419-9dc8dfa65541/go.mod h1:rEHBafUXWUWp8o4zkvTooUDTHDhV4oj4trnO1fI2l4k=
 github.com/vkuznet/auth-proxy-server/logging v0.0.0-20220113115019-b39467ff0a7e h1:k9bd+sFMDiRzEoPNmF7/mKKtWIP8QBPPBsSKMTOBY48=
 github.com/vkuznet/auth-proxy-server/logging v0.0.0-20220113115019-b39467ff0a7e/go.mod h1:rEHBafUXWUWp8o4zkvTooUDTHDhV4oj4trnO1fI2l4k=
+github.com/vkuznet/auth-proxy-server/logging v0.0.0-20220113155702-c024cbf817e5 h1:bNYui/tc4D/uZkM67yKPD1ou6W2ErG8bV0YuXyQBwUw=
+github.com/vkuznet/auth-proxy-server/logging v0.0.0-20220113155702-c024cbf817e5/go.mod h1:rEHBafUXWUWp8o4zkvTooUDTHDhV4oj4trnO1fI2l4k=
+github.com/vkuznet/auth-proxy-server/logging v0.0.0-20220120183350-7191dc40591d h1:OHRxPSISxh5jpJMDRNMP+aEciUX+ptPlHQRbkkX3B1o=
+github.com/vkuznet/auth-proxy-server/logging v0.0.0-20220120183350-7191dc40591d/go.mod h1:rEHBafUXWUWp8o4zkvTooUDTHDhV4oj4trnO1fI2l4k=
 github.com/vkuznet/x509proxy v0.0.0-20210801171832-e47b94db99b6 h1:Y5LCuH9nfTZ6srI5NaoKKbcDb01zqTHw8678++4fw0c=
 github.com/vkuznet/x509proxy v0.0.0-20210801171832-e47b94db99b6/go.mod h1:gfEPE3azFe+K/nMLezta3+kTiumttEYDawGAE72IYfM=
 github.com/yuin/goldmark v1.1.25/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
@@ -302,6 +316,8 @@ golang.org/x/net v0.0.0-20211123203042-d83791d6bcd9 h1:0qxwC5n+ttVOINCBeRHO0nq9X
 golang.org/x/net v0.0.0-20211123203042-d83791d6bcd9/go.mod h1:9nx3DQGgdP8bBQD5qxJ1jj9UTztislL4KSBs9R2vV5Y=
 golang.org/x/net v0.0.0-20220111093109-d55c255bac03 h1:0FB83qp0AzVJm+0wcIlauAjJ+tNdh7jLuacRYCIVv7s=
 golang.org/x/net v0.0.0-20220111093109-d55c255bac03/go.mod h1:9nx3DQGgdP8bBQD5qxJ1jj9UTztislL4KSBs9R2vV5Y=
+golang.org/x/net v0.0.0-20220114011407-0dd24b26b47d h1:1n1fc535VhN8SYtD4cDUyNlfpAF2ROMM9+11equK3hs=
+golang.org/x/net v0.0.0-20220114011407-0dd24b26b47d/go.mod h1:9nx3DQGgdP8bBQD5qxJ1jj9UTztislL4KSBs9R2vV5Y=
 golang.org/x/oauth2 v0.0.0-20180821212333-d2e6202438be/go.mod h1:N/0e6XlmueqKjAGxoOufVs8QHGRruUQn6yWY3a++T0U=
 golang.org/x/oauth2 v0.0.0-20190226205417-e64efc72b421/go.mod h1:gOpvHmFTYa4IltrdGE7lF6nIHvwfUNPOp7c8zoXwtLw=
 golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45/go.mod h1:gOpvHmFTYa4IltrdGE7lF6nIHvwfUNPOp7c8zoXwtLw=
@@ -359,6 +375,8 @@ golang.org/x/sys v0.0.0-20211124211545-fe61309f8881 h1:TyHqChC80pFkXWraUUf6RuB5I
 golang.org/x/sys v0.0.0-20211124211545-fe61309f8881/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.0.0-20220111092808-5a964db01320 h1:0jf+tOCoZ3LyutmCOWpVni1chK4VfFLhRsDK7MhqGRY=
 golang.org/x/sys v0.0.0-20220111092808-5a964db01320/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
+golang.org/x/sys v0.0.0-20220114195835-da31bd327af9 h1:XfKQ4OlFl8okEOr5UvAqFRVj8pY/4yfcXrddB8qAbU0=
+golang.org/x/sys v0.0.0-20220114195835-da31bd327af9/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1 h1:v+OssWQX+hTHEmOBgwxdZxK4zHq3yOs8F9J7mk0PY8E=
 golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1/go.mod h1:bj7SfCRtBDWHUb9snDiAeCFNEtKQo2Wmx5Cou7ajbmo=
 golang.org/x/text v0.0.0-20170915032832-14c0d48ead0c/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
