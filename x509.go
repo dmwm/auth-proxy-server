@@ -49,6 +49,7 @@ func x509RequestHandler(w http.ResponseWriter, r *http.Request) {
 	if Config.Verbose > 3 {
 		level = true
 	}
+	log.Printf("### userData %+v", userData)
 	CMSAuth.SetCMSHeaders(r, userData, cric.CricRecords, level)
 	if r.Header.Get("Cms-Auth-Cert") == "" {
 		if dn, ok := userData["dn"]; ok {

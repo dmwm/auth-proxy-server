@@ -17,7 +17,6 @@ require (
 	github.com/thomasdarimont/go-kc-example v0.0.0-20170529223628-e3951d8faa4c
 	github.com/tklauser/go-sysconf v0.3.9 // indirect
 	github.com/vkuznet/auth-proxy-server/auth v0.0.0-20220113115019-b39467ff0a7e
-	github.com/vkuznet/auth-proxy-server/cric v0.0.0-20220113115019-b39467ff0a7e
 	github.com/vkuznet/auth-proxy-server/logging v0.0.0-20220113115019-b39467ff0a7e
 	github.com/vkuznet/x509proxy v0.0.0-20210801171832-e47b94db99b6 // indirect
 	golang.org/x/crypto v0.0.0-20220112180741-5e0467b6c7ce
@@ -37,6 +36,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/tklauser/numcpus v0.3.0 // indirect
 	github.com/vkuznet/TokenManager v0.0.1 // indirect
+	github.com/vkuznet/auth-proxy-server/cric v0.0.0-20220113155702-c024cbf817e5 // indirect
 	github.com/yusufpapurcu/wmi v1.2.2 // indirect
 	golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1 // indirect
 	golang.org/x/text v0.3.7 // indirect

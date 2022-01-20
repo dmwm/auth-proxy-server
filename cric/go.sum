@@ -9,6 +9,8 @@ github.com/dmwm/cmsauth v0.0.0-20210902172554-166499e72579 h1:zab7dyp218nvZd8F3M
 github.com/dmwm/cmsauth v0.0.0-20210902172554-166499e72579/go.mod h1:TC1wDcaqoLxdESgkWahbggwrhuqLBEn9TnOyfVjGeOE=
 github.com/dmwm/cmsauth v0.0.0-20211208190746-4666f3e7a7aa h1:1L5vO4DpPWOdaN8evgA6wWL2c+ictf70DUbLcseXljg=
 github.com/dmwm/cmsauth v0.0.0-20211208190746-4666f3e7a7aa/go.mod h1:srkPo6iPp6d/T+/ZprqYBFXl/B6fF5ejjNuyP7CT39s=
+github.com/dmwm/cmsauth v0.0.0-20220115122544-c7e15a1986c1 h1:IDKArMrMWavDPV8Cy4TPl84jyzDyj+kUEIxSDiCL8uo=
+github.com/dmwm/cmsauth v0.0.0-20220115122544-c7e15a1986c1/go.mod h1:srkPo6iPp6d/T+/ZprqYBFXl/B6fF5ejjNuyP7CT39s=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
