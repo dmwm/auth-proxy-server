@@ -120,6 +120,10 @@ func reverseProxy(targetURL string, w http.ResponseWriter, r *http.Request) {
 	// Update the headers to allow for SSL redirection
 	r.URL.Host = url.Host
 	r.URL.Scheme = url.Scheme
+	r.URL.User = url.User
+	if Config.Verbose > 0 {
+		log.Printf("redirect to url.Scheme=%s url.User=%s url.Host=%s", r.URL.Scheme, r.URL.User, r.URL.Host)
+	}
 	reqHost := r.Header.Get("Host")
 	if reqHost == "" {
 		name, err := os.Hostname()
