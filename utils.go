@@ -419,3 +419,20 @@ func RedirectRules(ingressRules []Ingress) (map[string]Ingress, []string) {
 	sort.Sort(sort.Reverse(sort.StringSlice(rules)))
 	return rmap, rules
 }
+
+// LogName return proper log name based on Config.LogName and either
+// hostname or pod name (used in k8s environment).
+func LogName() string {
+	hostname, err := os.Hostname()
+	if err != nil {
+		log.Println("unable to get hostname", err)
+	}
+	if os.Getenv("MY_POD_NAME") != "" {
+		hostname = os.Getenv("MY_POD_NAME")
+	}
+	logName := Config.LogFile + "_%Y%m%d"
+	if hostname != "" {
+		logName = fmt.Sprintf("%s_%s", Config.LogFile, hostname) + "_%Y%m%d"
+	}
+	return logName
+}

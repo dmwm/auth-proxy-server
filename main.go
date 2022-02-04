@@ -326,14 +326,7 @@ func main() {
 	}
 	log.SetOutput(new(logging.LogWriter))
 	if Config.LogFile != "" {
-		logName := Config.LogFile + "_%Y%m%d"
-		hostname, err := os.Hostname()
-		if err == nil {
-			logName = fmt.Sprintf("%s_%s", Config.LogFile, hostname) + "_%Y%m%d"
-		} else {
-			log.Println("unable to get hostname", err)
-		}
-		rl, err := rotatelogs.New(logName)
+		rl, err := rotatelogs.New(LogName())
 		if err == nil {
 			rotlogs := logging.RotateLogWriter{RotateLogs: rl}
 			log.SetOutput(rotlogs)
