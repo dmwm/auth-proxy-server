@@ -30,6 +30,7 @@ This codebase is based on different examples taken from:
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -123,6 +124,11 @@ func reverseProxy(targetURL string, w http.ResponseWriter, r *http.Request) {
 	r.URL.User = url.User
 	if Config.Verbose > 0 {
 		log.Printf("redirect to url.Scheme=%s url.User=%s url.Host=%s", r.URL.Scheme, r.URL.User, r.URL.Host)
+	}
+	if url.User != nil {
+		// set basic authorization for provided user credentials
+		hash := base64.StdEncoding.EncodeToString([]byte(url.User.String()))
+		r.Header.Set("Authorization", fmt.Sprintf("Basic %s", hash))
 	}
 	reqHost := r.Header.Get("Host")
 	if reqHost == "" {
