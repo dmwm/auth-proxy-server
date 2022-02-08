@@ -381,6 +381,9 @@ func main() {
 		x509ProxyServer()
 		return
 	} else if scitokens {
+		if Config.CricURL != "" || Config.CricFile != "" {
+			go cric.UpdateCricRecords("dn", Config.CricFile, Config.CricURL, Config.UpdateCricInterval, Config.CricVerbose)
+		}
 		scitokensServer()
 		return
 	}
