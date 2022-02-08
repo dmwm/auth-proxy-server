@@ -10,6 +10,15 @@ tool from [Scitokens](https://github.com/scitokens/scitokens) repository
 and/or generate RSA256 certificate (see below)
 
 ```
+# install python venv
+python3 -m venv venv
+cd venv
+source bin/activate
+
+# install required package
+pip install scitokens
+
+
 # issue proper server PEM file which contains both private and public RSA keys
 scitokens-admin-create-key --create-keys --pem-private --pem-public > /tmp/issuer.pem
 
