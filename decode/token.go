@@ -14,7 +14,17 @@ func main() {
 	var token string
 	flag.StringVar(&token, "token", "", "token")
 	var purl string
-	flag.StringVar(&purl, "provider", "https://cms-auth.web.cern.ch", "provider url")
+	providers := []string{
+		"https://auth.cern.ch/auth/realms/cern",
+		"https://cms-auth.web.cern.ch",
+		"https://wlcg.cloud.cnaf.infn.it",
+	}
+	msg := fmt.Sprintf("provider url, supported providers:")
+	for _, p := range providers {
+		msg = fmt.Sprintf("%s\n\t%s", msg, p)
+	}
+	msg += "\n"
+	flag.StringVar(&purl, "provider", "https://cms-auth.web.cern.ch", msg)
 	var verbose int
 	flag.IntVar(&verbose, "verbose", 0, "verbose level")
 	flag.Parse()
