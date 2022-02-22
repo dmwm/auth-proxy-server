@@ -69,7 +69,7 @@ jobs:
         prerelease: false
 
     - name: Upload auth-proxy-tools
-      id: upload-auth-proxy-server
+      id: upload-auth-proxy-tools
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
