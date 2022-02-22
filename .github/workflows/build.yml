@@ -90,17 +90,6 @@ jobs:
         asset_name: auth-proxy-tools_amd64.tar.gz
         asset_content_type: application/octet-stream
 
-    - name: Upload amd64 token tools
-      id: upload-token-tools
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./token-tools.tar.gz
-        asset_name: token-tools.tar.gz
-        asset_content_type: application/octet-stream
-
     - name: Upload darwin binary
       id: upload-auth-proxy-server-darwin
       uses: actions/upload-release-asset@v1
