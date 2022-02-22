@@ -46,6 +46,18 @@ jobs:
         make build_arm64;   mv grpc-proxy-server ../auth-proxy-tools_arm64
         make build_windows; mv grpc-proxy-server ../auth-proxy-tools_windows
         cd -
+        cd manager
+        make
+        mv token ../
+        cd -
+        cd decode
+        go build
+        mv decode-token ../
+        cd -
+        cd client
+        go build
+        mv auth-token ../
+        cd -
 
         echo "Tar all builds"
         tar cfz auth-proxy-tools_amd64.tar.gz auth-proxy-tools_amd64
@@ -53,6 +65,7 @@ jobs:
         tar cfz auth-proxy-tools_power8.tar.gz auth-proxy-tools_power8
         tar cfz auth-proxy-tools_arm64.tar.gz auth-proxy-tools_arm64
         tar cfz auth-proxy-tools_windows.tar.gz auth-proxy-tools_windows
+        tar cfz token-tools.tar.gz token decode-token auth-token
 
     - name: Create Release
       id: create_release
@@ -74,6 +87,17 @@ jobs:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: ./auth-proxy-tools_amd64.tar.gz
         asset_name: auth-proxy-tools_amd64.tar.gz
+        asset_content_type: application/octet-stream
+
+    - name: Upload amd64 token tools
+      id: upload-token-tools
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./token-tools.tar.gz
+        asset_name: token-tools.tar.gz
         asset_content_type: application/octet-stream
 
     - name: Upload darwin binary
