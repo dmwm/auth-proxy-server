@@ -361,6 +361,7 @@ func oauthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	sess.Set("userinfo", resp.IDTokenClaims)
 	urlPath := sess.Get("path").(string)
 	accessToken := resp.OAuth2Token.AccessToken
+	sess.Set("accessToken", accessToken)
 	if accessToken != "" {
 		sess.Set("accessToken", accessToken)
 		r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", accessToken))
@@ -474,7 +475,7 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path == fmt.Sprintf("%s/token", Config.Base) {
 		var token, rtoken string
 		sessLock.Lock()
-		t := sess.Get("rawIDToken")
+		t := sess.Get("accessToken")
 		rt := sess.Get("refreshToken")
 		sessLock.Unlock()
 		if t == nil { // cli request
