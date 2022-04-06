@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -54,6 +55,7 @@ type LogRecord struct {
 	Cipher         string  `json:"cipher"`           // TLS cipher name
 	Referer        string  `json:"referer"`          // http referer
 	UserAgent      string  `json:"user_agent"`       // http user-agent field
+	UserAgentName  string  `json:"user_agent_name"`  // http user-agent name w/o version
 	XForwardedHost string  `json:"x_forwarded_host"` // http.Request X-Forwarded-Host
 	XForwardedFor  string  `json:"x_forwarded_for"`  // http.Request X-Forwarded-For
 	RemoteAddr     string  `json:"remote_addr"`      // http.Request remote address
@@ -251,6 +253,7 @@ func LogRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 		Cipher:         cipher,
 		Referer:        referer,
 		UserAgent:      r.Header.Get("User-Agent"),
+		UserAgentName:  userAgentName(r.Header.Get("User-Agent")),
 		XForwardedHost: r.Header.Get("X-Forwarded-Host"),
 		XForwardedFor:  xff,
 		ClientIP:       clientip,
@@ -306,4 +309,18 @@ func getSystem(uri string) string {
 		system = "base"
 	}
 	return system
+}
+
+// integer pattern
+var intPattern = regexp.MustCompile(`\d+`)
+
+// helper function to extract user agent name w/o version
+func userAgentName(agent string) string {
+	var parts []string
+	for _, a := range strings.Split(agent, "/") {
+		if matched := intPattern.MatchString(a); !matched {
+			parts = append(parts, a)
+		}
+	}
+	return strings.Join(parts, "/")
 }
