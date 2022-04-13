@@ -4,15 +4,30 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"os"
+	"strings"
 
 	"github.com/vkuznet/auth-proxy-server/auth"
 )
 
+// ReadToken reads either given token file or string and return the token
+func ReadToken(r string) string {
+	if _, err := os.Stat(r); err == nil {
+		b, e := ioutil.ReadFile(r)
+		if e != nil {
+			log.Fatalf("Unable to read data from file: %s, error: %s", r, e)
+		}
+		return strings.Replace(string(b), "\n", "", -1)
+	}
+	return r
+}
+
 // Example of usage:
 func main() {
 	var token string
-	flag.StringVar(&token, "token", "", "token")
+	flag.StringVar(&token, "token", "", "token or file containing the token")
 	var purl string
 	providers := []string{
 		"https://auth.cern.ch/auth/realms/cern",
@@ -33,6 +48,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("fail to initialize %s error %v", provider.URL, err)
 	}
+	token = ReadToken(token)
 	attrs, err := auth.InspectToken(provider, token, verbose)
 	if err != nil {
 		log.Fatal(err)
