@@ -137,6 +137,19 @@ func reverseProxy(targetURL string, w http.ResponseWriter, r *http.Request) {
 			reqHost = name
 		}
 	}
+
+	// CouchDB headers
+	if Config.XAuthCouchDBUserName != "" {
+		r.Header.Set("X-Auth-CouchDB-UserName", Config.XAuthCouchDBUserName)
+	}
+	if Config.XAuthCouchDBRoles != "" {
+		r.Header.Set("X-Auth-CouchDB-Roles", Config.XAuthCouchDBRoles)
+	}
+	if Config.XAuthCouchDBToken != "" {
+		r.Header.Set("X-Auth-CouchDB-Token", Config.XAuthCouchDBToken)
+	}
+
+	// XForward headers
 	if Config.XForwardedHost != "" {
 		r.Header.Set("X-Forwarded-Host", Config.XForwardedHost)
 	} else {

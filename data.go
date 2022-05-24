@@ -64,6 +64,13 @@ type Configuration struct {
 	MaxTLSVersion       string          `json:"maxTLSVersion"`          // maximum TLS version
 	LetsEncrypt         bool            `json:"lets_encrypt"`           // start LetsEncrypt HTTPs server
 	DomainNames         []string        `json:"domain_names"`           // list of domain names to use for LetsEncrypt
+
+	// CouchDB headers, see
+	// https://docs.couchdb.org/en/3.1.2/api/server/authn.html#proxy-authentication
+	XAuthCouchDBUserName string `json:"X-Auth-CouchDB-UserName"` // X-Auth-CouchDB-UserName field of HTTP request
+	XAuthCouchDBRoles    string `json:"X-Auth-CouchDB-Roles"`    // X-Auth-CouchDB-Roles field of HTTP request
+	XAuthCouchDBToken    string `json:"X-Auth-CouchDB-Token"`    // X-Auth-CouchDB-Token field of HTTP request
+
 }
 
 // ServerSettings controls server parameters
