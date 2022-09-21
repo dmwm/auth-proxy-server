@@ -37,6 +37,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"os"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -213,6 +214,21 @@ func getToken(r *http.Request) string {
 	return token
 }
 
+// helper function to check referer
+func setReferer(r *http.Request) {
+	referer := r.Referer()
+	if referer == "" {
+		referer = r.Header.Get("X-Forwarded-Host")
+	}
+	if referer == "" {
+		hname, err := os.Hostname()
+		if err == nil {
+			referer = hname
+		}
+	}
+	r.Header.Set("Referer", referer)
+}
+
 // helper function to check access token of the client
 // it is done via introspect auth end-point
 func checkAccessToken(r *http.Request) (auth.TokenAttributes, error) {
@@ -253,7 +269,6 @@ func checkAccessToken(r *http.Request) (auth.TokenAttributes, error) {
 		if attrs.ClientHost == "" {
 			attrs.ClientHost = r.Referer()
 		}
-		r.Header.Set("Referer", r.Referer())
 		r.Header.Set("scope", attrs.Scope)
 		r.Header.Set("client-host", attrs.ClientHost)
 		r.Header.Set("client-id", attrs.ClientID)
@@ -417,6 +432,8 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 		printHTTPRequest(r, msg)
 		sessLock.Unlock()
 	}
+	// set HTTP Referer HTTP header
+	setReferer(r)
 
 	attrs, err := checkAccessToken(r)
 	// add LogRequest after we set cms headers in HTTP request
