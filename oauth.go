@@ -37,7 +37,6 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
-	"os"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -212,21 +211,6 @@ func getToken(r *http.Request) string {
 	arr := strings.Split(tokenStr, " ")
 	token := arr[len(arr)-1]
 	return token
-}
-
-// helper function to check referer
-func setReferer(r *http.Request) {
-	referer := r.RemoteAddr
-	if referer == "" {
-		referer = r.Header.Get("X-Forwarded-Host")
-	}
-	if referer == "" {
-		hname, err := os.Hostname()
-		if err == nil {
-			referer = hname
-		}
-	}
-	r.Header.Set("Referer", referer)
 }
 
 // helper function to check access token of the client
@@ -432,8 +416,8 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 		printHTTPRequest(r, msg)
 		sessLock.Unlock()
 	}
-	// set HTTP Referer HTTP header
-	setReferer(r)
+	// set HTTP Referrer HTTP header
+	SetReferrer(r)
 
 	attrs, err := checkAccessToken(r)
 	// add LogRequest after we set cms headers in HTTP request

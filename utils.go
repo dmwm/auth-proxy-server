@@ -436,3 +436,13 @@ func LogName() string {
 	}
 	return logName
 }
+
+// SetReferrer set  HTTP Referrer/Referer HTTP headers
+func SetReferrer(r *http.Request) {
+	ref := r.URL.Hostname()
+	if ref == "" {
+		ref = r.Header.Get("X-Forwarded-Host")
+	}
+	r.Header.Set("Referer", ref)
+	r.Header.Set("Referrer", ref)
+}

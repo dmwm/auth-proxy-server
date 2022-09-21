@@ -66,6 +66,8 @@ func x509RequestHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(status)
 		return
 	}
+	// set HTTP Referrer HTTP header
+	SetReferrer(r)
 
 	// check CMS headers
 	authStatus := CMSAuth.CheckAuthnAuthz(r.Header)
