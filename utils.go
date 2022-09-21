@@ -439,10 +439,7 @@ func LogName() string {
 
 // SetReferrer set  HTTP Referrer/Referer HTTP headers
 func SetReferrer(r *http.Request) {
-	ref := r.Host
-	if ref == "" {
-		ref = r.Header.Get("X-Forwarded-Host")
-	}
+	ref := r.Header.Get("X-Forwarded-Host")
 	if !strings.HasPrefix(ref, "http") {
 		ref = fmt.Sprintf("https://%s", ref)
 	}
