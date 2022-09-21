@@ -219,6 +219,9 @@ func setReferer(r *http.Request) {
 	referer := r.Referer()
 	if referer == "" {
 		referer = r.Header.Get("X-Forwarded-Host")
+		if referer == "" {
+			r.Header.Set("X-Forwarded-For", r.RemoteAddr)
+		}
 	}
 	if referer == "" {
 		hname, err := os.Hostname()
