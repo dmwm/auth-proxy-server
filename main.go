@@ -160,6 +160,8 @@ func reverseProxy(targetURL string, w http.ResponseWriter, r *http.Request) {
 	if Config.Verbose > 0 {
 		log.Printf("proxy request: %+v\n", r)
 	}
+	// Set Referrer header
+	SetReferrer(r)
 
 	// use custom modify response function to setup response headers
 	proxy.ModifyResponse = func(resp *http.Response) error {

@@ -416,8 +416,6 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 		printHTTPRequest(r, msg)
 		sessLock.Unlock()
 	}
-	// set HTTP Referrer HTTP header
-	SetReferrer(r)
 
 	attrs, err := checkAccessToken(r)
 	// add LogRequest after we set cms headers in HTTP request
