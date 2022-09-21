@@ -253,6 +253,7 @@ func checkAccessToken(r *http.Request) (auth.TokenAttributes, error) {
 		if attrs.ClientHost == "" {
 			attrs.ClientHost = r.Referer()
 		}
+		r.Header.Set("Referer", r.Referer())
 		r.Header.Set("scope", attrs.Scope)
 		r.Header.Set("client-host", attrs.ClientHost)
 		r.Header.Set("client-id", attrs.ClientID)
