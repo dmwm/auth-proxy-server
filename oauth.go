@@ -216,12 +216,9 @@ func getToken(r *http.Request) string {
 
 // helper function to check referer
 func setReferer(r *http.Request) {
-	referer := r.Referer()
+	referer := r.RemoteAddr
 	if referer == "" {
 		referer = r.Header.Get("X-Forwarded-Host")
-		if referer == "" {
-			r.Header.Set("X-Forwarded-For", r.RemoteAddr)
-		}
 	}
 	if referer == "" {
 		hname, err := os.Hostname()
