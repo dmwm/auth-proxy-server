@@ -62,6 +62,7 @@ type Configuration struct {
 	Providers           []string        `json:"providers`               // list of JWKS providers
 	MinTLSVersion       string          `json:"minTLSVersion"`          // minimum TLS version
 	MaxTLSVersion       string          `json:"maxTLSVersion"`          // maximum TLS version
+	InsecureSkipVerify  bool            `json:"insecureSkipVerify"`     // tls configuration option
 	LetsEncrypt         bool            `json:"lets_encrypt"`           // start LetsEncrypt HTTPs server
 	DomainNames         []string        `json:"domain_names"`           // list of domain names to use for LetsEncrypt
 

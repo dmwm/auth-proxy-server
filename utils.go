@@ -194,13 +194,15 @@ func getServer(serverCrt, serverKey string, customVerify bool) (*http.Server, er
 		maxVer = tls.VersionTLS13
 	}
 	log.Printf("set tlsConfig with min=%d max=%d versions", minVer, maxVer)
+	cert, err := tls.LoadX509KeyPair(serverCrt, serverKey)
+	//     cert, err := x509proxy.LoadX509KeyPair(serverCrt, serverKey)
+	if err != nil {
+		log.Fatalf("server loadkeys: %s", err)
+
+	}
 	// if we do not require custom verification we'll load server crt/key and present to client
 	if customVerify == false {
-		cert, err := tls.LoadX509KeyPair(serverCrt, serverKey)
-		if err != nil {
-			log.Fatalf("server loadkeys: %s", err)
-
-		}
+		//         cert, err := tls.LoadX509KeyPair(serverCrt, serverKey)
 		tlsConfig = &tls.Config{
 			MinVersion:   uint16(minVer),
 			MaxVersion:   uint16(maxVer),
@@ -213,9 +215,10 @@ func getServer(serverCrt, serverKey string, customVerify bool) (*http.Server, er
 			// replacing. This will not disable VerifyPeerCertificate.
 			MinVersion:         uint16(minVer),
 			MaxVersion:         uint16(maxVer),
-			InsecureSkipVerify: true,
+			InsecureSkipVerify: Config.InsecureSkipVerify,
 			ClientAuth:         tls.RequestClientCert,
 			RootCAs:            _rootCAs,
+			Certificates:       []tls.Certificate{cert},
 		}
 		tlsConfig.VerifyPeerCertificate = VerifyPeerCertificate
 	}
