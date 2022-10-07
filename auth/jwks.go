@@ -55,11 +55,16 @@ type OpenIDConfiguration struct {
 	RevocationEndpoint    string   `json:"revocation_endpoint"`
 }
 
+type publicKey struct {
+	key *rsa.PublicKey // RSA public key
+	kid string         // Key Id
+}
+
 // Provider holds all information about given provider
 type Provider struct {
 	URL           string              // provider url
 	Configuration OpenIDConfiguration // provider OpenID configuration
-	PublicKey     *rsa.PublicKey      // RSA public key of the provider
+	PublicKeys    []publicKey         // Public keys of the provider
 	JWKSBody      []byte              // jwks body content of the provider
 }
 
@@ -117,20 +122,22 @@ func (p *Provider) Init(purl string, verbose int) error {
 		return err
 	}
 	p.JWKSBody = body2
-	exp := certs.Keys[0].E   // exponent
-	mod := certs.Keys[0].N   // modulus
-	kty := certs.Keys[0].Kty // kty attribute
-	if strings.ToLower(kty) != "rsa" {
-		msg := fmt.Sprintf("not RSA kty key: %s", kty)
-		log.Println(msg)
-		return errors.New(msg)
+	for _, key := range certs.Keys {
+		exp := key.E   // exponent
+		mod := key.N   // modulus
+		kty := key.Kty // kty attribute
+		if strings.ToLower(kty) != "rsa" {
+			msg := fmt.Sprintf("not RSA kty key: %s", kty)
+			log.Println(msg)
+			return errors.New(msg)
+		}
+		pub, err := getPublicKey(exp, mod)
+		if err != nil {
+			log.Println("unable to get public key ", err)
+			return err
+		}
+		p.PublicKeys = append(p.PublicKeys, publicKey{pub, key.Kid})
 	}
-	pub, err := getPublicKey(exp, mod)
-	if err != nil {
-		log.Println("unable to get public key ", err)
-		return err
-	}
-	p.PublicKey = pub
 	if verbose > 0 {
 		log.Println("\n", p.String())
 	}
@@ -206,8 +213,24 @@ func getPublicKey(exp, mod string) (*rsa.PublicKey, error) {
 // github.com/pascaldekloe/jwt go package
 func tokenClaims(provider Provider, token string) (map[string]interface{}, error) {
 	out := make(map[string]interface{})
+	// First parse without checking signature, to get the Kid
+	claims, err := jwt.ParseWithoutCheck([]byte(token))
+	log.Println("ParseWithoutCheck returns %v", err)
+	if err != nil {
+		return out, err
+	}
+	var pub *rsa.PublicKey
+	for _, pubkey := range provider.PublicKeys {
+		if claims.KeyID == pubkey.kid {
+			pub = pubkey.key
+			break
+		}
+	}
+	if pub == nil {
+		return out, fmt.Errorf("key id %s not found", claims.KeyID)
+	}
 	// verify a JWT
-	claims, err := jwt.RSACheck([]byte(token), provider.PublicKey)
+	claims, err = jwt.RSACheck([]byte(token), pub)
 	if err != nil {
 		return out, err
 	}
