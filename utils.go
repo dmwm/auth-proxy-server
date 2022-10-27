@@ -185,6 +185,8 @@ func getServer(serverCrt, serverKey string, customVerify bool) (*http.Server, er
 		minVer = tls.VersionTLS12
 	} else if Config.MinTLSVersion == "tls13" {
 		minVer = tls.VersionTLS13
+	} else {
+		minVer = tls.VersionTLS12
 	}
 	if Config.MaxTLSVersion == "tls10" {
 		maxVer = tls.VersionTLS10
@@ -193,6 +195,8 @@ func getServer(serverCrt, serverKey string, customVerify bool) (*http.Server, er
 	} else if Config.MaxTLSVersion == "tls12" {
 		maxVer = tls.VersionTLS12
 	} else if Config.MaxTLSVersion == "tls13" {
+		maxVer = tls.VersionTLS13
+	} else {
 		maxVer = tls.VersionTLS13
 	}
 	log.Printf("set tlsConfig with min=%d max=%d versions", minVer, maxVer)
@@ -212,17 +216,55 @@ func getServer(serverCrt, serverKey string, customVerify bool) (*http.Server, er
 			Certificates: []tls.Certificate{cert},
 		}
 	} else { // otherwise (x509 server) we'll perform custom verification of client's certificates
+		// supported ciphers, seehttps://pkg.go.dev/crypto/tls
+		cipherSuites := []uint16{
+			// TLS 1.0 - 1.2 cipher suites.
+			tls.TLS_RSA_WITH_RC4_128_SHA,
+			tls.TLS_RSA_WITH_3DES_EDE_CBC_SHA,
+			tls.TLS_RSA_WITH_AES_128_CBC_SHA,
+			tls.TLS_RSA_WITH_AES_256_CBC_SHA,
+			tls.TLS_RSA_WITH_AES_128_CBC_SHA256,
+			tls.TLS_RSA_WITH_AES_128_GCM_SHA256,
+			tls.TLS_RSA_WITH_AES_256_GCM_SHA384,
+			tls.TLS_ECDHE_ECDSA_WITH_RC4_128_SHA,
+			tls.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,
+			tls.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
+			tls.TLS_ECDHE_RSA_WITH_RC4_128_SHA,
+			tls.TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA,
+			tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
+			tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+			tls.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,
+			tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256,
+			tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+			tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+			tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+			tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+			tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256,
+			tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256,
+			// TLS 1.3 cipher suites.
+			tls.TLS_AES_128_GCM_SHA256,
+			tls.TLS_AES_256_GCM_SHA384,
+			tls.TLS_CHACHA20_POLY1305_SHA256,
+			// TLS_FALLBACK_SCSV isn't a standard cipher suite but an indicator
+			// that the client is doing version fallback. See RFC 7507.
+			tls.TLS_FALLBACK_SCSV,
+			// Legacy names for the corresponding cipher suites with the correct _SHA256
+			// suffix, retained for backward compatibility.
+			tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,
+			tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
+		}
 		tlsConfig = &tls.Config{
 			// Set InsecureSkipVerify to skip the default validation we are
 			// replacing. This will not disable VerifyPeerCertificate.
-			MinVersion: uint16(minVer),
-			MaxVersion: uint16(maxVer),
+			//             MinVersion: uint16(minVer),
+			//             MaxVersion: uint16(maxVer),
 			//             InsecureSkipVerify: Config.InsecureSkipVerify,
 			//             ClientAuth:   tls.RequestClientCert,
-			ClientAuth:   tls.RequireAndVerifyClientCert,
+			ClientAuth:   tls.VerifyClientCertIfGiven,
 			ClientCAs:    _rootCAs, // this comes from /etc/grid-security/certificate
 			RootCAs:      _rootCAs,
 			Certificates: []tls.Certificate{cert},
+			CipherSuites: cipherSuites,
 		}
 		tlsConfig.VerifyPeerCertificate = VerifyPeerCertificate
 	}
