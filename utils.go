@@ -169,6 +169,8 @@ func VerifyPeerCertificate(certificates [][]byte, _ [][]*x509.Certificate) error
 }
 
 // helper function to construct http server with TLS
+// very informative blog about TLS setup:
+// https://youngkin.github.io/post/gohttpsclientserver/
 func getServer(serverCrt, serverKey string, customVerify bool) (*http.Server, error) {
 	// start HTTP or HTTPs server based on provided configuration
 
