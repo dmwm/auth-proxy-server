@@ -201,7 +201,7 @@ func getServer(serverCrt, serverKey string, customVerify bool) (*http.Server, er
 
 	}
 	// if we do not require custom verification we'll load server crt/key and present to client
-	if customVerify == false {
+	if customVerify == false { // oauth server
 		//         cert, err := tls.LoadX509KeyPair(serverCrt, serverKey)
 		tlsConfig = &tls.Config{
 			MinVersion:   uint16(minVer),
@@ -209,16 +209,18 @@ func getServer(serverCrt, serverKey string, customVerify bool) (*http.Server, er
 			RootCAs:      _rootCAs,
 			Certificates: []tls.Certificate{cert},
 		}
-	} else { // otherwise we'll perform custom verification of client's certificates
+	} else { // otherwise (x509 server) we'll perform custom verification of client's certificates
 		tlsConfig = &tls.Config{
 			// Set InsecureSkipVerify to skip the default validation we are
 			// replacing. This will not disable VerifyPeerCertificate.
-			MinVersion:         uint16(minVer),
-			MaxVersion:         uint16(maxVer),
-			InsecureSkipVerify: Config.InsecureSkipVerify,
-			ClientAuth:         tls.RequestClientCert,
-			RootCAs:            _rootCAs,
-			Certificates:       []tls.Certificate{cert},
+			MinVersion: uint16(minVer),
+			MaxVersion: uint16(maxVer),
+			//             InsecureSkipVerify: Config.InsecureSkipVerify,
+			//             ClientAuth:   tls.RequestClientCert,
+			ClientAuth:   tls.RequireAndVerifyClientCert,
+			ClientCAs:    _rootCAs, // this comes from /etc/grid-security/certificate
+			RootCAs:      _rootCAs,
+			Certificates: []tls.Certificate{cert},
 		}
 		tlsConfig.VerifyPeerCertificate = VerifyPeerCertificate
 	}
