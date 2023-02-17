@@ -3,7 +3,6 @@ module github.com/vkuznet/auth-proxy-server
 go 1.19
 
 require (
-	github.com/StackExchange/wmi v1.2.1 // indirect
 	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/dmwm/cmsauth v0.0.0-20220120183156-5495692d4ca7
 	github.com/go-ole/go-ole v1.2.6 // indirect
@@ -20,9 +19,9 @@ require (
 	github.com/vkuznet/auth-proxy-server/logging v0.0.0-20221027171748-4fcd7afffc5c
 	github.com/vkuznet/x509proxy v0.0.0-20210801171832-e47b94db99b6 // indirect
 	golang.org/x/crypto v0.1.0
-	golang.org/x/net v0.1.0 // indirect
+	golang.org/x/net v0.7.0 // indirect
 	golang.org/x/oauth2 v0.1.0
-	golang.org/x/sys v0.1.0 // indirect
+	golang.org/x/sys v0.5.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
@@ -37,9 +36,7 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/tklauser/numcpus v0.5.0 // indirect
-	github.com/vkuznet/TokenManager v0.0.1 // indirect
 	github.com/yusufpapurcu/wmi v1.2.2 // indirect
-	golang.org/x/term v0.1.0 // indirect
-	golang.org/x/text v0.4.0 // indirect
+	golang.org/x/text v0.7.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c // indirect
 )
