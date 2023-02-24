@@ -1,13 +1,13 @@
 module github.com/vkuznet/auth-proxy-server/grpc
 
-go 1.19
+go 1.20
 
 require (
 	github.com/golang/protobuf v1.5.2
 	github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible
-	github.com/vkuznet/auth-proxy-server/auth v0.0.0-20230218132251-afaaef6261a0
-	github.com/vkuznet/auth-proxy-server/cric v0.0.0-20230218132251-afaaef6261a0
-	github.com/vkuznet/auth-proxy-server/logging v0.0.0-20230224134450-03c6bbc97b66
+	github.com/vkuznet/auth-proxy-server/auth v0.0.0-20230224144830-095471352e1c
+	github.com/vkuznet/auth-proxy-server/cric v0.0.0-20230224144830-095471352e1c
+	github.com/vkuznet/auth-proxy-server/logging v0.0.0-20230224144830-095471352e1c
 	golang.org/x/net v0.7.0
 	golang.org/x/oauth2 v0.5.0
 	google.golang.org/grpc v1.53.0

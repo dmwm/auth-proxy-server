@@ -1,9 +1,9 @@
 module github.com/vkuznet/grpc/auth-proxy-server/grpc/backend/client
 
-go 1.19
+go 1.20
 
 require (
-	github.com/vkuznet/auth-proxy-server/grpc v0.0.0-20230224135338-4593f19ba003
+	github.com/vkuznet/auth-proxy-server/grpc v0.0.0-20230224144830-095471352e1c
 	golang.org/x/oauth2 v0.5.0
 	google.golang.org/grpc v1.53.0
 )
