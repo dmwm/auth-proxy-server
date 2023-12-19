@@ -14,7 +14,7 @@ require (
 	github.com/vkuznet/auth-proxy-server/auth v0.0.0-20230310132501-6354c31c4973
 	github.com/vkuznet/auth-proxy-server/cric v0.0.0-20230310132501-6354c31c4973
 	github.com/vkuznet/auth-proxy-server/logging v0.0.0-20230310132501-6354c31c4973
-	golang.org/x/crypto v0.7.0
+	golang.org/x/crypto v0.17.0
 	golang.org/x/oauth2 v0.6.0
 )
 
@@ -29,13 +29,11 @@ require (
 	github.com/pquerna/cachecontrol v0.1.0 // indirect
 	github.com/tklauser/go-sysconf v0.3.11 // indirect
 	github.com/tklauser/numcpus v0.6.0 // indirect
-	github.com/vkuznet/TokenManager v0.0.1 // indirect
 	github.com/vkuznet/x509proxy v0.0.0-20210801171832-e47b94db99b6 // indirect
 	github.com/yusufpapurcu/wmi v1.2.2 // indirect
-	golang.org/x/net v0.8.0 // indirect
-	golang.org/x/sys v0.6.0 // indirect
-	golang.org/x/term v0.6.0 // indirect
-	golang.org/x/text v0.8.0 // indirect
+	golang.org/x/net v0.10.0 // indirect
+	golang.org/x/sys v0.15.0 // indirect
+	golang.org/x/text v0.14.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
