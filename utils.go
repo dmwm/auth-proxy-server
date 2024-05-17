@@ -69,7 +69,9 @@ func printHTTPRequest(r *http.Request, msg string) {
 
 // RootCAs returns cert pool of our root CAs
 func RootCAs() *x509.CertPool {
-	log.Println("Load RootCAs from", Config.RootCAs)
+	if Config.Verbose > 2 {
+		log.Println("Load RootCAs from", Config.RootCAs)
+	}
 	rootCAs := x509.NewCertPool()
 	files, err := ioutil.ReadDir(Config.RootCAs)
 	if err != nil {
@@ -80,16 +82,16 @@ func RootCAs() *x509.CertPool {
 		fname := fmt.Sprintf("%s/%s", Config.RootCAs, finfo.Name())
 		caCert, err := os.ReadFile(filepath.Clean(fname))
 		if err != nil {
-			if Config.Verbose > 1 {
+			if Config.Verbose > 2 {
 				log.Printf("Unable to read %s\n", fname)
 			}
 		}
 		if ok := rootCAs.AppendCertsFromPEM(caCert); !ok {
-			if Config.Verbose > 1 {
+			if Config.Verbose > 2 {
 				log.Printf("invalid PEM format while importing trust-chain: %q", fname)
 			}
 		}
-		if Config.Verbose > 1 {
+		if Config.Verbose > 2 {
 			log.Println("Load CA file", fname)
 		}
 	}
@@ -199,7 +201,9 @@ func getServer(serverCrt, serverKey string, customVerify bool) (*http.Server, er
 	} else {
 		maxVer = tls.VersionTLS13
 	}
-	log.Printf("set tlsConfig with min=%d max=%d versions", minVer, maxVer)
+	if Config.Verbose > 2 {
+		log.Printf("set tlsConfig with min=%d max=%d versions", minVer, maxVer)
+	}
 	cert, err := tls.LoadX509KeyPair(serverCrt, serverKey)
 	//     cert, err := x509proxy.LoadX509KeyPair(serverCrt, serverKey)
 	if err != nil {
