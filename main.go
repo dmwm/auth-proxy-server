@@ -328,6 +328,8 @@ func info() string {
 func main() {
 	var config string
 	flag.StringVar(&config, "config", "", "configuration file")
+	var port int
+	flag.IntVar(&port, "port", 0, "server port number")
 	var useX509 bool
 	flag.BoolVar(&useX509, "useX509", false, "start X509 auth server")
 	var scitokens bool
@@ -361,6 +363,10 @@ func main() {
 	logging.CMSMonitType = Config.MonitType
 	logging.CMSMonitProducer = Config.MonitProducer
 
+	if port > 0 {
+		log.Println("overwrite server port number to", port)
+		Config.Port = port
+	}
 	if Config.Verbose > 0 {
 		log.Printf("%+v\n", Config)
 	}
