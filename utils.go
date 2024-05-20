@@ -383,13 +383,14 @@ func InList(a string, list []string) bool {
 	return false
 }
 
-// PatchMatched check if given paths are matched
+// PathMatched check if given path are matched with rurl
 func PathMatched(rurl, path string, strict bool) bool {
-	log.Printf("PatchMatched rurl=%s path=%s strict=%v", rurl, path, strict)
 	if v, err := url.QueryUnescape(rurl); err == nil {
 		rurl = v
 	}
-	log.Printf("PatchMatched rurl=%s path=%s strict=%v", rurl, path, strict)
+	if Config.Verbose > 2 {
+		log.Printf("PathMatched rurl=%s path=%s strict=%v", rurl, path, strict)
+	}
 	matched := false
 	if strings.HasSuffix(path, "/") {
 		if !strings.HasSuffix(rurl, "/") {
@@ -418,7 +419,9 @@ func PathMatched(rurl, path string, strict bool) bool {
 			matched = true
 		}
 	}
-	log.Printf("PatchMatched rurl=%s path=%s strict=%v matched %v", rurl, path, strict, matched)
+	if Config.Verbose > 1 {
+		log.Printf("PathMatched rurl=%s path=%s strict=%v matched %v", rurl, path, strict, matched)
+	}
 	return matched
 }
 
