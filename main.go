@@ -373,7 +373,7 @@ func main() {
 	}
 	if metricsPort > 0 {
 		log.Println("overwrite server metrics port number to", metricsPort)
-		Config.MetircsPort = metricsPort
+		Config.MetricsPort = metricsPort
 	}
 	if logFile != "" {
 		log.Println("overwrite server log file to", logFile)
