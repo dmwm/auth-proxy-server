@@ -330,6 +330,10 @@ func main() {
 	flag.StringVar(&config, "config", "", "configuration file")
 	var port int
 	flag.IntVar(&port, "port", 0, "server port number")
+	var metricsPort int
+	flag.IntVar(&metricsPort, "metricsPort", 0, "server metrics port number")
+	var logFile string
+	flag.StringVar(&logFile, "logFile", "", "log file")
 	var useX509 bool
 	flag.BoolVar(&useX509, "useX509", false, "start X509 auth server")
 	var scitokens bool
@@ -366,6 +370,14 @@ func main() {
 	if port > 0 {
 		log.Println("overwrite server port number to", port)
 		Config.Port = port
+	}
+	if metricsPort > 0 {
+		log.Println("overwrite server metrics port number to", metricsPort)
+		Config.MetircsPort = metricsPort
+	}
+	if logFile != "" {
+		log.Println("overwrite server log file to", logFile)
+		Config.LogFile = logFile
 	}
 	if Config.Verbose > 0 {
 		log.Printf("%+v\n", Config)
