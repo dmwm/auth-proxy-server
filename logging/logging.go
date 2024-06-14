@@ -220,7 +220,7 @@ func LogRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 	refMsg := fmt.Sprintf("[ref: \"%v\" \"%v\"]", ref, r.Header.Get("User-Agent"))
 	respTime := "0"
 	if respHeader.Get("Response-Time") != "" {
-		respTime = fmt.Sprintf("%sv", respHeader.Get("Response-Time"))
+		respTime = fmt.Sprintf("%s", respHeader.Get("Response-Time"))
 	}
 	respMsg := fmt.Sprintf("[req: %v proxy-resp: %v]", time.Since(start), respTime)
 	uri, err := url.QueryUnescape(r.URL.RequestURI())
