@@ -98,3 +98,35 @@ You can find CMS kubernetes deployment:
 
 Please note, the static area in CMS is deployed as 
 [side car container](https://github.com/dmwm/CMSKubernetes/blob/master/kubernetes/cmsweb/daemonset/auth-proxy-server.yaml#L143)
+
+### Logging
+The APS/XPS logging is provided by
+[logging module](../logging/logging.go). In particular, this module mimic
+apache log format but also enhance it further. For instance, here is a typical
+log entry:
+```
+[2024-06-14 11:36:17.611781625 +0000 UTC m=+4111.311647917] HTTP/1.1 200 PUT /workqueue/_local/29c809a8e0d15785a82faf581c10796a [data: 11342 in 0 out] [remoteAddr: 188.185.123.179:11401] [X-Forwarded-For: 188.185.123.179:11401] [X-Forwarded-Host: cmsweb-xxx.cern.ch] [auth: TLS13 TLS_AES_128_GCM_SHA256 "/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=user/CN=000000/CN=Robot:" user x509] [ref: "https://xxx.cern.ch" "CouchDB-Replicator/3.2.2"] [req: 32.514995ms proxy-resp: 32.107549ms]
+```
+As you can see the timestamp provide proper locale, i.e. UTC, and at the end it
+provides request and proxy response times consumed by HTTP request
+
+### Modules
+The APS codebase provides additional modules for day-to-day operations. Here we
+briefly list all of them:
+- [auth-token client](client/README.md) allows fetch token from CERN SSO
+- [decode token](decode/README.md) is a simple tool to decode given token and shows its details
+  on stdout
+- [cric module](cric/README.md) provides list of useful utilities to handle CMS
+  CRIC data
+- [token manager](manager/README.md) provides token manager, an utility to
+  periodically obtain/renew tokens 
+- [gRPC proxy server](grpc/README.md) provides fully function gRPC reverse
+  proxy server. It supports both HTTP and gRPC clients via the following
+  workflows:
+```
+# HTTP based client
+client (HTTP) -> http+gRPC server (performs auth/authz) -> gRPC backend server
+
+# gRPC client
+client (gRPC) -> gRPC server (performs auth/authz) -> gRPC backend server
+```
