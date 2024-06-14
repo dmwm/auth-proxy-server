@@ -4,6 +4,8 @@ following features:
 - it supports token based authentication
 - it supports X509 authentication
 - it supports scitokens
+- it supports gRPC protocol and clients, see [grpc](grpc/README.md) proxy server
+(can be useful for ML backends)
 
 ### Configuration file
 Here is basic example of APS configuration file:
