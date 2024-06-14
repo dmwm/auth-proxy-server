@@ -134,3 +134,56 @@ client (HTTP) -> http+gRPC server (performs auth/authz) -> gRPC backend server
 # gRPC client
 client (gRPC) -> gRPC server (performs auth/authz) -> gRPC backend server
 ```
+
+### Benchmarks
+We benchmark code in k8s cluster with 8GB of RAM and 4CPUs node. For comparison
+we deployed apache frontend server and used
+[hey](https://github.com/vkuznet/hey) tool (with x509 support) to run the
+tests. For our results we used [httpgo](docs/httpgo.go) services behind
+reverse proxy which only return HTTP requests headers.
+
+Here are the results of our tests using 1000 requests and different set of
+concurrent clients (100, 200, 300, 400, 500). Each time we measured average
+requests/second throughput as well as count number of successfull and failed
+responses. For tests below we disabled keep-alive to simulate load from
+distributed clients.
+
+#### throughput measurements
+The following plots shows throughput performance of Go-based and apache based
+reverse proxy servers. Here we use the following notations: Go-auth-srvN and
+Apache-srvN where N refers to number of replicas of given server in k8s
+setup, i.e. srv4 means we run 4 replicas of that server in k8s cluster.
+![Throughput](https://github.com/vkuznet/auth-proxy-server/raw/master/docs/perf-rps.png)
+
+#### failure rate measurements
+![Failure-rate](https://github.com/vkuznet/auth-proxy-server/raw/master/docs/perf-failure.png)
+
+#### Additional remarks
+We also want to point out that k8s image sizes are quite different, the
+Go-based server has uncompressed size of 12.4MB/5.18MB (for uncompressed/compressed),
+while cmsweb frontend image is 1.97GB/707MB, respectively. The average memory
+usage of srv4 tests was 20MB for Go-based server, and 1GB or more for apache one.
+And, CPU usage was about 900 millicore for Go-based server and 400 millicore for
+apache one.
+
+### Test with DBS service
+We also performed more realistics tests using frontend (apache or Go-based) and
+DBS services with different queries. As before, srvN correspond to number of
+fronends used in tests, and keep-alive option was disabled in tests.
+
+In these tests we used DBS datasets queries with different dataset names.
+
+#### throughput measurements
+![Throughput](https://github.com/vkuznet/auth-proxy-server/raw/master/docs/perf-rps-dbs.png)
+
+#### failure rate measurements
+![Failure-rate](https://github.com/vkuznet/auth-proxy-server/raw/master/docs/perf-failure-dbs.png)
+
+### References
+
+- [Certified OpenID connect implementations](https://openid.net/developers/certified/)
+- [JWT tokens](https://jwt.io/)
+- [WLCG tokens](https://github.com/WLCG-AuthZ-WG/common-jwt-profile/blob/master/profile.md)
+- [SciTokens](https://scitokens.org/)
+- [CERN SSO OAuth2 OICD](https://gitlab.cern.ch/authzsvc/docs/keycloak-sso-examples)
+- JSON Web Token libraries: [jwt](https://github.com/pascaldekloe/jwt) and [jwt-go](https://github.com/dgrijalva/jwt-go)
