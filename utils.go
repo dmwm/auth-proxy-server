@@ -205,14 +205,13 @@ func getServer(serverCrt, serverKey string, customVerify bool) (*http.Server, er
 		log.Printf("set tlsConfig with min=%d max=%d versions", minVer, maxVer)
 	}
 	cert, err := tls.LoadX509KeyPair(serverCrt, serverKey)
-	//     cert, err := x509proxy.LoadX509KeyPair(serverCrt, serverKey)
 	if err != nil {
 		log.Fatalf("server loadkeys: %s", err)
 
 	}
+
 	// if we do not require custom verification we'll load server crt/key and present to client
 	if customVerify == false { // oauth server
-		//         cert, err := tls.LoadX509KeyPair(serverCrt, serverKey)
 		tlsConfig = &tls.Config{
 			MinVersion:   uint16(minVer),
 			MaxVersion:   uint16(maxVer),
@@ -223,16 +222,20 @@ func getServer(serverCrt, serverKey string, customVerify bool) (*http.Server, er
 		tlsConfig = &tls.Config{
 			// Set InsecureSkipVerify to skip the default validation we are
 			// replacing. This will not disable VerifyPeerCertificate.
-			MinVersion: uint16(minVer),
-			MaxVersion: uint16(maxVer),
-			//             InsecureSkipVerify: Config.InsecureSkipVerify,
-			//             ClientAuth:   tls.RequestClientCert,
-			ClientAuth:   tls.VerifyClientCertIfGiven,
-			ClientCAs:    _rootCAs, // this comes from /etc/grid-security/certificate
-			RootCAs:      _rootCAs,
-			Certificates: []tls.Certificate{cert},
+			MinVersion:         uint16(minVer),
+			MaxVersion:         uint16(maxVer),
+			InsecureSkipVerify: Config.InsecureSkipVerify,
+			// we must use tls.RequestClientCert for CMS proxy, otherwise client
+			// cert will not be present during TLS handshake
+			// we will use other options like
+			//             ClientAuth: tls.VerifyClientCertIfGiven,
+			// then it will only work for user's cert but not for proxies
+			ClientAuth:            tls.RequestClientCert,
+			ClientCAs:             _rootCAs, // this comes from /etc/grid-security/certificate
+			RootCAs:               _rootCAs,
+			Certificates:          []tls.Certificate{cert},
+			VerifyPeerCertificate: VerifyPeerCertificate,
 		}
-		tlsConfig.VerifyPeerCertificate = VerifyPeerCertificate
 	}
 	addr := fmt.Sprintf(":%d", Config.Port)
 	server := &http.Server{
