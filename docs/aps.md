@@ -1,10 +1,10 @@
 # Auth-Proxy-Server (APS)
 The auth-proxy-server is generic Go-base HTTP frontend which supports the
 following features:
-- it supports token based authentication
-- it supports X509 authentication
-- it supports scitokens
-- it supports gRPC protocol and clients, see [grpc](grpc/README.md) proxy server
+- token based authentication
+- X509 authentication (usually referred as XPS)
+- scitokens (usually referred as SPS)
+- gRPC protocol and clients, see [grpc](grpc/README.md) proxy server
 (can be useful for ML backends)
 
 ### Configuration file
