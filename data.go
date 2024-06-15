@@ -44,6 +44,7 @@ type Configuration struct {
 	CMSHeaders          bool            `json:"cms_headers"`            // set CMS headers
 	RedirectURL         string          `json:"redirect_url"`           // redirect auth url for proxy server
 	Verbose             int             `json:"verbose"`                // verbose output
+	PermanentRedirects  []string        `json:"permanent_redirects"`    // list of permanent redirects
 	Ingress             []Ingress       `json:"ingress"`                // incress section
 	ServerCrt           string          `json:"server_cert"`            // server certificate
 	ServerKey           string          `json:"server_key"`             // server certificate

@@ -209,16 +209,17 @@ func srvURL(surl string) string {
 
 // helper function to redirect HTTP requests based on configuration ingress rules
 func redirect(w http.ResponseWriter, r *http.Request) {
+	// check for permanent redirects first
+	if !InList(r.URL.Path, Config.PermanentRedirects) {
+		path := fmt.Sprintf("%s/index.html", r.URL.Path)
+		path = strings.Replace(path, "//", "/", -1)
+		http.Redirect(w, r, path, http.StatusMovedPermanently)
+		return
+	}
 	// get redirect rule map and rules (in reverse order)
 	// here the reverse order will provide /path/rse /path/aaa followed by /path, etc.
 	// such that we can match the /path as last reserve
 	rmap, rules := RedirectRules(Config.Ingress)
-	// special CMS cases
-	if r.URL.Path == "/wmstats" {
-		r.URL.Path = "/wmstats/index.html"
-	} else if r.URL.Path == "/tier0_wmstats" {
-		r.URL.Path = "/tier0_wmstats/index.html"
-	}
 	for _, key := range rules {
 		rec := rmap[key]
 		// check that request URL path had ingress path with slash
