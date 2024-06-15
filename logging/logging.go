@@ -211,7 +211,7 @@ func LogRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 	} else if r.RemoteAddr != "" {
 		clientip = strings.Split(r.RemoteAddr, ":")[0]
 	}
-	addr := fmt.Sprintf("[remoteAddr: %v] [X-Forwarded-For: %v] [X-Forwarded-Host: %v]", r.RemoteAddr, xff, r.Header.Get("X-Forwarded-Host"))
+	addr := fmt.Sprintf("[host: %v] [remoteAddr: %v] [X-Forwarded-For: %v] [X-Forwarded-Host: %v]", r.Host, r.RemoteAddr, xff, r.Header.Get("X-Forwarded-Host"))
 	//     addr := fmt.Sprintf("[X-Forwarded-For: %v] [X-Forwarded-Host: %v] [remoteAddr: %v]", xff, r.Header.Get("X-Forwarded-Host"), r.RemoteAddr)
 	ref, err := url.QueryUnescape(referer)
 	if err != nil {
