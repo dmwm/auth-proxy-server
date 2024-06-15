@@ -419,6 +419,8 @@ func PathMatched(rurl, path string, strict bool) bool {
 	} else {
 		if prefixMatch {
 			matched = true
+		} else if rurl == path {
+			matched = true
 		}
 	}
 	if Config.Verbose > 1 {
