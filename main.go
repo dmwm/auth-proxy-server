@@ -213,6 +213,12 @@ func redirect(w http.ResponseWriter, r *http.Request) {
 	// here the reverse order will provide /path/rse /path/aaa followed by /path, etc.
 	// such that we can match the /path as last reserve
 	rmap, rules := RedirectRules(Config.Ingress)
+	// special CMS cases
+	if r.URL.Path == "/wmstats" {
+		r.URL.Path = "/wmstats/index.html"
+	} else if r.URL.Path == "/tier0_wmstats" {
+		r.URL.Path = "/tier0_wmstats/index.html"
+	}
 	for _, key := range rules {
 		rec := rmap[key]
 		// check that request URL path had ingress path with slash
