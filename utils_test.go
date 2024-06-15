@@ -114,7 +114,7 @@ func Test_RedirectRules(t *testing.T) {
 	ingressRules = append(ingressRules, Ingress{Path: "/path/"})
 	ingressRules = append(ingressRules, Ingress{Path: "/path/rse"})
 	rmap, rules := RedirectRules(ingressRules)
-	expect := []string{"/path/rse", "/path/aaa", "/path/"}
+	expect := []string{"/path/aaa", "/path/", "/path/rse"}
 	assert.Equal(t, rules, expect)
 	assert.Equal(t, len(rmap), len(rules))
 }
