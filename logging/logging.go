@@ -8,6 +8,7 @@ package logging
 import (
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -154,6 +155,45 @@ func LoggingMiddleware(h http.Handler) http.Handler {
 	return http.HandlerFunc(loggingFn)
 }
 
+// parseHumanReadableTime parses a human-readable time string into seconds represented as a float64
+func parseHumanReadableTime(timeStr string) (float64, error) {
+	// Define a regular expression to match time components (e.g., 7h, 5m, 3s, etc.)
+	re := regexp.MustCompile(`(\d+\.?\d*)([a-zA-Z]+)`)
+	matches := re.FindAllStringSubmatch(timeStr, -1)
+	if matches == nil {
+		return 0, errors.New("invalid time format")
+	}
+
+	totalSeconds := float64(0)
+	for _, match := range matches {
+		value, err := strconv.ParseFloat(match[1], 64)
+		if err != nil {
+			return 0, fmt.Errorf("invalid number: %v", match[1])
+		}
+		unit := strings.ToLower(match[2])
+		switch unit {
+		case "ns":
+			totalSeconds += value / 1000000000
+		case "us", "µs":
+			totalSeconds += value / 1000000
+		case "ms":
+			totalSeconds += value / 1000
+		case "s":
+			totalSeconds += value
+		case "m":
+			totalSeconds += value * 60
+		case "h":
+			totalSeconds += value * 3600
+		case "d":
+			totalSeconds += value * 86400
+		default:
+			return 0, fmt.Errorf("invalid time unit: %v", unit)
+		}
+	}
+
+	return totalSeconds, nil
+}
+
 // helper function to log every single user request, here we pass pointer to status code
 // as it may change through the handler while we use defer logRequest
 func LogRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth string, status *int, tstamp int64, bytesOut int64) {
@@ -220,9 +260,12 @@ func LogRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 	refMsg := fmt.Sprintf("[ref: \"%v\" \"%v\"]", ref, r.Header.Get("User-Agent"))
 	respTime := "0"
 	if respHeader.Get("Response-Time") != "" {
-		respTime = fmt.Sprintf("%s", respHeader.Get("Response-Time"))
+		//         respTime = fmt.Sprintf("%s", respHeader.Get("Response-Time"))
+		if seconds, err := parseHumanReadableTime(respHeader.Get("Response-Time")); err == nil {
+			respTime = fmt.Sprintf("%f", seconds)
+		}
 	}
-	respMsg := fmt.Sprintf("[req: %v proxy-resp: %v]", time.Since(start), respTime)
+	respMsg := fmt.Sprintf("[req: %v (s) proxy-resp: %v (s)]", time.Since(start).Seconds(), respTime)
 	uri, err := url.QueryUnescape(r.URL.RequestURI())
 	if err != nil {
 		uri = r.RequestURI
