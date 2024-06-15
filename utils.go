@@ -19,7 +19,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
-	"sort"
 	"strings"
 	"time"
 
@@ -436,8 +435,9 @@ func RedirectRules(ingressRules []Ingress) (map[string]Ingress, []string) {
 		rules = append(rules, rec.Path)
 		rmap[rec.Path] = rec
 	}
-	// sort rules according to length of the path
-	sort.Sort(sort.Reverse(sort.StringSlice(rules)))
+	// we should not sort rules, otherwise we break order of the rules which is important, e.g.
+	// /wmstats should point to /wmstats/index.html, while /wmstats/.* should go further
+	// therefore we can put ^/wmstats$ before ^/wmstats/.* in redirect rules
 	return rmap, rules
 }
 
