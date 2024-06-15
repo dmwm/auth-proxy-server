@@ -210,7 +210,7 @@ func srvURL(surl string) string {
 // helper function to redirect HTTP requests based on configuration ingress rules
 func redirect(w http.ResponseWriter, r *http.Request) {
 	// check for permanent redirects first
-	if !InList(r.URL.Path, Config.PermanentRedirects) {
+	if InList(r.URL.Path, Config.PermanentRedirects) {
 		path := fmt.Sprintf("%s/index.html", r.URL.Path)
 		r.URL.Path = strings.Replace(path, "//", "/", -1)
 	}
