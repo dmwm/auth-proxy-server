@@ -212,9 +212,7 @@ func redirect(w http.ResponseWriter, r *http.Request) {
 	// check for permanent redirects first
 	if !InList(r.URL.Path, Config.PermanentRedirects) {
 		path := fmt.Sprintf("%s/index.html", r.URL.Path)
-		path = strings.Replace(path, "//", "/", -1)
-		http.Redirect(w, r, path, http.StatusMovedPermanently)
-		return
+		r.URL.Path = strings.Replace(path, "//", "/", -1)
 	}
 	// get redirect rule map and rules (in reverse order)
 	// here the reverse order will provide /path/rse /path/aaa followed by /path, etc.
