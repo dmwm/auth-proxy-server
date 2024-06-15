@@ -11,9 +11,9 @@ require (
 	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/stretchr/testify v1.9.0
 	github.com/thomasdarimont/go-kc-example v0.0.0-20170529223628-e3951d8faa4c
-	github.com/vkuznet/auth-proxy-server/auth v0.0.0-20240611125333-ca282666cbbe
-	github.com/vkuznet/auth-proxy-server/cric v0.0.0-20240611125333-ca282666cbbe
-	github.com/vkuznet/auth-proxy-server/logging v0.0.0-20240611125333-ca282666cbbe
+	github.com/vkuznet/auth-proxy-server/auth v0.0.0-20240615180935-b3980328e5b3
+	github.com/vkuznet/auth-proxy-server/cric v0.0.0-20240615180935-b3980328e5b3
+	github.com/vkuznet/auth-proxy-server/logging v0.0.0-20240615180935-b3980328e5b3
 	golang.org/x/crypto v0.24.0
 	golang.org/x/oauth2 v0.21.0
 )
@@ -31,12 +31,10 @@ require (
 	github.com/vkuznet/TokenManager v0.0.1 // indirect
 	github.com/vkuznet/x509proxy v0.0.0-20210801171832-e47b94db99b6 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
-	golang.org/x/net v0.26.0 // indirect
+	golang.org/x/net v0.21.0 // indirect
 	golang.org/x/sys v0.21.0 // indirect
 	golang.org/x/term v0.21.0 // indirect
 	golang.org/x/text v0.16.0 // indirect
 	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-replace github.com/vkuznet/auth-proxy-server/logging => /Users/vk/Work/Languages/Go/gopath/src/github.com/dmwm/auth-proxy-server/logging
