@@ -209,11 +209,6 @@ func srvURL(surl string) string {
 
 // helper function to redirect HTTP requests based on configuration ingress rules
 func redirect(w http.ResponseWriter, r *http.Request) {
-	// check for permanent redirects first
-	if InList(r.URL.Path, Config.PermanentRedirects) {
-		path := fmt.Sprintf("%s/index.html", r.URL.Path)
-		r.URL.Path = strings.Replace(path, "//", "/", -1)
-	}
 	// get redirect rule map and rules (in reverse order)
 	// here the reverse order will provide /path/rse /path/aaa followed by /path, etc.
 	// such that we can match the /path as last reserve
