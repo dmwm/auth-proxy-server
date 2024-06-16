@@ -79,6 +79,7 @@ with `http://backend.../tier0_wmstats/_design/WMStatsErl4/_view/cooledoffRequest
 The `old_path` to `new_path` substitution is useful in cases when frontend
 and backend routes are different.
 
+The full list of configuration options can be found in [data.go](../data.go).
 The full list of CMS redirect rules can be found
 [here](https://gitlab.cern.ch/cmsweb-k8s/services_config/-/tree/preprod/auth-proxy-server?ref_type=heads).
 Please use appropriate branch if necessary.
