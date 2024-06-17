@@ -55,7 +55,7 @@ func x509RequestHandler(w http.ResponseWriter, r *http.Request) {
 			r.Header.Set("Cms-Auth-Cert", dn.(string))
 		}
 	}
-	if Config.Verbose > 0 {
+	if Config.Verbose > 1 {
 		printHTTPRequest(r, "cms headers")
 	}
 	// add LogRequest after we set cms headers in HTTP request
@@ -69,7 +69,7 @@ func x509RequestHandler(w http.ResponseWriter, r *http.Request) {
 
 	// check CMS headers
 	authStatus := CMSAuth.CheckAuthnAuthz(r.Header)
-	if Config.Verbose > 0 {
+	if Config.Verbose > 1 {
 		log.Println("x509RequestHandler", r.Header, authStatus)
 	}
 	if authStatus {
