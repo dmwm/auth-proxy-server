@@ -215,6 +215,10 @@ func redirect(w http.ResponseWriter, r *http.Request) {
 	rmap, rules := RedirectRules(Config.Ingress)
 	for _, key := range rules {
 		rec := rmap[key]
+		if (r.URL.Path == "/" && rec.Path == "/") || r.URL.Path == "/index.html" {
+			staticContent(w, r)
+			return
+		}
 		// check that request URL path had ingress path with slash
 		if PathMatched(r.URL.Path, rec.Path, rec.Strict) {
 			if Config.Verbose > 0 {
