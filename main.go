@@ -123,7 +123,7 @@ func reverseProxy(targetURL string, w http.ResponseWriter, r *http.Request) {
 	r.URL.Scheme = url.Scheme
 	r.URL.User = url.User
 	if Config.Verbose > 0 {
-		log.Printf("redirect to url.Scheme=%s url.User=%s url.Host=%s", r.URL.Scheme, r.URL.User, r.URL.Host)
+		log.Printf("redirect to url.Scheme=%s url.User=%s url.Host=%s url.Path=%s", r.URL.Scheme, r.URL.User, r.URL.Host, r.URL.Path)
 	}
 	if url.User != nil {
 		// set basic authorization for provided user credentials
@@ -157,7 +157,7 @@ func reverseProxy(targetURL string, w http.ResponseWriter, r *http.Request) {
 	}
 	r.Header.Set("X-Forwarded-For", r.RemoteAddr)
 	r.Host = url.Host
-	if Config.Verbose > 0 {
+	if Config.Verbose > 1 {
 		log.Printf("proxy request: %+v\n", r)
 	}
 	// Set Referrer header
@@ -292,6 +292,8 @@ func staticContent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusNotFound)
+	msg := fmt.Sprintf("requested path '%s' not found", r.URL.Path)
+	w.Write([]byte(msg))
 }
 
 // setting handler function, i.e. it can be used to change server settings
