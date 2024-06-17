@@ -311,13 +311,13 @@ func findCN(subject string) (string, error) {
 func getUserData(r *http.Request) map[string]interface{} {
 	userData := make(map[string]interface{})
 	if r.TLS == nil {
-		if Config.Verbose > 0 {
+		if Config.Verbose > 2 {
 			log.Printf("HTTP request does not support TLS, %+v", r)
 		}
 		return userData
 	}
 	certs := r.TLS.PeerCertificates
-	if Config.Verbose > 0 {
+	if Config.Verbose > 2 {
 		log.Printf("found %d peer certificates in HTTP request", len(certs))
 		log.Printf("HTTP request %+v", r)
 		log.Printf("HTTP request TLS %+v", r.TLS)
@@ -328,7 +328,7 @@ func getUserData(r *http.Request) map[string]interface{} {
 			log.Println("x509RequestHandler tls: failed to parse certificate from server: " + err.Error())
 		}
 		if len(cert.UnhandledCriticalExtensions) > 0 {
-			if Config.Verbose > 0 {
+			if Config.Verbose > 2 {
 				log.Println("cert.UnhandledCriticalExtensions equal to", len(cert.UnhandledCriticalExtensions))
 			}
 			continue
@@ -344,11 +344,11 @@ func getUserData(r *http.Request) map[string]interface{} {
 			}
 			subjects = append(subjects, s)
 		}
-		if Config.Verbose > 0 {
+		if Config.Verbose > 2 {
 			log.Println("cert subjects", subjects)
 		}
 		rec, err := cric.FindUser(subjects)
-		if Config.Verbose > 0 {
+		if Config.Verbose > 1 {
 			log.Printf("found user %+v error=%v elapsed time %v\n", rec, err, time.Since(start))
 		}
 		if err == nil {
