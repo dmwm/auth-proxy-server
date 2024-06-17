@@ -220,6 +220,11 @@ func redirect(w http.ResponseWriter, r *http.Request) {
 			if Config.Verbose > 0 {
 				log.Printf("ingress request path %s, record path %s, service url %s, old path %s, new path %s\n", r.URL.Path, rec.Path, rec.ServiceURL, rec.OldPath, rec.NewPath)
 			}
+			if rec.ServiceURL == "" {
+				// if service url is not set we need to look-up static content from this server
+				staticContent(w, r)
+				return
+			}
 			url := srvURL(rec.ServiceURL)
 			if rec.OldPath != "" {
 				// replace old path to new one, e.g. /couchdb/_all_dbs => /_all_dbs
@@ -247,37 +252,42 @@ func redirect(w http.ResponseWriter, r *http.Request) {
 	if Config.TargetURL != "" {
 		reverseProxy(Config.TargetURL, w, r)
 	} else {
-		if Config.DocumentRoot != "" {
-			fname := fmt.Sprintf("%s%s", Config.DocumentRoot, r.URL.Path)
-			if strings.HasSuffix(fname, "css") {
-				w.Header().Set("Content-Type", "text/css")
-			} else if strings.HasSuffix(fname, "js") {
-				w.Header().Set("Content-Type", "application/javascript")
-			}
-			if r.URL.Path == "/" {
-				fname = fmt.Sprintf("%s/index.html", Config.DocumentRoot)
-			}
-			if _, err := os.Stat(fname); err == nil {
-				body, err := os.ReadFile(filepath.Clean(fname))
-				if err == nil {
-					data := []byte(body)
-					w.Write(data)
-					return
-				}
-			}
-		}
-		// use static page content if provided in configuration
-		if Config.StaticPage != "" {
-			tmpl := template.Must(template.ParseFiles(Config.StaticPage))
-			tmpl.Execute(w, "")
-			return
-		}
-
-		// prohibit access to main page
-		w.WriteHeader(http.StatusNotFound)
+		staticContent(w, r)
 		return
 	}
 	return
+}
+
+func staticContent(w http.ResponseWriter, r *http.Request) {
+	if Config.Verbose > 0 {
+		log.Printf("staticContent, path=%s\n", r.URL.Path)
+	}
+	if Config.DocumentRoot != "" {
+		fname := fmt.Sprintf("%s%s", Config.DocumentRoot, r.URL.Path)
+		if r.URL.Path == "/" || r.URL.Path == "" {
+			fname = fmt.Sprintf("%s/index.html", Config.DocumentRoot)
+		}
+		if strings.HasSuffix(fname, "css") {
+			w.Header().Set("Content-Type", "text/css")
+		} else if strings.HasSuffix(fname, "js") {
+			w.Header().Set("Content-Type", "application/javascript")
+		}
+		if _, err := os.Stat(fname); err == nil {
+			body, err := os.ReadFile(filepath.Clean(fname))
+			if err == nil {
+				data := []byte(body)
+				w.Write(data)
+				return
+			}
+		}
+	}
+	// use static page content if provided in configuration
+	if Config.StaticPage != "" {
+		tmpl := template.Must(template.ParseFiles(Config.StaticPage))
+		tmpl.Execute(w, "")
+		return
+	}
+	w.WriteHeader(http.StatusNotFound)
 }
 
 // setting handler function, i.e. it can be used to change server settings
