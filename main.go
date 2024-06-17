@@ -71,8 +71,11 @@ var NumLogicalCores int
 // CMSAuth structure to create CMS Auth headers
 var CMSAuth cmsauth.CMSAuth
 
-// version of the code
-var version string
+// gitVersion of the code shows git hash
+var gitVersion string
+
+// tagVersion of the code shows git tag
+var tagVersion string
 
 type transport struct {
 	http.RoundTripper
@@ -338,7 +341,7 @@ func metricsHandler(w http.ResponseWriter, r *http.Request) {
 func info() string {
 	goVersion := runtime.Version()
 	tstamp := time.Now().Format("2006-02-01")
-	return fmt.Sprintf("auth-proxy-server git=%s go=%s date=%s", version, goVersion, tstamp)
+	return fmt.Sprintf("auth-proxy-server tag=%s git=%s go=%s date=%s", tagVersion, gitVersion, goVersion, tstamp)
 }
 
 func main() {

@@ -1,10 +1,11 @@
-VERSION=`git rev-parse --short HEAD`
-#flags=-ldflags="-s -w -X main.version=${VERSION}"
+GITVERSION=`git rev-parse --short HEAD`
+VERSION=`git describe --tags`
+#flags=-ldflags="-s -w -X main.gitVersion=${GITVERSION} -X main.version=${VERBOSE}"
 OS := $(shell uname)
 ifeq ($(OS),Darwin)
-flags=-ldflags="-s -w -X main.version=${VERSION}"
+flags=-ldflags="-s -w -X main.gitVersion=${GITVERSION} -X main.tagVersion=${VERSION}"
 else
-flags=-ldflags="-s -w -X main.version=${VERSION} -extldflags -static"
+flags=-ldflags="-s -w -X main.gitVersion=${GITVERSION} -X main.tagVersion=${VERSION} -extldflags -static"
 endif
 
 all: build build_client build_token
