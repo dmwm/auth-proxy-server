@@ -77,6 +77,12 @@ var gitVersion string
 // tagVersion of the code shows git tag
 var tagVersion string
 
+// common set of ingress rule maps
+var _ingressMap map[string]Ingress
+
+// common set of ingress rules
+var _ingressRules []string
+
 type transport struct {
 	http.RoundTripper
 }
@@ -210,14 +216,31 @@ func srvURL(surl string) string {
 	return surl
 }
 
+// helper function to read ingress rules
+func readIngressRules() (map[string]Ingress, []string) {
+	var rmap map[string]Ingress
+	var rules []string
+	if len(Config.IngressFiles) > 0 {
+		rmap, rules = RedirectRulesFromFiles(Config.IngressFiles)
+	} else {
+		rmap, rules = RedirectRules(Config.Ingress)
+	}
+	if Config.Verbose > 0 {
+		log.Println("ingress paths", rules)
+		for key, item := range rmap {
+			log.Printf("%s: %+v\n", key, item)
+		}
+	}
+	return rmap, rules
+}
+
 // helper function to redirect HTTP requests based on configuration ingress rules
 func redirect(w http.ResponseWriter, r *http.Request) {
 	// get redirect rule map and rules (in reverse order)
 	// here the reverse order will provide /path/rse /path/aaa followed by /path, etc.
 	// such that we can match the /path as last reserve
-	rmap, rules := RedirectRules(Config.Ingress)
-	for _, key := range rules {
-		rec := rmap[key]
+	for _, key := range _ingressRules {
+		rec := _ingressMap[key]
 		if (r.URL.Path == "/" && rec.Path == "/") || r.URL.Path == "/index.html" {
 			staticContent(w, r)
 			return
@@ -404,6 +427,9 @@ func main() {
 
 	// read RootCAs once
 	_rootCAs = RootCAs()
+
+	// initialize ingress rules only once
+	_ingressMap, _ingressRules = readIngressRules()
 
 	// setup StartTime and metrics last update time
 	StartTime = time.Now()
