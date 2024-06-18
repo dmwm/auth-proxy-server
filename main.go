@@ -399,7 +399,7 @@ func main() {
 		Config.LogFile = logFile
 	}
 	if Config.Verbose > 0 {
-		log.Printf("%+v\n", Config)
+		log.Printf("%+v\n", Config.String())
 	}
 
 	// read RootCAs once
