@@ -11,9 +11,9 @@ require (
 	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/stretchr/testify v1.9.0
 	github.com/thomasdarimont/go-kc-example v0.0.0-20170529223628-e3951d8faa4c
-	github.com/vkuznet/auth-proxy-server/auth v0.0.0-20240615180935-b3980328e5b3
-	github.com/vkuznet/auth-proxy-server/cric v0.0.0-20240615180935-b3980328e5b3
-	github.com/vkuznet/auth-proxy-server/logging v0.0.0-20240615180935-b3980328e5b3
+	github.com/vkuznet/auth-proxy-server/auth v0.0.0-20240617185909-65578d8d9f96
+	github.com/vkuznet/auth-proxy-server/cric v0.0.0-20240617185909-65578d8d9f96
+	github.com/vkuznet/auth-proxy-server/logging v0.0.0-20240618105423-c0a381ed8be6
 	golang.org/x/crypto v0.24.0
 	golang.org/x/oauth2 v0.21.0
 )
