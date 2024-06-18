@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -465,13 +466,43 @@ func PathMatched(rurl, path string, strict bool) bool {
 	return matched
 }
 
-// helper function to parse ingress rules
+// RedirectRules provides redirect rules map by reading Config.Ingress items
 func RedirectRules(ingressRules []Ingress) (map[string]Ingress, []string) {
 	rmap := make(map[string]Ingress)
 	var rules []string
 	for _, rec := range ingressRules {
 		rules = append(rules, rec.Path)
 		rmap[rec.Path] = rec
+	}
+	// we should not sort rules, otherwise we break order of the rules which is important, e.g.
+	// /wmstats should point to /wmstats/index.html, while /wmstats/.* should go further
+	// therefore we can put ^/wmstats$ before ^/wmstats/.* in redirect rules
+	return rmap, rules
+}
+
+// RedirectRulesFromFiles provides redirect rules map by reading Config.IngressFiles
+func RedirectRulesFromFiles(ingressFiles []string) (map[string]Ingress, []string) {
+	rmap := make(map[string]Ingress)
+	var rules []string
+	for _, fname := range ingressFiles {
+		file, err := os.Open(fname)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer file.Close()
+		bytes, err := io.ReadAll(file)
+		if err != nil {
+			log.Fatal(err)
+		}
+		var ingressRules []Ingress
+		err = json.Unmarshal(bytes, &ingressRules)
+		if err != nil {
+			log.Fatal(err)
+		}
+		for _, rec := range ingressRules {
+			rules = append(rules, rec.Path)
+			rmap[rec.Path] = rec
+		}
 	}
 	// we should not sort rules, otherwise we break order of the rules which is important, e.g.
 	// /wmstats should point to /wmstats/index.html, while /wmstats/.* should go further
