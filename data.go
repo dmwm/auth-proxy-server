@@ -6,6 +6,9 @@ package main
 //
 
 import (
+	"encoding/json"
+	"fmt"
+
 	"github.com/shirou/gopsutil/load"
 	"github.com/shirou/gopsutil/net"
 	"github.com/shirou/gopsutil/process"
@@ -72,6 +75,15 @@ type Configuration struct {
 	XAuthCouchDBRoles    string `json:"X-Auth-CouchDB-Roles"`    // X-Auth-CouchDB-Roles field of HTTP request
 	XAuthCouchDBToken    string `json:"X-Auth-CouchDB-Token"`    // X-Auth-CouchDB-Token field of HTTP request
 
+}
+
+// String representation of Configuration object
+func (c Configuration) String() string {
+	data, err := json.MarshalIndent(c, "", "  ")
+	if err == nil {
+		return string(data)
+	}
+	return fmt.Sprintf("%+v", c)
 }
 
 // ServerSettings controls server parameters
