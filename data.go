@@ -48,6 +48,7 @@ type Configuration struct {
 	RedirectURL         string          `json:"redirect_url"`           // redirect auth url for proxy server
 	Verbose             int             `json:"verbose"`                // verbose output
 	Ingress             []Ingress       `json:"ingress"`                // incress section
+	IngressFiles        []string        `json:"ingress_files"`          // use ingress files for ingress rules
 	ServerCrt           string          `json:"server_cert"`            // server certificate
 	ServerKey           string          `json:"server_key"`             // server certificate
 	Hmac                string          `json:"hmac"`                   // cmsweb hmac file
