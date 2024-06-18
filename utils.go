@@ -200,7 +200,7 @@ func getServer(serverCrt, serverKey string, customVerify bool) (*http.Server, er
 	} else {
 		maxVer = tls.VersionTLS13
 	}
-	if Config.Verbose > 2 {
+	if Config.Verbose > 0 {
 		log.Printf("set tlsConfig with min=%d max=%d versions", minVer, maxVer)
 	}
 	cert, err := tls.LoadX509KeyPair(serverCrt, serverKey)
