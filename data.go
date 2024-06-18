@@ -7,7 +7,7 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
+	"log"
 
 	"github.com/shirou/gopsutil/load"
 	"github.com/shirou/gopsutil/net"
@@ -65,6 +65,7 @@ type Configuration struct {
 	Providers           []string        `json:"providers`               // list of JWKS providers
 	MinTLSVersion       string          `json:"minTLSVersion"`          // minimum TLS version
 	MaxTLSVersion       string          `json:"maxTLSVersion"`          // maximum TLS version
+	CipherSuites        string          `json:"cipher_suites"`          // use custom CipherSuites
 	InsecureSkipVerify  bool            `json:"insecureSkipVerify"`     // tls configuration option
 	LetsEncrypt         bool            `json:"lets_encrypt"`           // start LetsEncrypt HTTPs server
 	DomainNames         []string        `json:"domain_names"`           // list of domain names to use for LetsEncrypt
@@ -82,8 +83,10 @@ func (c Configuration) String() string {
 	data, err := json.MarshalIndent(c, "", "  ")
 	if err == nil {
 		return string(data)
+	} else {
+		log.Println("unable to marshal Configuration object", err)
 	}
-	return fmt.Sprintf("%+v", c)
+	return ""
 }
 
 // ServerSettings controls server parameters
