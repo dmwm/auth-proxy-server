@@ -77,7 +77,7 @@ func utcMsg(data []byte) string {
 	if UTC {
 		msg = fmt.Sprintf("[" + time.Now().UTC().String() + "] " + string(data))
 	} else {
-		msg = fmt.Sprintf("[" + time.Now().String() + "] " + string(data))
+		msg = fmt.Sprintf("[" + time.Now().Format(time.RFC3339Nano) + "] " + string(data))
 		//     msg = fmt.Sprintf("[" + time.Now().UTC().Format("2006-01-02T15:04:05.999Z") + " UTC] " + string(data))
 	}
 	return msg
