@@ -14,6 +14,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -158,6 +159,29 @@ func srvURL(surl string) string {
 	return surl
 }
 
+// helper function to print APS redirect rules from given config
+func printRules() {
+	var rmap map[string]Ingress
+	var rules []string
+	if len(Config.IngressFiles) > 0 {
+		rmap, rules = RedirectRulesFromFiles(Config.IngressFiles)
+	} else {
+		rmap, rules = RedirectRules(Config.Ingress)
+	}
+	sort.Strings(rules)
+	var maxLen int
+	for _, r := range rules {
+		if len(r) > maxLen {
+			maxLen = len(r)
+		}
+	}
+	for _, r := range rules {
+		if rule, ok := rmap[r]; ok {
+			fmt.Println(redirectRule(rule, maxLen))
+		}
+	}
+}
+
 // helper function to read ingress rules
 func readIngressRules() (map[string]Ingress, []string) {
 	var rmap map[string]Ingress
@@ -168,16 +192,26 @@ func readIngressRules() (map[string]Ingress, []string) {
 		rmap, rules = RedirectRules(Config.Ingress)
 	}
 	if Config.Verbose > 0 {
+		sort.Strings(rules)
+		var maxLen int
+		for _, r := range rules {
+			if len(r) > maxLen {
+				maxLen = len(r)
+			}
+		}
 		log.Println("ingress paths", rules)
 		for _, item := range rmap {
-			log.Println(redirectRule(item))
+			log.Println(redirectRule(item, maxLen))
 		}
 	}
 	return rmap, rules
 }
 
 // helper function to print human readable redirect rule
-func redirectRule(r Ingress) string {
+func redirectRule(r Ingress, maxLen int) string {
+	for i := len(r.Path); i < maxLen; i++ {
+		r.Path += " "
+	}
 	out := fmt.Sprintf("%s => %s/%s", r.Path, r.ServiceURL, r.NewPath)
 	if strings.HasPrefix(r.NewPath, "/") {
 		out = fmt.Sprintf("%s => %s%s", r.Path, r.ServiceURL, r.NewPath)
