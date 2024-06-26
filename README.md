@@ -36,9 +36,13 @@ The code is implemented as the following modules:
 - [cric.go](cric/cric.go) provides CMS CRIC service functionality
 - [data.go](data.go) holds all data structures used in the package
 - [logging.go](logging/logging.go) provides logging functionality
+- [iam.go](iam.go) module provides all necessary logic to handle IAM
+- [main.go](main.go) the main module
+- [metrics.go](metrics.go) Prometheus metrics module
 - [oauth.go](oauth.go) provides implementation of oathProxyServer
 - [redirect.go](redirect.go) provides logic of reverse proxy
 - [server.go](server.go) provides main APS server logic
+- [scitokens.go](scitokens.go) module provides support for [SciTokens](https://scitokens.org/)
 - [utils.go](utils.go) provides various utils used in a code
 - [x509.go](x509.go) provides implementation of x509ProxyServer
 
