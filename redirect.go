@@ -143,6 +143,9 @@ func reverseProxy(targetURL string, w http.ResponseWriter, r *http.Request) {
 		rw.Write([]byte(err.Error()))
 	}
 
+	// collect how much bytes each HTTP request has
+	DataIn += float64(r.ContentLength)
+
 	// ServeHttp is non blocking and uses a go routine under the hood
 	proxy.ServeHTTP(w, r)
 }

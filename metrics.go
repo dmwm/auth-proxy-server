@@ -16,6 +16,12 @@ import (
 	"github.com/shirou/gopsutil/process"
 )
 
+// DataIn represents total data (in bytes) going into APS
+var DataIn float64
+
+// DataOut represents total data (in bytes) going out from APS
+var DataOut float64
+
 // TotalGetRequests counts total number of GET requests received by the server
 var TotalGetRequests uint64
 
@@ -77,6 +83,8 @@ func metrics() Metrics {
 	if metrics.GetRequests+metrics.PostRequests > 0 {
 		metrics.RPSLogical = RPSLogical / float64(metrics.GetRequests+metrics.PostRequests)
 	}
+	metrics.DataIn = DataIn
+	metrics.DataOut = DataOut
 
 	// update time stamp
 	MetricsLastUpdateTime = time.Now()
@@ -196,6 +204,14 @@ func promMetrics() string {
 	out += fmt.Sprintf("# HELP %s_post_requests reports total number of HTTP POST requests\n", prefix)
 	out += fmt.Sprintf("# TYPE %s_post_requests counter\n", prefix)
 	out += fmt.Sprintf("%s_post_requests %v\n", prefix, data.PostRequests)
+
+	// data in/data out numbers
+	out += fmt.Sprintf("# HELP %s_data_in reports total number of bytes going into HTTP server\n", prefix)
+	out += fmt.Sprintf("# TYPE %s_data_in counter\n", prefix)
+	out += fmt.Sprintf("%s_data_in %v\n", prefix, data.DataIn)
+	out += fmt.Sprintf("# HELP %s_data_out reports total number of bytes going out of HTTP server\n", prefix)
+	out += fmt.Sprintf("# TYPE %s_data_out counter\n", prefix)
+	out += fmt.Sprintf("%s_data_out %v\n", prefix, data.DataOut)
 
 	// throughput, rps, rps physical cpu, rps logical cpu
 	out += fmt.Sprintf("# HELP %s_rps reports request per second average\n", prefix)
