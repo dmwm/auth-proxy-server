@@ -113,6 +113,8 @@ type Mem struct {
 type Metrics struct {
 	CPU               []float64               `json:"cpu"`               // cpu metrics from gopsutils
 	Connections       []net.ConnectionStat    `json:"conenctions"`       // connections metrics from gopsutils
+	DataIn            float64                 `json:"data_in"`           // data into APS (in bytes)
+	DataOut           float64                 `json:"data_out"`          // data out of APS (in bytes)
 	Load              load.AvgStat            `json:"load"`              // load metrics from gopsutils
 	Memory            Mem                     `json:"memory"`            // memory metrics from gopsutils
 	OpenFiles         []process.OpenFilesStat `json:"openFiles"`         // open files metrics from gopsutils
