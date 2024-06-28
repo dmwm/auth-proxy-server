@@ -58,8 +58,16 @@ func x509RequestHandler(w http.ResponseWriter, r *http.Request) {
 	if Config.Verbose > 1 {
 		printHTTPRequest(r, "cms headers")
 	}
+
+	// Use the custom response writer to capture number of bytes written back by BE
+	crw := &logging.CustomResponseWriter{ResponseWriter: w}
+	// collect DataOut once we process our request
+	defer func() {
+		DataOut += float64(crw.BytesWritten)
+	}()
+
 	// add LogRequest after we set cms headers in HTTP request
-	defer logging.LogRequest(w, r, start, "x509", &status, tstamp, 0)
+	defer logging.LogRequest(crw, r, start, "x509", &status, tstamp, 0)
 	if _, ok := userData["name"]; !ok {
 		log.Println("unauthorized access, user not found in CRIC DB")
 		status = http.StatusUnauthorized
@@ -73,11 +81,12 @@ func x509RequestHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println("x509RequestHandler", r.Header, authStatus)
 	}
 	if authStatus {
-		redirect(w, r)
+		redirect(crw, r)
 		return
 	}
 	status = http.StatusUnauthorized
-	w.WriteHeader(status)
+	crw.WriteHeader(status)
+
 }
 
 // helper function to start x509 proxy server

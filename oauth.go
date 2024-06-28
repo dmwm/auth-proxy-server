@@ -417,9 +417,16 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 		sessLock.Unlock()
 	}
 
+	// Use the custom response writer to capture number of bytes written back by BE
+	crw := &logging.CustomResponseWriter{ResponseWriter: w}
+	// collect DataOut once we process our request
+	defer func() {
+		DataOut += float64(crw.BytesWritten)
+	}()
+
 	attrs, err := checkAccessToken(r)
 	// add LogRequest after we set cms headers in HTTP request
-	defer logging.LogRequest(w, r, start, "CERN-SSO-OAuth2-OICD", &status, tstamp, 0)
+	defer logging.LogRequest(crw, r, start, "CERN-SSO-OAuth2-OICD", &status, tstamp, 0)
 	if err != nil {
 		// there is no proper authentication yet, redirect users to auth callback
 		aurl := OAuth2Config.AuthCodeURL(oauthState)
@@ -428,7 +435,7 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 			log.Println("auth redirect to", aurl)
 		}
 		status = http.StatusFound
-		http.Redirect(w, r, aurl, status)
+		http.Redirect(crw, r, aurl, status)
 		return
 	} else {
 		if Config.Verbose > 0 {
@@ -451,24 +458,24 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			msg := fmt.Sprintf("unable to refresh access token, %v", err)
 			status = http.StatusInternalServerError
-			http.Error(w, msg, status)
+			http.Error(crw, msg, status)
 			return
 		}
 		if Config.Verbose > 2 {
 			printJSON(tokenInfo, "new token info")
 		}
 		if !strings.Contains(strings.ToLower(r.Header.Get("Accept")), "json") {
-			w.Write([]byte(tokenInfo.String()))
+			crw.Write([]byte(tokenInfo.String()))
 			return
 		}
 		data, err := json.Marshal(tokenInfo)
 		if err != nil {
 			msg := fmt.Sprintf("unable to marshal token info, %v", err)
 			status = http.StatusInternalServerError
-			http.Error(w, msg, status)
+			http.Error(crw, msg, status)
 			return
 		}
-		w.Write(data)
+		crw.Write(data)
 		return
 	}
 	// if user wants to see token
@@ -503,7 +510,7 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 		sessLock.Unlock()
 		tokenInfo := auth.TokenInfo{AccessToken: token, RefreshToken: rtoken, AccessExpire: texp, RefreshExpire: rtexp, IDToken: token}
 		if !strings.Contains(strings.ToLower(r.Header.Get("Accept")), "json") {
-			w.Write([]byte(tokenInfo.String()))
+			crw.Write([]byte(tokenInfo.String()))
 			return
 		}
 		data, err := json.Marshal(tokenInfo)
@@ -513,7 +520,7 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, msg, status)
 			return
 		}
-		w.Write(data)
+		crw.Write(data)
 		return
 	}
 
@@ -527,7 +534,7 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				msg := fmt.Sprintf("unable to decode user data, %v", err)
 				status = http.StatusInternalServerError
-				http.Error(w, msg, status)
+				http.Error(crw, msg, status)
 				return
 			}
 		}
@@ -563,19 +570,19 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 			log.Printf("request headers %+v\n", r.Header)
 			msg := fmt.Sprintf("not authorized access")
 			status = http.StatusUnauthorized
-			http.Error(w, msg, status)
+			http.Error(crw, msg, status)
 			return
 		}
 	}
 
 	// for /auth path we simply return status ok
 	if r.URL.Path == fmt.Sprintf("%s/auth", Config.Base) {
-		w.WriteHeader(http.StatusOK)
+		crw.WriteHeader(http.StatusOK)
 		return
 	}
 
 	// redirect HTTP requests
-	redirect(w, r)
+	redirect(crw, r)
 }
 
 // oauth server provides reverse proxy functionality with
