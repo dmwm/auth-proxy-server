@@ -61,8 +61,9 @@ func x509RequestHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Use the custom response writer to capture number of bytes written back by BE
 	crw := &logging.CustomResponseWriter{ResponseWriter: w}
-	// collect DataOut once we process our request
+	// collect how much bytes we consume and write out with every HTTP request
 	defer func() {
+		DataIn += float64(r.ContentLength)
 		DataOut += float64(crw.BytesWritten)
 	}()
 
