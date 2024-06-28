@@ -240,6 +240,9 @@ func LogRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 	respHeader := w.Header()
 	//     dataMsg := fmt.Sprintf("[data: %v in %v out]", r.ContentLength, respHeader.Get("Content-Length"))
 	dataMsg := fmt.Sprintf("[data: %v in %v out]", r.ContentLength, bytesOut)
+	if customWriter, ok := w.(*CustomResponseWriter); ok {
+		dataMsg = fmt.Sprintf("[data: %v in %v out]", r.ContentLength, customWriter.BytesWritten)
+	}
 	referer := r.Referer()
 	if referer == "" {
 		referer = "-"
@@ -366,4 +369,17 @@ func userAgentName(agent string) string {
 		}
 	}
 	return strings.Join(parts, "/")
+}
+
+// CustomResponseWriter wraps http.ResponseWriter to capture the number of bytes written
+type CustomResponseWriter struct {
+	http.ResponseWriter
+	BytesWritten int
+}
+
+// Write captures the number of bytes written and calls the underlying Write method
+func (w *CustomResponseWriter) Write(data []byte) (int, error) {
+	bytesWritten, err := w.ResponseWriter.Write(data)
+	w.BytesWritten += bytesWritten
+	return bytesWritten, err
 }
