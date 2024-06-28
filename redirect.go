@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"compress/gzip"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -128,6 +129,18 @@ func reverseProxy(targetURL string, w http.ResponseWriter, r *http.Request) {
 		resp.Header.Set("Response-Proto", resp.Proto)
 		resp.Header.Set("Response-Time", time.Since(start).String())
 		resp.Header.Set("Response-Time-Seconds", fmt.Sprintf("%v", time.Since(start).Seconds()))
+
+		// If the response is gzipped, decompress it
+		if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
+			gzReader, err := gzip.NewReader(resp.Body)
+			if err != nil {
+				return err
+			}
+			defer gzReader.Close()
+			resp.Body = io.NopCloser(gzReader)
+			resp.Header.Del("Content-Encoding")
+			resp.Header.Del("Content-Length")
+		}
 		return nil
 	}
 	proxy.ErrorHandler = func(rw http.ResponseWriter, r *http.Request, err error) {
@@ -144,7 +157,25 @@ func reverseProxy(targetURL string, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// ServeHttp is non blocking and uses a go routine under the hood
-	proxy.ServeHTTP(w, r)
+	//     proxy.ServeHTTP(w, r)
+	proxy.ServeHTTP(newGzipResponseWriter(w), r)
+}
+
+// gzipResponseWriter wraps http.ResponseWriter to decompress gzip-encoded responses
+type gzipResponseWriter struct {
+	io.Writer
+	http.ResponseWriter
+}
+
+func (w *gzipResponseWriter) Write(b []byte) (int, error) {
+	return w.Writer.Write(b)
+}
+
+func newGzipResponseWriter(w http.ResponseWriter) *gzipResponseWriter {
+	return &gzipResponseWriter{
+		Writer:         w,
+		ResponseWriter: w,
+	}
 }
 
 // helper function to get random service url
