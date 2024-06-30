@@ -58,6 +58,18 @@ var TotalOAuthGetRequests uint64
 // TotalOAuthPostRequests counts total number of POST requests received by the server
 var TotalOAuthPostRequests uint64
 
+// TotalOAuthPutRequests counts total number of PUT requests received by the server
+var TotalOAuthPutRequests uint64
+
+// TotalOAuthDeleteRequests counts total number of DELETE requests received by the server
+var TotalOAuthDeleteRequests uint64
+
+// TotalOAuthHeadRequests counts total number of HEAD requests received by the server
+var TotalOAuthHeadRequests uint64
+
+// TotalOAuthRequests counts total number of all requests received by the server
+var TotalOAuthRequests uint64
+
 // AuthTokenURL holds url for token authentication
 var AuthTokenURL string
 
@@ -386,10 +398,16 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 	// increment GET/POST counters
 	if r.Method == "GET" {
 		atomic.AddUint64(&TotalOAuthGetRequests, 1)
-	}
-	if r.Method == "POST" {
+	} else if r.Method == "POST" {
 		atomic.AddUint64(&TotalOAuthPostRequests, 1)
+	} else if r.Method == "PUT" {
+		atomic.AddUint64(&TotalOAuthPostRequests, 1)
+	} else if r.Method == "DELETE" {
+		atomic.AddUint64(&TotalOAuthDeleteRequests, 1)
+	} else if r.Method == "HEAD" {
+		atomic.AddUint64(&TotalOAuthHeadRequests, 1)
 	}
+	atomic.AddUint64(&TotalOAuthRequests, 1)
 	defer getRPS(start)
 
 	status := http.StatusOK
@@ -421,8 +439,8 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 	crw := &logging.CustomResponseWriter{ResponseWriter: w}
 	// collect how much bytes we consume and write out with every HTTP request
 	defer func() {
-		DataIn += float64(r.ContentLength)
-		DataOut += float64(crw.BytesWritten)
+		DataIn += float64(r.ContentLength) / float64(TotalOAuthRequests)
+		DataOut += float64(crw.BytesWritten) / float64(TotalOAuthRequests)
 	}()
 
 	attrs, err := checkAccessToken(r)

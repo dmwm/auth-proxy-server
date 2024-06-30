@@ -24,16 +24,34 @@ var TotalX509GetRequests uint64
 // TotalX509PostRequests counts total number of POST requests received by the server
 var TotalX509PostRequests uint64
 
+// TotalX509PutRequests counts total number of PUT requests received by the server
+var TotalX509PutRequests uint64
+
+// TotalX509HeadRequests counts total number of HEAD requests received by the server
+var TotalX509HeadRequests uint64
+
+// TotalX509DeleteRequests counts total number of DELETE requests received by the server
+var TotalX509DeleteRequests uint64
+
+// TotalX509Requests counts total number of all requests received by the server
+var TotalX509Requests uint64
+
 // x509RequestHandler handle requests for x509 clients
 func x509RequestHandler(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
-	// increment GET/POST counters
+	// increment requests counters
 	if r.Method == "GET" {
 		atomic.AddUint64(&TotalX509GetRequests, 1)
-	}
-	if r.Method == "POST" {
+	} else if r.Method == "POST" {
 		atomic.AddUint64(&TotalX509PostRequests, 1)
+	} else if r.Method == "PUT" {
+		atomic.AddUint64(&TotalX509PutRequests, 1)
+	} else if r.Method == "DELETE" {
+		atomic.AddUint64(&TotalX509DeleteRequests, 1)
+	} else if r.Method == "HEAD" {
+		atomic.AddUint64(&TotalX509HeadRequests, 1)
 	}
+	atomic.AddUint64(&TotalX509Requests, 1)
 	defer getRPS(start)
 
 	// check if user provides valid credentials
@@ -63,8 +81,8 @@ func x509RequestHandler(w http.ResponseWriter, r *http.Request) {
 	crw := &logging.CustomResponseWriter{ResponseWriter: w}
 	// collect how much bytes we consume and write out with every HTTP request
 	defer func() {
-		DataIn += float64(r.ContentLength)
-		DataOut += float64(crw.BytesWritten)
+		DataIn += float64(r.ContentLength) / float64(TotalX509Requests)
+		DataOut += float64(crw.BytesWritten) / float64(TotalX509Requests)
 	}()
 
 	// add LogRequest after we set cms headers in HTTP request

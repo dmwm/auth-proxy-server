@@ -28,6 +28,15 @@ var TotalGetRequests uint64
 // TotalPostRequests counts total number of POST requests received by the server
 var TotalPostRequests uint64
 
+// TotalPutRequests counts total number of PUT requests received by the server
+var TotalPutRequests uint64
+
+// TotalDeleteRequests counts total number of DELETE requests received by the server
+var TotalDeleteRequests uint64
+
+// TotalHeadRequests counts total number of HEAD requests received by the server
+var TotalHeadRequests uint64
+
 // MetricsLastUpdateTime keeps track of last update time of the metrics
 var MetricsLastUpdateTime time.Time
 
@@ -68,20 +77,33 @@ func metrics() Metrics {
 		}
 	}
 	metrics.Uptime = time.Since(StartTime).Seconds()
+
 	metrics.GetX509Requests = TotalX509GetRequests
 	metrics.PostX509Requests = TotalX509PostRequests
+	metrics.PutX509Requests = TotalX509PutRequests
+	metrics.DeleteX509Requests = TotalX509DeleteRequests
+	metrics.HeadX509Requests = TotalX509HeadRequests
+
 	metrics.GetOAuthRequests = TotalOAuthGetRequests
 	metrics.PostOAuthRequests = TotalOAuthPostRequests
+	metrics.PutOAuthRequests = TotalOAuthPutRequests
+	metrics.DeleteOAuthRequests = TotalOAuthDeleteRequests
+	metrics.HeadOAuthRequests = TotalOAuthHeadRequests
+
 	metrics.GetRequests = metrics.GetX509Requests + metrics.GetOAuthRequests
 	metrics.PostRequests = metrics.PostX509Requests + metrics.PostOAuthRequests
-	if (metrics.GetRequests + metrics.PostRequests) > 0 {
-		metrics.RPS = RPS / float64(metrics.GetRequests+metrics.PostRequests)
+	metrics.PutRequests = metrics.PutX509Requests + metrics.PutOAuthRequests
+	metrics.DeleteRequests = metrics.DeleteX509Requests + metrics.DeleteOAuthRequests
+	metrics.HeadRequests = metrics.HeadX509Requests + metrics.HeadOAuthRequests
+
+	if (metrics.GetRequests + metrics.PostRequests + metrics.PutRequests + metrics.DeleteRequests + metrics.HeadRequests) > 0 {
+		metrics.RPS = RPS / float64(metrics.GetRequests+metrics.PostRequests+metrics.PutRequests+metrics.DeleteRequests+metrics.HeadRequests)
 	}
-	if metrics.GetRequests+metrics.PostRequests > 0 {
-		metrics.RPSPhysical = RPSPhysical / float64(metrics.GetRequests+metrics.PostRequests)
+	if (metrics.GetRequests + metrics.PostRequests + metrics.PutRequests + metrics.DeleteRequests + metrics.HeadRequests) > 0 {
+		metrics.RPSPhysical = RPSPhysical / float64(metrics.GetRequests+metrics.PostRequests+metrics.PutRequests+metrics.DeleteRequests+metrics.HeadRequests)
 	}
-	if metrics.GetRequests+metrics.PostRequests > 0 {
-		metrics.RPSLogical = RPSLogical / float64(metrics.GetRequests+metrics.PostRequests)
+	if (metrics.GetRequests + metrics.PostRequests + metrics.PutRequests + metrics.DeleteRequests + metrics.HeadRequests) > 0 {
+		metrics.RPSLogical = RPSLogical / float64(metrics.GetRequests+metrics.PostRequests+metrics.PutRequests+metrics.DeleteRequests+metrics.HeadRequests)
 	}
 	metrics.DataIn = DataIn
 	metrics.DataOut = DataOut
@@ -185,31 +207,70 @@ func promMetrics() string {
 	out += fmt.Sprintf("# HELP %s_get_x509_requests reports total number of X509 HTTP GET requests\n", prefix)
 	out += fmt.Sprintf("# TYPE %s_get_x509_requests counter\n", prefix)
 	out += fmt.Sprintf("%s_get_x509_requests %v\n", prefix, data.GetX509Requests)
+
 	out += fmt.Sprintf("# HELP %s_post_x509_requests reports total number of X509 HTTP POST requests\n", prefix)
 	out += fmt.Sprintf("# TYPE %s_post_x509_requests counter\n", prefix)
 	out += fmt.Sprintf("%s_post_x509_requests %v\n", prefix, data.PostX509Requests)
+
+	out += fmt.Sprintf("# HELP %s_put_x509_requests reports total number of X509 HTTP PUT requests\n", prefix)
+	out += fmt.Sprintf("# TYPE %s_put_x509_requests counter\n", prefix)
+	out += fmt.Sprintf("%s_put_x509_requests %v\n", prefix, data.PutX509Requests)
+
+	out += fmt.Sprintf("# HELP %s_delete_x509_requests reports total number of X509 HTTP DELETE requests\n", prefix)
+	out += fmt.Sprintf("# TYPE %s_delete_x509_requests counter\n", prefix)
+	out += fmt.Sprintf("%s_delete_x509_requests %v\n", prefix, data.DeleteX509Requests)
+
+	out += fmt.Sprintf("# HELP %s_head_x509_requests reports total number of X509 HTTP HEAD requests\n", prefix)
+	out += fmt.Sprintf("# TYPE %s_head_x509_requests counter\n", prefix)
+	out += fmt.Sprintf("%s_head_x509_requests %v\n", prefix, data.HeadX509Requests)
 
 	// oauth requests
 	out += fmt.Sprintf("# HELP %s_get_oauth_requests reports total number of OAuth HTTP GET requests\n", prefix)
 	out += fmt.Sprintf("# TYPE %s_get_oauth_requests counter\n", prefix)
 	out += fmt.Sprintf("%s_get_oauth_requests %v\n", prefix, data.GetOAuthRequests)
+
 	out += fmt.Sprintf("# HELP %s_post_oauth_requests reports total number of OAuth HTTP POST requests\n", prefix)
 	out += fmt.Sprintf("# TYPE %s_post_oauth_requests counter\n", prefix)
 	out += fmt.Sprintf("%s_post_oauth_requests %v\n", prefix, data.PostOAuthRequests)
+
+	out += fmt.Sprintf("# HELP %s_put_oauth_requests reports total number of OAuth HTTP PUT requests\n", prefix)
+	out += fmt.Sprintf("# TYPE %s_put_oauth_requests counter\n", prefix)
+	out += fmt.Sprintf("%s_put_oauth_requests %v\n", prefix, data.PutOAuthRequests)
+
+	out += fmt.Sprintf("# HELP %s_delete_oauth_requests reports total number of OAuth HTTP DELETE requests\n", prefix)
+	out += fmt.Sprintf("# TYPE %s_delete_oauth_requests counter\n", prefix)
+	out += fmt.Sprintf("%s_delete_oauth_requests %v\n", prefix, data.DeleteOAuthRequests)
+
+	out += fmt.Sprintf("# HELP %s_head_oauth_requests reports total number of OAuth HTTP HEAD requests\n", prefix)
+	out += fmt.Sprintf("# TYPE %s_head_oauth_requests counter\n", prefix)
+	out += fmt.Sprintf("%s_head_oauth_requests %v\n", prefix, data.HeadOAuthRequests)
 
 	// total requests
 	out += fmt.Sprintf("# HELP %s_get_requests reports total number of HTTP GET requests\n", prefix)
 	out += fmt.Sprintf("# TYPE %s_get_requests counter\n", prefix)
 	out += fmt.Sprintf("%s_get_requests %v\n", prefix, data.GetRequests)
+
 	out += fmt.Sprintf("# HELP %s_post_requests reports total number of HTTP POST requests\n", prefix)
 	out += fmt.Sprintf("# TYPE %s_post_requests counter\n", prefix)
 	out += fmt.Sprintf("%s_post_requests %v\n", prefix, data.PostRequests)
 
+	out += fmt.Sprintf("# HELP %s_put_requests reports total number of HTTP PUT requests\n", prefix)
+	out += fmt.Sprintf("# TYPE %s_put_requests counter\n", prefix)
+	out += fmt.Sprintf("%s_put_requests %v\n", prefix, data.PutRequests)
+
+	out += fmt.Sprintf("# HELP %s_delete_requests reports total number of HTTP DELETE requests\n", prefix)
+	out += fmt.Sprintf("# TYPE %s_delete_requests counter\n", prefix)
+	out += fmt.Sprintf("%s_delete_requests %v\n", prefix, data.DeleteRequests)
+
+	out += fmt.Sprintf("# HELP %s_head_requests reports total number of HTTP HEAD requests\n", prefix)
+	out += fmt.Sprintf("# TYPE %s_head_requests counter\n", prefix)
+	out += fmt.Sprintf("%s_head_requests %v\n", prefix, data.HeadRequests)
+
 	// data in/data out numbers
-	out += fmt.Sprintf("# HELP %s_data_in reports total number of bytes going into HTTP server\n", prefix)
+	out += fmt.Sprintf("# HELP %s_data_in reports average number of bytes going into HTTP server\n", prefix)
 	out += fmt.Sprintf("# TYPE %s_data_in counter\n", prefix)
 	out += fmt.Sprintf("%s_data_in %v\n", prefix, data.DataIn)
-	out += fmt.Sprintf("# HELP %s_data_out reports total number of bytes going out of HTTP server\n", prefix)
+	out += fmt.Sprintf("# HELP %s_data_out reports average number of bytes going out of HTTP server\n", prefix)
 	out += fmt.Sprintf("# TYPE %s_data_out counter\n", prefix)
 	out += fmt.Sprintf("%s_data_out %v\n", prefix, data.DataOut)
 

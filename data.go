@@ -111,24 +111,33 @@ type Mem struct {
 
 // Metrics provide various metrics about our server
 type Metrics struct {
-	CPU               []float64               `json:"cpu"`               // cpu metrics from gopsutils
-	Connections       []net.ConnectionStat    `json:"conenctions"`       // connections metrics from gopsutils
-	DataIn            float64                 `json:"data_in"`           // data into APS (in bytes)
-	DataOut           float64                 `json:"data_out"`          // data out of APS (in bytes)
-	Load              load.AvgStat            `json:"load"`              // load metrics from gopsutils
-	Memory            Mem                     `json:"memory"`            // memory metrics from gopsutils
-	OpenFiles         []process.OpenFilesStat `json:"openFiles"`         // open files metrics from gopsutils
-	GoRoutines        uint64                  `json:"goroutines"`        // total number of go routines at run-time
-	Uptime            float64                 `json:"uptime"`            // uptime of the server
-	GetX509Requests   uint64                  `json:"x509GetRequests"`   // total number of get x509 requests
-	PostX509Requests  uint64                  `json:"x509PostRequests"`  // total number of post X509 requests
-	GetOAuthRequests  uint64                  `json:"oAuthGetRequests"`  // total number of get requests form OAuth server
-	PostOAuthRequests uint64                  `json:"oAuthPostRequests"` // total number of post requests from OAuth server
-	GetRequests       uint64                  `json:"getRequests"`       // total number of get requests across all services
-	PostRequests      uint64                  `json:"postRequests"`      // total number of post requests across all services
-	RPS               float64                 `json:"rps"`               // throughput req/sec
-	RPSPhysical       float64                 `json:"rpsPhysical"`       // throughput req/sec using physical cpu
-	RPSLogical        float64                 `json:"rpsLogical"`        // throughput req/sec using logical cpu
+	CPU                 []float64               `json:"cpu"`                 // cpu metrics from gopsutils
+	Connections         []net.ConnectionStat    `json:"conenctions"`         // connections metrics from gopsutils
+	DataIn              float64                 `json:"data_in"`             // data into APS (in bytes)
+	DataOut             float64                 `json:"data_out"`            // data out of APS (in bytes)
+	Load                load.AvgStat            `json:"load"`                // load metrics from gopsutils
+	Memory              Mem                     `json:"memory"`              // memory metrics from gopsutils
+	OpenFiles           []process.OpenFilesStat `json:"openFiles"`           // open files metrics from gopsutils
+	GoRoutines          uint64                  `json:"goroutines"`          // total number of go routines at run-time
+	Uptime              float64                 `json:"uptime"`              // uptime of the server
+	GetX509Requests     uint64                  `json:"x509GetRequests"`     // total number of get x509 requests
+	PostX509Requests    uint64                  `json:"x509PostRequests"`    // total number of post X509 requests
+	PutX509Requests     uint64                  `json:"x509PutRequests"`     // total number of put X509 requests
+	DeleteX509Requests  uint64                  `json:"x509DeleteRequests"`  // total number of delete X509 requests
+	HeadX509Requests    uint64                  `json:"x509HeadRequests"`    // total number of head X509 requests
+	GetOAuthRequests    uint64                  `json:"oAuthGetRequests"`    // total number of get requests form OAuth server
+	PostOAuthRequests   uint64                  `json:"oAuthPostRequests"`   // total number of post requests from OAuth server
+	PutOAuthRequests    uint64                  `json:"oAuthPutRequests"`    // total number of put requests from OAuth server
+	DeleteOAuthRequests uint64                  `json:"oAuthDeleteRequests"` // total number of delete requests from OAuth server
+	HeadOAuthRequests   uint64                  `json:"oAuthHeadRequests"`   // total number of head requests from OAuth server
+	GetRequests         uint64                  `json:"getRequests"`         // total number of get requests across all services
+	PostRequests        uint64                  `json:"postRequests"`        // total number of post requests across all services
+	PutRequests         uint64                  `json:"putRequests"`         // total number of put requests across all services
+	DeleteRequests      uint64                  `json:"deleteRequests"`      // total number of delete requests across all services
+	HeadRequests        uint64                  `json:"headRequests"`        // total number of head requests across all services
+	RPS                 float64                 `json:"rps"`                 // throughput req/sec
+	RPSPhysical         float64                 `json:"rpsPhysical"`         // throughput req/sec using physical cpu
+	RPSLogical          float64                 `json:"rpsLogical"`          // throughput req/sec using logical cpu
 }
 
 // ScitokensConfig represents configuration of scitokens service
