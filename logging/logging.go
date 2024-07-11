@@ -263,7 +263,6 @@ func LogRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 	refMsg := fmt.Sprintf("[ref: \"%v\" \"%v\"]", ref, r.Header.Get("User-Agent"))
 	respTime := "0"
 	if respHeader.Get("Response-Time") != "" {
-		//         respTime = fmt.Sprintf("%s", respHeader.Get("Response-Time"))
 		if seconds, err := parseHumanReadableTime(respHeader.Get("Response-Time")); err == nil {
 			respTime = fmt.Sprintf("%f", seconds)
 		}
@@ -273,8 +272,15 @@ func LogRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 	if err != nil {
 		uri = r.RequestURI
 	}
-	log.Printf("%s %d %s %s %s %s %s %s %s\n", r.Proto, *status, r.Method, uri, dataMsg, addr, authMsg, refMsg, respMsg)
-	//     log.Printf("%s %s %s %s %d %s %s %s %s\n", addr, r.Method, uri, r.Proto, *status, dataMsg, authMsg, refMsg, respMsg)
+	statusCode := *status
+	if len(w.Header()["Response-Status-Code"]) > 0 {
+		// if status code was set by reverse proxy
+		scode := w.Header()["Response-Status-Code"][0]
+		if c, err := strconv.Atoi(scode); err == nil {
+			statusCode = c
+		}
+	}
+	log.Printf("%s %d %s %s %s %s %s %s %s\n", r.Proto, statusCode, r.Method, uri, dataMsg, addr, authMsg, refMsg, respMsg)
 	if CMSMonitType == "" || CMSMonitProducer == "" {
 		return
 	}
