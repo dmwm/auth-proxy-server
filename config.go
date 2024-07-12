@@ -82,5 +82,23 @@ func parseConfig(configFile string) error {
 	if Config.IAMBatchSize == 0 {
 		Config.IAMBatchSize = 100
 	}
+	if Config.KeepAlive {
+		if Config.MaxIdleConns == 0 {
+			Config.MaxIdleConns = 100
+		}
+		if Config.MaxIdleConnsPerHost == 0 {
+			Config.MaxIdleConnsPerHost = 100
+		}
+		if Config.IdleConnTimeout == 0 {
+			Config.IdleConnTimeout = 90
+		}
+		if Config.KeepAliveTimeout == 0 {
+			Config.KeepAliveTimeout = 30
+		}
+		if Config.TLSHandshakeTimeout == 0 {
+			Config.TLSHandshakeTimeout = 10
+		}
+
+	}
 	return nil
 }
