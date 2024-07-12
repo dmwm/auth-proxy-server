@@ -1,6 +1,6 @@
 module github.com/dmwm/auth-proxy-server
 
-go 1.22.4
+go 1.22.5
 
 require (
 	github.com/coreos/go-oidc v2.2.1+incompatible
@@ -11,10 +11,10 @@ require (
 	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/stretchr/testify v1.9.0
 	github.com/thomasdarimont/go-kc-example v0.0.0-20170529223628-e3951d8faa4c
-	github.com/vkuznet/auth-proxy-server/auth v0.0.0-20240626173509-dcaa4cd30046
-	github.com/vkuznet/auth-proxy-server/cric v0.0.0-20240628130000-bb844cc400e4
-	github.com/vkuznet/auth-proxy-server/logging v0.0.0-20240628124930-67620c8cb352
-	golang.org/x/crypto v0.24.0
+	github.com/vkuznet/auth-proxy-server/auth v0.0.0-20240711155522-6c486c7aeb29
+	github.com/vkuznet/auth-proxy-server/cric v0.0.0-20240711155522-6c486c7aeb29
+	github.com/vkuznet/auth-proxy-server/logging v0.0.0-20240711155522-6c486c7aeb29
+	golang.org/x/crypto v0.25.0
 	golang.org/x/oauth2 v0.21.0
 )
 
@@ -32,8 +32,8 @@ require (
 	github.com/vkuznet/x509proxy v0.0.0-20210801171832-e47b94db99b6 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 	golang.org/x/net v0.23.0 // indirect
-	golang.org/x/sys v0.21.0 // indirect
-	golang.org/x/term v0.21.0 // indirect
+	golang.org/x/sys v0.22.0 // indirect
+	golang.org/x/term v0.22.0 // indirect
 	golang.org/x/text v0.16.0 // indirect
 	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
