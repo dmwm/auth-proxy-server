@@ -175,7 +175,6 @@ func reverseProxy(targetURL string, w http.ResponseWriter, r *http.Request) {
 			return err
 		}
 		buf := bytes.NewBuffer(data)
-		buf.Write(data)
 		resp.Body = io.NopCloser(buf)
 
 		return nil
