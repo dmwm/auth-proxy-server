@@ -68,8 +68,16 @@ type Configuration struct {
 	MaxTLSVersion       string          `json:"maxTLSVersion"`          // maximum TLS version
 	CipherSuites        string          `json:"cipher_suites"`          // use custom CipherSuites
 	InsecureSkipVerify  bool            `json:"insecureSkipVerify"`     // tls configuration option
-	LetsEncrypt         bool            `json:"lets_encrypt"`           // start LetsEncrypt HTTPs server
-	DomainNames         []string        `json:"domain_names"`           // list of domain names to use for LetsEncrypt
+
+	KeepAlive           bool `json:"keepAlive"`           // keep alive for http proxy transport
+	KeepAliveTimeout    int  `json:"keepAliveTimeout"`    // keep alive timeout
+	IdleConnTimeout     int  `json:"idleConnTimeout"`     // idle connection timeout
+	TLSHandshakeTimeout int  `json:"tlsHandshakeTimeout"` // tls handshake timeout
+	MaxIdleConns        int  `json:"maxIdleConnections"`  // number of max idle connections
+	MaxIdleConnsPerHost int  `json:"maxIdleConnsPerHost"` // number of max idle connections
+
+	LetsEncrypt bool     `json:"lets_encrypt"` // start LetsEncrypt HTTPs server
+	DomainNames []string `json:"domain_names"` // list of domain names to use for LetsEncrypt
 
 	// CouchDB headers, see
 	// https://docs.couchdb.org/en/3.1.2/api/server/authn.html#proxy-authentication
