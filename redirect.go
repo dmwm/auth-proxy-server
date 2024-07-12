@@ -10,6 +10,7 @@ import (
 	"io"
 	"log"
 	"math/rand"
+	"net"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -61,6 +62,20 @@ func reverseProxy(targetURL string, w http.ResponseWriter, r *http.Request) {
 
 	// create the reverse proxy
 	proxy := httputil.NewSingleHostReverseProxy(url)
+
+	// make additional http transport if we requested to have keep alive
+	if Config.KeepAlive {
+		proxy.Transport = &http.Transport{
+			MaxIdleConns:        Config.MaxIdleConns,
+			MaxIdleConnsPerHost: Config.MaxIdleConnsPerHost,
+			IdleConnTimeout:     time.Duration(Config.IdleConnTimeout) * time.Second,
+			DialContext: (&net.Dialer{
+				Timeout:   time.Duration(Config.KeepAliveTimeout) * time.Second,
+				KeepAlive: time.Duration(Config.KeepAliveTimeout) * time.Second,
+			}).DialContext,
+			TLSHandshakeTimeout: time.Duration(Config.TLSHandshakeTimeout) * time.Second,
+		}
+	}
 
 	// set custom transport to capture size of response body
 	//     proxy.Transport = &transport{http.DefaultTransport}
@@ -119,7 +134,7 @@ func reverseProxy(targetURL string, w http.ResponseWriter, r *http.Request) {
 	// use custom modify response function to setup response headers
 	proxy.ModifyResponse = func(resp *http.Response) error {
 		if Config.Verbose > 1 {
-			log.Println("proxy ModifyResponse")
+			log.Printf("proxy ModifyResponse: %+v", resp)
 		}
 		if Config.XContentTypeOptions != "" {
 			resp.Header.Set("X-Content-Type-Options", Config.XContentTypeOptions)
@@ -130,17 +145,39 @@ func reverseProxy(targetURL string, w http.ResponseWriter, r *http.Request) {
 		resp.Header.Set("Response-Time", time.Since(start).String())
 		resp.Header.Set("Response-Time-Seconds", fmt.Sprintf("%v", time.Since(start).Seconds()))
 
-		// If the response is gzipped, decompress it
+		// Set the status code from the backend response
+		w.WriteHeader(resp.StatusCode)
+
+		// Copy headers from the backend response
+		for k, v := range resp.Header {
+			w.Header()[k] = v
+		}
+		// create gzip reader if response is in gzip data-format
+		body := resp.Body
+		defer resp.Body.Close()
 		if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
-			gzReader, err := gzip.NewReader(resp.Body)
+			if Config.Verbose > 1 {
+				log.Println("### use gzip.NewReader to read from back-end response")
+			}
+			reader, err := gzip.NewReader(resp.Body)
 			if err != nil {
 				return err
 			}
-			defer gzReader.Close()
-			resp.Body = io.NopCloser(gzReader)
-			resp.Header.Del("Content-Encoding")
-			resp.Header.Del("Content-Length")
+			body = GzipReader{reader, resp.Body}
+		} else {
+			if Config.Verbose > 1 {
+				log.Println("### use plain resp.Body to read from back-end response")
+			}
 		}
+		// we need to copy the data sent from BE server back to the client
+		data, err := io.ReadAll(body)
+		if err != nil {
+			return err
+		}
+		buf := bytes.NewBuffer(data)
+		buf.Write(data)
+		resp.Body = io.NopCloser(buf)
+
 		return nil
 	}
 	proxy.ErrorHandler = func(rw http.ResponseWriter, r *http.Request, err error) {
@@ -157,25 +194,18 @@ func reverseProxy(targetURL string, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// ServeHttp is non blocking and uses a go routine under the hood
-	//     proxy.ServeHTTP(w, r)
-	proxy.ServeHTTP(newGzipResponseWriter(w), r)
+	proxy.ServeHTTP(w, r)
 }
 
-// gzipResponseWriter wraps http.ResponseWriter to decompress gzip-encoded responses
-type gzipResponseWriter struct {
-	io.Writer
-	http.ResponseWriter
+// GzipReader struct to handle GZip'ed content of HTTP requests
+type GzipReader struct {
+	*gzip.Reader
+	io.Closer
 }
 
-func (w *gzipResponseWriter) Write(b []byte) (int, error) {
-	return w.Writer.Write(b)
-}
-
-func newGzipResponseWriter(w http.ResponseWriter) *gzipResponseWriter {
-	return &gzipResponseWriter{
-		Writer:         w,
-		ResponseWriter: w,
-	}
+// Close function closes gzip reader
+func (gz GzipReader) Close() error {
+	return gz.Closer.Close()
 }
 
 // helper function to get random service url
