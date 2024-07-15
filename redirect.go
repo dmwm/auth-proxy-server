@@ -149,9 +149,9 @@ func reverseProxy(targetURL string, w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(resp.StatusCode)
 
 		// Copy headers from the backend response
-		for k, v := range resp.Header {
-			w.Header()[k] = v
-		}
+		//         for k, v := range resp.Header {
+		//             w.Header()[k] = v
+		//         }
 		// create gzip reader if response is in gzip data-format
 		body := resp.Body
 		defer resp.Body.Close()
