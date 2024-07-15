@@ -399,6 +399,7 @@ func getUserData(r *http.Request) map[string]interface{} {
 			userData["email"] = cert.EmailAddresses
 			userData["roles"] = rec.Roles
 			userData["dn"] = rec.DN
+			userData["dns"] = rec.DNs
 			break
 		} else {
 			log.Println(err)
