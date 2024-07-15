@@ -10,7 +10,6 @@ import (
 	"io"
 	"log"
 	"math/rand"
-	"mime"
 	"net"
 	"net/http"
 	"net/http/httputil"
@@ -147,48 +146,52 @@ func reverseProxy(targetURL string, w http.ResponseWriter, r *http.Request) {
 		resp.Header.Set("Response-Time-Seconds", fmt.Sprintf("%v", time.Since(start).Seconds()))
 
 		// Set the status code from the backend response
-		w.WriteHeader(resp.StatusCode)
+		//         w.WriteHeader(resp.StatusCode)
 
 		// Copy headers from the backend response
-		for k, v := range resp.Header {
-			w.Header()[k] = v
-		}
+		//         for k, v := range resp.Header {
+		//             w.Header()[k] = v
+		//         }
 
 		// Check the Content-Type header and set it correctly if necessary
 		//         if resp.Header.Get("Content-Type") == "" || strings.Contains(r.URL.Path, "wmstats") {
-		if strings.Contains(r.URL.Path, "wmstats") {
-			ext := filepath.Ext(resp.Request.URL.Path)
-			mimeType := mime.TypeByExtension(ext)
-			log.Println("### path=", resp.Request.URL.Path, ext, mimeType)
-			if mimeType != "" {
-				resp.Header.Set("Content-Type", mimeType)
+		/*
+			if strings.Contains(r.URL.Path, "wmstats") {
+				ext := filepath.Ext(resp.Request.URL.Path)
+				mimeType := mime.TypeByExtension(ext)
+				log.Println("### path=", resp.Request.URL.Path, ext, mimeType)
+				if mimeType != "" {
+					resp.Header.Set("Content-Type", mimeType)
+				}
 			}
-		}
+		*/
 
 		// create gzip reader if response is in gzip data-format
-		body := resp.Body
-		defer resp.Body.Close()
-		if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
-			if Config.Verbose > 1 {
-				log.Println("### use gzip.NewReader to read from back-end response")
+		/*
+			body := resp.Body
+			defer resp.Body.Close()
+			if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
+				if Config.Verbose > 1 {
+					log.Println("### use gzip.NewReader to read from back-end response")
+				}
+				reader, err := gzip.NewReader(resp.Body)
+				if err != nil {
+					return err
+				}
+				body = GzipReader{reader, resp.Body}
+			} else {
+				if Config.Verbose > 1 {
+					log.Println("### use plain resp.Body to read from back-end response")
+				}
 			}
-			reader, err := gzip.NewReader(resp.Body)
+			// we need to copy the data sent from BE server back to the client
+			data, err := io.ReadAll(body)
 			if err != nil {
 				return err
 			}
-			body = GzipReader{reader, resp.Body}
-		} else {
-			if Config.Verbose > 1 {
-				log.Println("### use plain resp.Body to read from back-end response")
-			}
-		}
-		// we need to copy the data sent from BE server back to the client
-		data, err := io.ReadAll(body)
-		if err != nil {
-			return err
-		}
-		buf := bytes.NewBuffer(data)
-		resp.Body = io.NopCloser(buf)
+			buf := bytes.NewBuffer(data)
+			resp.Body = io.NopCloser(buf)
+		*/
 
 		return nil
 	}
