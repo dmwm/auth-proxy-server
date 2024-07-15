@@ -5,6 +5,8 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/dmwm/cmsauth v0.0.0-20230224144745-c57dbeca74a3 h1:qPAabMqJdOQ9DHloVEskzTL59l3iBrM4nBIyRcxjkHU=
 github.com/dmwm/cmsauth v0.0.0-20230224144745-c57dbeca74a3/go.mod h1:Q/FulD8nZWDBQZ9yCQ4MKYKKiM0leeIvI6ceuUKDMys=
+github.com/dmwm/cmsauth v0.0.0-20240715181559-4387a84fc29d h1:fJ/k7lZ/g9O/YLQAo2d4BLmqARCwXP2qgKtRRNl6ifk=
+github.com/dmwm/cmsauth v0.0.0-20240715181559-4387a84fc29d/go.mod h1:Q/FulD8nZWDBQZ9yCQ4MKYKKiM0leeIvI6ceuUKDMys=
 github.com/go-ole/go-ole v1.2.6 h1:/Fpf6oFPoeFik9ty7siob0G6Ke8QvQEuVcuChpwXzpY=
 github.com/go-ole/go-ole v1.2.6/go.mod h1:pprOEPIfldk/42T2oK7lQ4v4JSDwmV0As9GaiUsvbm0=
 github.com/golang-jwt/jwt v3.2.2+incompatible h1:IfV12K8xAKAnZqdXVzCZ+TOjboZ2keLg81eXfW3O+oY=

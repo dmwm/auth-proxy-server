@@ -4,7 +4,7 @@ go 1.22.5
 
 require (
 	github.com/coreos/go-oidc v2.2.1+incompatible
-	github.com/dmwm/cmsauth v0.0.0-20230224144745-c57dbeca74a3
+	github.com/dmwm/cmsauth v0.0.0-20240715181559-4387a84fc29d
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/google/uuid v1.6.0
 	github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible
