@@ -68,11 +68,6 @@ func x509RequestHandler(w http.ResponseWriter, r *http.Request) {
 		level = true
 	}
 	CMSAuth.SetCMSHeaders(r, userData, cric.CricRecords, level)
-	if r.Header.Get("Cms-Auth-Cert") == "" {
-		if dn, ok := userData["dn"]; ok {
-			r.Header.Set("Cms-Auth-Cert", dn.(string))
-		}
-	}
 	if Config.Verbose > 1 {
 		printHTTPRequest(r, "cms headers")
 	}
