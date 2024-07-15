@@ -400,6 +400,11 @@ func getUserData(r *http.Request) map[string]interface{} {
 			userData["roles"] = rec.Roles
 			userData["dn"] = rec.DN
 			userData["dns"] = rec.DNs
+			if len(rec.DNs) > 1 {
+				if dn := matchDN(cert.Subject.CommonName, rec.DNs); dn != "" {
+					userData["dn"] = dn
+				}
+			}
 			break
 		} else {
 			log.Println(err)
@@ -407,6 +412,20 @@ func getUserData(r *http.Request) map[string]interface{} {
 		}
 	}
 	return userData
+}
+
+// helper function to match user DN from list of all user DNs. The logic is based on exact
+// match of CommonName field
+func matchDN(cnField string, dns []string) string {
+	cn := fmt.Sprintf("CN=%s", cnField)
+	for _, dn := range dns {
+		for _, r := range strings.Split(dn, "/") {
+			if cn == r {
+				return dn
+			}
+		}
+	}
+	return ""
 }
 
 // InList helper function to check item in a list
