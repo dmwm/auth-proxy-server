@@ -10,7 +10,6 @@ import (
 	"io"
 	"log"
 	"math/rand"
-	"mime"
 	"net"
 	"net/http"
 	"net/http/httputil"
@@ -149,18 +148,27 @@ func reverseProxy(targetURL string, w http.ResponseWriter, r *http.Request) {
 		// Set the status code from the backend response
 		w.WriteHeader(resp.StatusCode)
 
-		// Copy headers from the backend response
-		//         for k, v := range resp.Header {
-		//             w.Header()[k] = v
-		//         }
-
 		// Check the Content-Type header and set it correctly if necessary
-		if resp.Header.Get("Content-Type") == "" || strings.Contains(r.URL.Path, "wmstats") {
-			ext := filepath.Ext(resp.Request.URL.Path)
-			mimeType := mime.TypeByExtension(ext)
-			if mimeType != "" {
-				resp.Header.Set("Content-Type", mimeType)
+		/*
+			if resp.Header.Get("Content-Type") == "" || strings.Contains(r.URL.Path, "wmstats") {
+				ext := filepath.Ext(resp.Request.URL.Path)
+				mimeType := mime.TypeByExtension(ext)
+				if mimeType != "" {
+					resp.Header.Set("Content-Type", mimeType)
+				}
+				return nil
 			}
+		*/
+		if strings.Contains(r.URL.Path, "wmstats") {
+			// do not modify response body for wmstats requests
+			// TODO: investigation of wrong MIME type, e..g
+			// ... was not loaded because its MIME type, “text/plain”, is not “text/css”.
+			return nil
+		}
+
+		// Copy headers from the backend response
+		for k, v := range resp.Header {
+			w.Header()[k] = v
 		}
 
 		// create gzip reader if response is in gzip data-format
