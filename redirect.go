@@ -10,6 +10,7 @@ import (
 	"io"
 	"log"
 	"math/rand"
+	"mime"
 	"net"
 	"net/http"
 	"net/http/httputil"
@@ -152,6 +153,16 @@ func reverseProxy(targetURL string, w http.ResponseWriter, r *http.Request) {
 		//         for k, v := range resp.Header {
 		//             w.Header()[k] = v
 		//         }
+
+		// Check the Content-Type header and set it correctly if necessary
+		if resp.Header.Get("Content-Type") == "" || strings.Contains(r.URL.Path, "wmstats") {
+			ext := filepath.Ext(resp.Request.URL.Path)
+			mimeType := mime.TypeByExtension(ext)
+			if mimeType != "" {
+				resp.Header.Set("Content-Type", mimeType)
+			}
+		}
+
 		// create gzip reader if response is in gzip data-format
 		body := resp.Body
 		defer resp.Body.Close()
