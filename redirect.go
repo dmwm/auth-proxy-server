@@ -145,29 +145,19 @@ func reverseProxy(targetURL string, w http.ResponseWriter, r *http.Request) {
 		resp.Header.Set("Response-Time", time.Since(start).String())
 		resp.Header.Set("Response-Time-Seconds", fmt.Sprintf("%v", time.Since(start).Seconds()))
 
-		// Set the status code from the backend response
-		//         w.WriteHeader(resp.StatusCode)
-
-		// Copy headers from the backend response
-		//         for k, v := range resp.Header {
-		//             w.Header()[k] = v
-		//         }
-
-		// Check the Content-Type header and set it correctly if necessary
-		//         if resp.Header.Get("Content-Type") == "" || strings.Contains(r.URL.Path, "wmstats") {
 		/*
-			if strings.Contains(r.URL.Path, "wmstats") {
-				ext := filepath.Ext(resp.Request.URL.Path)
-				mimeType := mime.TypeByExtension(ext)
-				log.Println("### path=", resp.Request.URL.Path, ext, mimeType)
-				if mimeType != "" {
-					resp.Header.Set("Content-Type", mimeType)
-				}
+			// After fixing DBS code based it seems we no longer need the code below
+			// as now all responses are propagated correctly
+
+			// Set the status code from the backend response
+			w.WriteHeader(resp.StatusCode)
+
+			// Copy headers from the backend response
+			for k, v := range resp.Header {
+				w.Header()[k] = v
 			}
-		*/
 
-		// create gzip reader if response is in gzip data-format
-		/*
+			// create gzip reader if response is in gzip data-format
 			body := resp.Body
 			defer resp.Body.Close()
 			if strings.Contains(resp.Header.Get("Content-Encoding"), "gzip") {
