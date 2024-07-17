@@ -68,6 +68,7 @@ type Configuration struct {
 	MaxTLSVersion       string          `json:"maxTLSVersion"`          // maximum TLS version
 	CipherSuites        string          `json:"cipher_suites"`          // use custom CipherSuites
 	InsecureSkipVerify  bool            `json:"insecureSkipVerify"`     // tls configuration option
+	DebugTLSHandshake   bool            `json:"debugTLSHandshake"`      // enable TLS handshake debug info on stdout
 
 	KeepAlive           bool `json:"keepAlive"`           // keep alive for http proxy transport
 	KeepAliveTimeout    int  `json:"keepAliveTimeout"`    // keep alive timeout

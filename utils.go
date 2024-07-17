@@ -228,6 +228,10 @@ func getServer(serverCrt, serverKey string, customVerify bool) (*http.Server, er
 			VerifyPeerCertificate: VerifyPeerCertificate,
 		}
 	}
+	// enable debugging of TLS handshake
+	if Config.DebugTLSHandshake {
+		tlsConfig.KeyLogWriter = os.Stdout
+	}
 	// set min/max TLS version only if they are provided in configuration
 	if Config.MinTLSVersion != "" {
 		log.Println("use minTLSVersion", minVer)
