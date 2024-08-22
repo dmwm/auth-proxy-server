@@ -147,6 +147,8 @@ func UpdateCMSRecords(cricRecords cmsauth.CricRecords) {
 
 // FindUser finds user info in cric records for given cert subject
 func FindUser(subjects []string) (cmsauth.CricEntry, error) {
+	cmsRecordsLock.Lock()
+	defer cmsRecordsLock.Unlock()
 	for _, s := range subjects {
 		s = strings.Replace(s, "CN=", "", -1)
 		if r, ok := cmsRecords[s]; ok {
