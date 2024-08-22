@@ -21,6 +21,7 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/vkuznet/auth-proxy-server/cric"
@@ -351,6 +352,7 @@ func findCN(subject string) (string, error) {
 // helper function to get user data from TLS request
 func getUserData(r *http.Request) map[string]interface{} {
 	userData := make(map[string]interface{})
+	mapMutex := sync.RWMutex{}
 	if r.TLS == nil {
 		if Config.Verbose > 2 {
 			log.Printf("HTTP request does not support TLS, %+v", r)
@@ -393,6 +395,7 @@ func getUserData(r *http.Request) map[string]interface{} {
 			log.Printf("found user %+v error=%v elapsed time %v\n", rec, err, time.Since(start))
 		}
 		if err == nil {
+			mapMutex.Lock()
 			userData["issuer"] = strings.Split(cert.Issuer.String(), ",")[0]
 			userData["Subject"] = strings.Split(cert.Subject.String(), ",")[0]
 			userData["name"] = rec.Name
@@ -409,6 +412,7 @@ func getUserData(r *http.Request) map[string]interface{} {
 					userData["dn"] = dn
 				}
 			}
+			mapMutex.Unlock()
 			break
 		} else {
 			log.Println(err)
@@ -493,10 +497,13 @@ func PathMatched(rurl, path string, strict bool) bool {
 // RedirectRules provides redirect rules map by reading Config.Ingress items
 func RedirectRules(ingressRules []Ingress) (map[string]Ingress, []string) {
 	rmap := make(map[string]Ingress)
+	mapMutex := sync.RWMutex{}
 	var rules []string
 	for _, rec := range ingressRules {
 		rules = append(rules, rec.Path)
+		mapMutex.Lock()
 		rmap[rec.Path] = rec
+		mapMutex.Unlock()
 	}
 	// we should not sort rules, otherwise we break order of the rules which is important, e.g.
 	// /wmstats should point to /wmstats/index.html, while /wmstats/.* should go further
@@ -507,6 +514,7 @@ func RedirectRules(ingressRules []Ingress) (map[string]Ingress, []string) {
 // RedirectRulesFromFiles provides redirect rules map by reading Config.IngressFiles
 func RedirectRulesFromFiles(ingressFiles []string) (map[string]Ingress, []string) {
 	rmap := make(map[string]Ingress)
+	mapMutex := sync.RWMutex{}
 	var rules []string
 	for _, fname := range ingressFiles {
 		file, err := os.Open(fname)
@@ -525,7 +533,9 @@ func RedirectRulesFromFiles(ingressFiles []string) (map[string]Ingress, []string
 		}
 		for _, rec := range ingressRules {
 			rules = append(rules, rec.Path)
+			mapMutex.Lock()
 			rmap[rec.Path] = rec
+			mapMutex.Unlock()
 		}
 	}
 	// we should not sort rules, otherwise we break order of the rules which is important, e.g.

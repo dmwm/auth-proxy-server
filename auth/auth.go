@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"sync"
 )
 
 // OAuthProviders contains maps of all participated providers
@@ -47,6 +48,7 @@ func (t *TokenInfo) String() string {
 // Init initializes map of OAuth providers
 func Init(providers []string, verbose int) {
 	OAuthProviders = make(map[string]Provider)
+	mapMutex := sync.RWMutex{}
 	for _, purl := range providers {
 		if verbose > 0 {
 			log.Println("initialize provider ", purl)
@@ -56,7 +58,9 @@ func Init(providers []string, verbose int) {
 		if err != nil {
 			log.Fatalf("fail to initialize %s error %v", p.URL, err)
 		}
+		mapMutex.Lock()
 		OAuthProviders[purl] = p
+		mapMutex.Unlock()
 	}
 }
 

@@ -412,6 +412,7 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 
 	status := http.StatusOK
 	userData := make(map[string]interface{})
+	mapMutex := sync.RWMutex{}
 	tstamp := int64(start.UnixNano() / 1000000) // use milliseconds for MONIT
 	sess := globalSessions.SessionStart(w, r)
 	oauthState := uuid.New().String()
@@ -559,12 +560,16 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		// in case of existing token CERN SSO or IAM we use token attributes as user data
+		mapMutex.Lock()
 		userData["email"] = attrs.Email
 		userData["name"] = attrs.UserName
 		userData["exp"] = attrs.Expiration
+		mapMutex.Unlock()
 	}
 	// set id in user data based on token ClientID. The id will be used by SetCMSHeadersXXX calls
+	mapMutex.Lock()
 	userData["id"] = attrs.ClientID
+	mapMutex.Unlock()
 
 	// set CMS headers
 	if Config.CMSHeaders {

@@ -16,6 +16,7 @@ import (
 	"math/big"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/pascaldekloe/jwt"
@@ -213,6 +214,7 @@ func getPublicKey(exp, mod string) (*rsa.PublicKey, error) {
 // github.com/pascaldekloe/jwt go package
 func tokenClaims(provider Provider, token string) (map[string]interface{}, error) {
 	out := make(map[string]interface{})
+	mapMutex := sync.RWMutex{}
 	// First parse without checking signature, to get the Kid
 	claims, err := jwt.ParseWithoutCheck([]byte(token))
 	log.Println("ParseWithoutCheck returns %v", err)
@@ -238,6 +240,7 @@ func tokenClaims(provider Provider, token string) (map[string]interface{}, error
 		msg := "The token is not valid"
 		return out, errors.New(msg)
 	}
+	mapMutex.Lock()
 	for k, v := range claims.Set {
 		out[k] = v
 	}
@@ -246,5 +249,6 @@ func tokenClaims(provider Provider, token string) (map[string]interface{}, error
 	out["sub"] = claims.Subject
 	out["iss"] = claims.Issuer
 	out["aud"] = claims.Audiences
+	mapMutex.Unlock()
 	return out, nil
 }

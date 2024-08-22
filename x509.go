@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -58,6 +59,7 @@ func x509RequestHandler(w http.ResponseWriter, r *http.Request) {
 	status := http.StatusOK
 	tstamp := int64(start.UnixNano() / 1000000) // use milliseconds for MONIT
 	userData := getUserData(r)
+	mapMutex := sync.RWMutex{}
 	if Config.Verbose > 0 {
 		log.Println("userData", userData)
 	}
@@ -67,7 +69,9 @@ func x509RequestHandler(w http.ResponseWriter, r *http.Request) {
 	if Config.Verbose > 3 {
 		level = true
 	}
+	mapMutex.RLock()
 	CMSAuth.SetCMSHeaders(r, userData, cric.CricRecords, level)
+	mapMutex.RUnlock()
 	if Config.Verbose > 1 {
 		printHTTPRequest(r, "cms headers")
 	}
@@ -82,7 +86,10 @@ func x509RequestHandler(w http.ResponseWriter, r *http.Request) {
 
 	// add LogRequest after we set cms headers in HTTP request
 	defer logging.LogRequest(crw, r, start, "x509", &status, tstamp, 0)
-	if _, ok := userData["name"]; !ok {
+	mapMutex.RLock()
+	_, ok := userData["name"]
+	mapMutex.RUnlock()
+	if !ok {
 		log.Println("unauthorized access, user not found in CRIC DB")
 		status = http.StatusUnauthorized
 		w.WriteHeader(status)
