@@ -117,6 +117,7 @@ func x509ProxyServer() {
 
 	// start http server to serve metrics only
 	if Config.MetricsPort > 0 {
+		log.Println("Start x509 server metrics on port", Config.MetricsPort)
 		go http.ListenAndServe(fmt.Sprintf(":%d", Config.MetricsPort), nil)
 	}
 
