@@ -20,6 +20,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -349,6 +350,94 @@ func findCN(subject string) (string, error) {
 	return "", errors.New("no user CN is found in subject: " + subject)
 }
 
+// helper function to convert attr ANS.1 to human readable form
+// https://cs.opensource.google/go/go/+/master:src/crypto/x509/pkix/pkix.go;l=26
+// crypto/x509/pkix/pkix.go
+// https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc772812(v=ws.10)?redirectedfrom=MSDN
+// https://stackoverflow.com/questions/6465454/table-of-oids-for-certificates-subject
+func attrDN(attr string) string {
+	switch attr {
+	case "2.5.4.3": // CN (Common Name)
+		return "CN"
+	case "2.5.4.11": // OU (Organizational Unit)
+		return "OU"
+	case "0.9.2342.19200300.100.1.25": // DC (Domain Component)
+		return "DC"
+	case "2.5.4.6":
+		return "C"
+	case "2.5.4.10":
+		return "O"
+	case "2.5.4.5":
+		return "SERIALNUMBER"
+	case "2.5.4.7":
+		return "L"
+	case "2.5.4.8":
+		return "ST"
+	case "2.5.4.17":
+		return "POSTALCODE"
+	case "2.5.4.12":
+		return "T" // Title
+	case "2.5.4.42":
+		return "GN" // GivenName
+	case "2.5.4.43":
+		return "I" // Initials
+	case "2.5.4.4":
+		return "SN" // SurName
+	case "1.2.840.113549.1.9.1":
+		return "EMail" // EMail
+	}
+	return attr
+
+}
+
+func getDNParts(cert *x509.Certificate) string {
+	dnParts := []string{}
+	parts := []string{}
+
+	// loop over names
+	for _, obj := range cert.Subject.Names {
+		aType := attrDN(obj.Type.String())
+		aValue := obj.Value
+		part := fmt.Sprintf("%s=%s", aType, aValue)
+		parts = append(parts, part)
+	}
+	for _, obj := range cert.Subject.ExtraNames {
+		aType := attrDN(obj.Type.String())
+		aValue := obj.Value
+		part := fmt.Sprintf("%s=%s", aType, aValue)
+		parts = append(parts, part)
+	}
+	// Extract all RDNs from the Subject field
+	rdnSequence := cert.Subject.ToRDNSequence()
+	for _, rdnSet := range rdnSequence {
+		for _, rdn := range rdnSet {
+			aType := attrDN(rdn.Type.String())
+			aValue := rdn.Value.(string)
+			part := fmt.Sprintf("%s=%s", aType, aValue)
+			parts = append(parts, part)
+		}
+	}
+	sort.Strings(parts)
+	for _, value := range parts {
+		if !contains(dnParts, value) {
+			dnParts = append(dnParts, value)
+		}
+	}
+	dn := "/" + strings.Join(dnParts, "/")
+	dn = strings.Replace(dn, "//", "/", -1)
+	return dn
+}
+
+// contains checks if a slice contains a specific value
+func contains(list []string, value string) bool {
+	for _, v := range list {
+		if v == value {
+			return true
+		}
+	}
+	return false
+}
+
 // helper function to get user data from TLS request
 func getUserData(r *http.Request) map[string]interface{} {
 	userData := make(map[string]interface{})
@@ -376,21 +465,9 @@ func getUserData(r *http.Request) map[string]interface{} {
 			}
 			continue
 		}
+		dnParts := getDNParts(cert)
 		start := time.Now()
-		var subjects []string
-		for _, s := range strings.Split(cert.Subject.String(), ",") {
-			if strings.Contains(s, "ROOT") && strings.Contains(s, "CERN") || strings.Contains(s, "Grid") {
-				continue
-			}
-			if Config.Verbose > 2 {
-				log.Println("cert subject", s)
-			}
-			subjects = append(subjects, s)
-		}
-		if Config.Verbose > 2 {
-			log.Println("cert subjects", subjects)
-		}
-		rec, err := cric.FindUser(subjects)
+		rec, err := cric.FindUser(dnParts)
 		if Config.Verbose > 1 {
 			log.Printf("found user %+v error=%v elapsed time %v\n", rec, err, time.Since(start))
 		}
