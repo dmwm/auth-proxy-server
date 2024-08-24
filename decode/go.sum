@@ -1,8 +1,4 @@
-github.com/pascaldekloe/jwt v1.10.0 h1:ktcIUV4TPvh404R5dIBEnPCsSwj0sqi3/0+XafE5gJs=
-github.com/pascaldekloe/jwt v1.10.0/go.mod h1:TKhllgThT7TOP5rGr2zMLKEDZRAgJfBbtKyVeRsNB9A=
+github.com/dmwm/auth-proxy-server/auth v0.0.0-20240824201455-d491444f799e h1:VYSMOIUncUjrvs7LREZWQq0S4zUdnp6dHKoLSUZYqVQ=
+github.com/dmwm/auth-proxy-server/auth v0.0.0-20240824201455-d491444f799e/go.mod h1:ZYG5e4cp2cp/AY34woP4kaaeI4SHLk4KjxI5QE+i0nY=
 github.com/pascaldekloe/jwt v1.12.0 h1:imQSkPOtAIBAXoKKjL9ZVJuF/rVqJ+ntiLGpLyeqMUQ=
 github.com/pascaldekloe/jwt v1.12.0/go.mod h1:LiIl7EwaglmH1hWThd/AmydNCnHf/mmfluBlNqHbk8U=
-github.com/vkuznet/auth-proxy-server/auth v0.0.0-20220208135328-4439c674660a h1:IIhvNfNmPw4dVR1MjCNNKetD/Hz3FeQAxeEnlkeTLO4=
-github.com/vkuznet/auth-proxy-server/auth v0.0.0-20220208135328-4439c674660a/go.mod h1:jr+4XDinkJS6ufG/VQxuKwLaQWyiqMq86ybOj09zHlA=
-github.com/vkuznet/auth-proxy-server/auth v0.0.0-20221007130226-52e0a5feeaa6 h1:bGDUmS6fvuYW+icaF1fDoiBz3nUW/H1xW9Bxx1kzTO4=
-github.com/vkuznet/auth-proxy-server/auth v0.0.0-20221007130226-52e0a5feeaa6/go.mod h1:jr+4XDinkJS6ufG/VQxuKwLaQWyiqMq86ybOj09zHlA=
