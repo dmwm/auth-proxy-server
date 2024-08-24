@@ -1,4 +1,4 @@
-module github.com/dmwm/auth-proxy-server/cric
+module github.com/dmwm/auth-proxy-server/logging
 
 go 1.23.0
 
