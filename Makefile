@@ -77,7 +77,9 @@ clean:
 test : test1
 
 test1:
-	go test -v -bench=.
+	# we filter 401 and unauthorized log messages as we perform test without
+	# user credentials in BenchmarkX509RequestHandler
+	go test -v -race -bench=. | egrep -v "401 GET|unauthorized access"
 
 tarball:
 	cp -r /tmp/auth-proxy-tools .
