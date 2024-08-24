@@ -154,10 +154,10 @@ The following plots shows throughput performance of Go-based and apache based
 reverse proxy servers. Here we use the following notations: Go-auth-srvN and
 Apache-srvN where N refers to number of replicas of given server in k8s
 setup, i.e. srv4 means we run 4 replicas of that server in k8s cluster.
-![Throughput](https://github.com/vkuznet/auth-proxy-server/raw/master/docs/perf-rps.png)
+![Throughput](https://github.com/dmwm/auth-proxy-server/raw/master/docs/perf-rps.png)
 
 #### failure rate measurements
-![Failure-rate](https://github.com/vkuznet/auth-proxy-server/raw/master/docs/perf-failure.png)
+![Failure-rate](https://github.com/dmwm/auth-proxy-server/raw/master/docs/perf-failure.png)
 
 #### Additional remarks
 We also want to point out that k8s image sizes are quite different, the
@@ -175,10 +175,10 @@ fronends used in tests, and keep-alive option was disabled in tests.
 In these tests we used DBS datasets queries with different dataset names.
 
 #### throughput measurements
-![Throughput](https://github.com/vkuznet/auth-proxy-server/raw/master/docs/perf-rps-dbs.png)
+![Throughput](https://github.com/dmwm/auth-proxy-server/raw/master/docs/perf-rps-dbs.png)
 
 #### failure rate measurements
-![Failure-rate](https://github.com/vkuznet/auth-proxy-server/raw/master/docs/perf-failure-dbs.png)
+![Failure-rate](https://github.com/dmwm/auth-proxy-server/raw/master/docs/perf-failure-dbs.png)
 
 ### References
 
