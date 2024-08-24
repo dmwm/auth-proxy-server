@@ -11,7 +11,6 @@ import (
 	"log"
 	"reflect"
 	"regexp"
-	"strings"
 	"sync"
 	"time"
 
@@ -48,7 +47,7 @@ func UpdateCricRecords(key, cricFile, cricURL string, cricUpdateInterval int64, 
 		} else {
 			cricRecords, err = cmsauth.ParseCric(cricFile, verbose)
 		}
-		log.Printf("obtain CRIC records from %s, %v", cricFile, err)
+		log.Printf("obtain CRIC records from %s using key=%s, error %v", cricFile, key, err)
 		if err != nil {
 			log.Printf("Unable to update CRIC records: %v", err)
 		} else {
@@ -79,14 +78,14 @@ func UpdateCricRecords(key, cricFile, cricURL string, cricUpdateInterval int64, 
 				} else {
 					cricRecords, err = cmsauth.ParseCric(cricFile, verbose)
 				}
-				log.Printf("obtain CRIC records from %s, %v", cricFile, err)
+				log.Printf("obtain CRIC records from %s using key %s, error %v", cricFile, key, err)
 			} else {
 				if key == "id" {
 					cricRecords, err = cmsauth.GetCricDataByKey(cricURL, "id", verbose)
 				} else {
 					cricRecords, err = cmsauth.GetCricData(cricURL, verbose)
 				}
-				log.Printf("obtain CRIC records from %s, %v", cricURL, err)
+				log.Printf("obtain CRIC records from %s using key %s, error %v", cricURL, key, err)
 			}
 		} else if cricFile != "" {
 			if key == "id" {
@@ -94,7 +93,7 @@ func UpdateCricRecords(key, cricFile, cricURL string, cricUpdateInterval int64, 
 			} else {
 				cricRecords, err = cmsauth.ParseCric(cricFile, verbose)
 			}
-			log.Printf("obtain CRIC records from %s, %v", cricFile, err)
+			log.Printf("obtain CRIC records from %s using key %s, error %v", cricFile, key, err)
 		} else {
 			log.Println("Unable to get CRIC records no file or no url was provided")
 		}
@@ -134,27 +133,20 @@ func UpdateCMSRecords(cricRecords cmsauth.CricRecords) {
 	cmsRecords = make(cmsauth.CricRecords)
 	for _, r := range cricRecords {
 		for _, dn := range r.DNs {
-			for _, v := range strings.Split(dn, "/CN=") {
-				if !strings.HasPrefix(v, "/") {
-					if matched := intPattern.MatchString(v); !matched {
-						cmsRecords[v] = r
-					}
-				}
-			}
+			sortedDN := cmsauth.GetSortedDN(dn)
+			cmsRecords[sortedDN] = r
 		}
 	}
 }
 
-// FindUser finds user info in cric records for given cert subject
-func FindUser(subjects []string) (cmsauth.CricEntry, error) {
+// FindUser finds user info in cric records for given DN
+func FindUser(dn string) (cmsauth.CricEntry, error) {
 	cmsRecordsLock.Lock()
 	defer cmsRecordsLock.Unlock()
-	for _, s := range subjects {
-		s = strings.Replace(s, "CN=", "", -1)
-		if r, ok := cmsRecords[s]; ok {
-			return r, nil
-		}
+	sortedDN := cmsauth.GetSortedDN(dn)
+	if r, ok := cmsRecords[sortedDN]; ok {
+		return r, nil
 	}
-	msg := fmt.Sprintf("user not found: %v\n", subjects)
+	msg := fmt.Sprintf("user not found: %v\n", sortedDN)
 	return cmsauth.CricEntry{}, errors.New(msg)
 }
