@@ -4,12 +4,12 @@ import (
 	"log"
 	"time"
 
+	"github.com/dmwm/auth-proxy-server/auth"
+	"github.com/dmwm/auth-proxy-server/cric"
+	"github.com/dmwm/auth-proxy-server/logging"
 	"github.com/dmwm/cmsauth"
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
 	"github.com/shirou/gopsutil/cpu"
-	"github.com/vkuznet/auth-proxy-server/auth"
-	"github.com/vkuznet/auth-proxy-server/cric"
-	"github.com/vkuznet/auth-proxy-server/logging"
 )
 
 // StartTime of the server

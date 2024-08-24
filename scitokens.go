@@ -36,9 +36,9 @@ import (
 
 	// jwt "github.com/cristalhq/jwt/v3"
 	//     jwt "github.com/dgrijalva/jwt-go"
+	"github.com/dmwm/auth-proxy-server/logging"
 	jwt "github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
-	"github.com/vkuznet/auth-proxy-server/logging"
 )
 
 // server private/public keys to be used for signing

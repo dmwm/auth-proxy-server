@@ -43,12 +43,12 @@ import (
 	"time"
 
 	oidc "github.com/coreos/go-oidc"
+	"github.com/dmwm/auth-proxy-server/auth"
+	"github.com/dmwm/auth-proxy-server/cric"
+	"github.com/dmwm/auth-proxy-server/logging"
 	"github.com/google/uuid"
 	"github.com/thomasdarimont/go-kc-example/session"
 	_ "github.com/thomasdarimont/go-kc-example/session_memory"
-	"github.com/vkuznet/auth-proxy-server/auth"
-	"github.com/vkuznet/auth-proxy-server/cric"
-	"github.com/vkuznet/auth-proxy-server/logging"
 	"golang.org/x/oauth2"
 )
 

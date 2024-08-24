@@ -11,9 +11,9 @@ import (
 	_ "expvar"         // to be used for monitoring, see https://github.com/divan/expvarmon
 	_ "net/http/pprof" // profiler, see https://golang.org/pkg/net/http/pprof/
 
+	"github.com/dmwm/auth-proxy-server/auth"
+	"github.com/dmwm/auth-proxy-server/logging"
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
-	"github.com/vkuznet/auth-proxy-server/auth"
-	"github.com/vkuznet/auth-proxy-server/logging"
 )
 
 // main function

@@ -25,7 +25,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/vkuznet/auth-proxy-server/cric"
+	"github.com/dmwm/auth-proxy-server/cric"
 	"golang.org/x/crypto/acme/autocert"
 )
 

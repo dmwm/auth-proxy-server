@@ -11,7 +11,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/vkuznet/auth-proxy-server/grpc/cms"
+	"github.com/dmwm/auth-proxy-server/grpc/cms"
 	"golang.org/x/oauth2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"

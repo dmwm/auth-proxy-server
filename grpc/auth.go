@@ -7,8 +7,8 @@ package main
 import (
 	"log"
 
-	"github.com/vkuznet/auth-proxy-server/auth"
-	"github.com/vkuznet/auth-proxy-server/cric"
+	"github.com/dmwm/auth-proxy-server/auth"
+	"github.com/dmwm/auth-proxy-server/cric"
 )
 
 // helper function to validate given token

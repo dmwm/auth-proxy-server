@@ -4,6 +4,9 @@ go 1.23.0
 
 require (
 	github.com/coreos/go-oidc v2.2.1+incompatible
+	github.com/dmwm/auth-proxy-server/auth v0.0.0-20240824201455-d491444f799e
+	github.com/dmwm/auth-proxy-server/cric v0.0.0-20240824201455-d491444f799e
+	github.com/dmwm/auth-proxy-server/logging v0.0.0-20240824201455-d491444f799e
 	github.com/dmwm/cmsauth v0.0.3
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/google/uuid v1.6.0
@@ -11,9 +14,6 @@ require (
 	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/stretchr/testify v1.9.0
 	github.com/thomasdarimont/go-kc-example v0.0.0-20170529223628-e3951d8faa4c
-	github.com/vkuznet/auth-proxy-server/auth v0.0.0-20240824185425-489caf51ea67
-	github.com/vkuznet/auth-proxy-server/cric v0.0.0-20240824185425-489caf51ea67
-	github.com/vkuznet/auth-proxy-server/logging v0.0.0-20240824183508-c53023582b26
 	golang.org/x/crypto v0.26.0
 	golang.org/x/oauth2 v0.22.0
 )

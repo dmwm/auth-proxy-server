@@ -12,7 +12,7 @@ import (
 	"net"
 	"strings"
 
-	"github.com/vkuznet/auth-proxy-server/grpc/cms"
+	"github.com/dmwm/auth-proxy-server/grpc/cms"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"

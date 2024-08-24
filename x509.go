@@ -14,9 +14,9 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/dmwm/auth-proxy-server/cric"
+	"github.com/dmwm/auth-proxy-server/logging"
 	_ "github.com/thomasdarimont/go-kc-example/session_memory"
-	"github.com/vkuznet/auth-proxy-server/cric"
-	"github.com/vkuznet/auth-proxy-server/logging"
 )
 
 // TotalX509GetRequests counts total number of GET requests received by the server

@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/vkuznet/auth-proxy-server/grpc/cms"
+	"github.com/dmwm/auth-proxy-server/grpc/cms"
 )
 
 // RequestHandler performs reverse proxy action on incoming user request

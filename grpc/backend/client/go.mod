@@ -1,21 +1,19 @@
-module github.com/vkuznet/grpc/auth-proxy-server/grpc/backend/client
+module github.com/dmwm/grpc/auth-proxy-server/grpc/backend/client
 
-go 1.20
+go 1.23.0
 
 require (
-	github.com/vkuznet/auth-proxy-server/grpc v0.0.0-20230224144830-095471352e1c
-	golang.org/x/oauth2 v0.7.0
-	google.golang.org/grpc v1.56.3
+	github.com/dmwm/auth-proxy-server/grpc v0.0.0-20240824211350-9265b8164b07
+	golang.org/x/oauth2 v0.22.0
+	google.golang.org/grpc v1.65.0
 )
 
 require (
-	cloud.google.com/go/compute v1.19.1 // indirect
-	cloud.google.com/go/compute/metadata v0.2.3 // indirect
-	github.com/golang/protobuf v1.5.3 // indirect
-	golang.org/x/net v0.23.0 // indirect
-	golang.org/x/sys v0.18.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
-	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1 // indirect
-	google.golang.org/protobuf v1.33.0 // indirect
+	cloud.google.com/go/compute/metadata v0.3.0 // indirect
+	github.com/golang/protobuf v1.5.4 // indirect
+	golang.org/x/net v0.28.0 // indirect
+	golang.org/x/sys v0.23.0 // indirect
+	golang.org/x/text v0.17.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240528184218-531527333157 // indirect
+	google.golang.org/protobuf v1.34.1 // indirect
 )

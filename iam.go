@@ -20,7 +20,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/vkuznet/auth-proxy-server/auth"
+	"github.com/dmwm/auth-proxy-server/auth"
 )
 
 // IAMRenewInterval represent renewal interval for IAMUsers
