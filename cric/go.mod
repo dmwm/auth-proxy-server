@@ -1,4 +1,4 @@
-module github.com/dmwm/auth-proxy-server/cric
+module github.com/vkuznet/auth-proxy-server/cric
 
 go 1.23.0
 
