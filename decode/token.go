@@ -9,7 +9,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/vkuznet/auth-proxy-server/auth"
+	"github.com/dmwm/auth-proxy-server/auth"
 )
 
 // ReadToken reads either given token file or string and return the token
