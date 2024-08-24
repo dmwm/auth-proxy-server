@@ -6,7 +6,7 @@ nginx -> auth proxy server -> gRPC backend
 ```
 
 Therefore, we'll need the following components:
-- [auth proxy server](https://github.com/vkuznet/auth-proxy-server) (APS)
+- [auth proxy server](https://github.com/dmwm/auth-proxy-server) (APS)
 You'll need to compile the code and start APS with proper configuration. It
 should include the ingress path to `/token` end-point, e.g.
 ```
