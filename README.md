@@ -1,7 +1,7 @@
 ### auth-proxy-server
 
-[![Go CI build](https://github.com/vkuznet/auth-proxy-server/actions/workflows/go-ci.yml/badge.svg)](https://github.com/vkuznet/auth-proxy-server/actions/workflows/go-ci.yml)
-[![Go Report Card](https://goreportcard.com/badge/github.com/vkuznet/auth-proxy-server)](https://goreportcard.com/report/github.com/vkuznet/auth-proxy-server)
+[![Go CI build](https://github.com/dmwm/auth-proxy-server/actions/workflows/go-ci.yml/badge.svg)](https://github.com/dmwm/auth-proxy-server/actions/workflows/go-ci.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/dmwm/auth-proxy-server)](https://goreportcard.com/report/github.com/dmwm/auth-proxy-server)
 
 Go implementation of reverse proxy server with OAuth OIDC or x509 authentication.
 It provides CMS authentication headers based on CRIC information, and
