@@ -42,7 +42,10 @@ import (
 	"sync/atomic"
 	"time"
 
-	oidc "github.com/coreos/go-oidc"
+	// original APS code used v2 of oidc
+	//     oidc "github.com/coreos/go-oidc"
+	// new oidc is v3
+	oidc "github.com/coreos/go-oidc/v3/oidc"
 	"github.com/dmwm/auth-proxy-server/auth"
 	"github.com/dmwm/auth-proxy-server/cric"
 	"github.com/dmwm/auth-proxy-server/logging"
