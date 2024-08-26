@@ -202,7 +202,7 @@ func parseHumanReadableTime(timeStr string) (float64, error) {
 // helper function to log every single user request, here we pass pointer to status code
 // as it may change through the handler while we use defer logRequest
 func LogRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth string, status *int, tstamp int64, bytesOut int64) {
-	//     config := zap.NewDevelopmentConfig()
+	// configure zap logger, see https://www.golinuxcloud.com/golang-zap-logger/
 	config := zap.NewProductionConfig()
 	config.EncoderConfig = zapcore.EncoderConfig{
 		MessageKey: "msg", // We just need the message itself
