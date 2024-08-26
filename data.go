@@ -80,6 +80,8 @@ type Configuration struct {
 	LetsEncrypt bool     `json:"lets_encrypt"` // start LetsEncrypt HTTPs server
 	DomainNames []string `json:"domain_names"` // list of domain names to use for LetsEncrypt
 
+	ZapLogger string `json:"zap_logger"` // define zap logger usage
+
 	// CouchDB headers, see
 	// https://docs.couchdb.org/en/3.1.2/api/server/authn.html#proxy-authentication
 	XAuthCouchDBUserName string `json:"X-Auth-CouchDB-UserName"` // X-Auth-CouchDB-UserName field of HTTP request

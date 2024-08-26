@@ -51,6 +51,10 @@ func Server(config string, port, metricsPort int, logFile string, useX509, scito
 	// initialize logging module
 	logging.CMSMonitType = Config.MonitType
 	logging.CMSMonitProducer = Config.MonitProducer
+	if Config.ZapLogger != "" {
+		log.Printf("Use zap logger with %s format", Config.ZapLogger)
+		logging.ZapLogger = Config.ZapLogger
+	}
 
 	if port > 0 {
 		log.Println("overwrite server port number to", port)
