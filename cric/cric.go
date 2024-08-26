@@ -23,8 +23,8 @@ var CricRecords cmsauth.CricRecords
 // cmsRecords holds map of CricRecords for CMS users
 var cmsRecords cmsauth.CricRecords
 
-// cmsRecordsLock keeps lock for cmsRecords updates
-var cmsRecordsLock sync.RWMutex
+// mutex keeps lock for cmsRecords updates
+var mutex sync.RWMutex
 
 // int pattern
 var intPattern = regexp.MustCompile(`^\d+$`)
@@ -128,23 +128,24 @@ func UpdateCricRecords(key, cricFile, cricURL string, cricUpdateInterval int64, 
 
 // UpdateCMSRecords updates CMS Records
 func UpdateCMSRecords(cricRecords cmsauth.CricRecords) {
-	cmsRecordsLock.Lock()
-	defer cmsRecordsLock.Unlock()
 	cmsRecords = make(cmsauth.CricRecords)
 	for _, r := range cricRecords {
 		for _, dn := range r.DNs {
 			sortedDN := cmsauth.GetSortedDN(dn)
+			mutex.Lock()
 			cmsRecords[sortedDN] = r
+			mutex.Unlock()
 		}
 	}
 }
 
 // FindUser finds user info in cric records for given DN
 func FindUser(dn string) (cmsauth.CricEntry, error) {
-	cmsRecordsLock.Lock()
-	defer cmsRecordsLock.Unlock()
 	sortedDN := cmsauth.GetSortedDN(dn)
-	if r, ok := cmsRecords[sortedDN]; ok {
+	mutex.RLock()
+	r, ok := cmsRecords[sortedDN]
+	mutex.RUnlock()
+	if ok {
 		return r, nil
 	}
 	msg := fmt.Sprintf("user not found: %v\n", sortedDN)
