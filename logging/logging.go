@@ -20,7 +20,12 @@ import (
 	"time"
 
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
+	zap "go.uber.org/zap"
+	zapcore "go.uber.org/zap/zapcore"
 )
+
+// ZapLogger defines zap logger structure
+var ZapLogger string
 
 // CMSMonitType controls CMS Monit log record type
 var CMSMonitType string
@@ -197,6 +202,22 @@ func parseHumanReadableTime(timeStr string) (float64, error) {
 // helper function to log every single user request, here we pass pointer to status code
 // as it may change through the handler while we use defer logRequest
 func LogRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth string, status *int, tstamp int64, bytesOut int64) {
+	//     config := zap.NewDevelopmentConfig()
+	config := zap.NewProductionConfig()
+	config.EncoderConfig = zapcore.EncoderConfig{
+		MessageKey: "msg", // We just need the message itself
+	}
+	if ZapLogger != "" {
+		config.Encoding = ZapLogger
+	}
+	// use unstructured zap logger
+	logger, e := config.Build()
+	if e != nil {
+		log.Fatal(e)
+	}
+	defer logger.Sync()      // flushes buffer, if any
+	zapLog := logger.Sugar() // get sugar logger (JSON one)
+
 	// our apache configuration
 	// CustomLog "||@APACHE2_ROOT@/bin/rotatelogs -f @LOGDIR@/access_log_%Y%m%d.txt 86400" \
 	//   "%t %v [client: %a] [backend: %h] \"%r\" %>s [data: %I in %O out %b body %D us ] [auth: %{SSL_PROTOCOL}x %{SSL_CIPHER}x \"%{SSL_CLIENT_S_DN}x\" \"%{cms-auth}C\" ] [ref: \"%{Referer}i\" \"%{User-Agent}i\" ]"
@@ -280,7 +301,12 @@ func LogRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 			statusCode = c
 		}
 	}
-	log.Printf("%s %d %s %s %s %s %s %s %s\n", r.Proto, statusCode, r.Method, uri, dataMsg, addr, authMsg, refMsg, respMsg)
+	if ZapLogger != "" {
+		tstamp := time.Now().Format("[2006-01-02T15:04:05.000000-07:00]")
+		zapLog.Infof("%s %s %d %s %s %s %s %s %s %s\n", tstamp, r.Proto, statusCode, r.Method, uri, dataMsg, addr, authMsg, refMsg, respMsg)
+	} else {
+		log.Printf("%s %d %s %s %s %s %s %s %s\n", r.Proto, statusCode, r.Method, uri, dataMsg, addr, authMsg, refMsg, respMsg)
+	}
 	if CMSMonitType == "" || CMSMonitProducer == "" {
 		return
 	}
