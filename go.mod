@@ -3,10 +3,10 @@ module github.com/dmwm/auth-proxy-server
 go 1.23.0
 
 require (
-	github.com/coreos/go-oidc v2.2.1+incompatible
-	github.com/dmwm/auth-proxy-server/auth v0.0.0-20240826194024-b3be074056a7
-	github.com/dmwm/auth-proxy-server/cric v0.0.0-20240826194024-b3be074056a7
-	github.com/dmwm/auth-proxy-server/logging v0.0.0-20240826194024-b3be074056a7
+	github.com/coreos/go-oidc/v3 v3.11.0
+	github.com/dmwm/auth-proxy-server/auth v0.0.0-20240828180749-5c89b96090d4
+	github.com/dmwm/auth-proxy-server/cric v0.0.0-20240828180749-5c89b96090d4
+	github.com/dmwm/auth-proxy-server/logging v0.0.0-20240828180749-5c89b96090d4
 	github.com/dmwm/cmsauth v0.0.4
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/google/uuid v1.6.0
@@ -19,7 +19,6 @@ require (
 )
 
 require (
-	github.com/coreos/go-oidc/v3 v3.11.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-jose/go-jose/v4 v4.0.2 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
@@ -27,7 +26,6 @@ require (
 	github.com/pascaldekloe/jwt v1.12.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/pquerna/cachecontrol v0.2.0 // indirect
 	github.com/tklauser/go-sysconf v0.3.14 // indirect
 	github.com/tklauser/numcpus v0.8.0 // indirect
 	github.com/vkuznet/TokenManager v0.0.1 // indirect
@@ -39,6 +37,5 @@ require (
 	golang.org/x/sys v0.23.0 // indirect
 	golang.org/x/term v0.23.0 // indirect
 	golang.org/x/text v0.17.0 // indirect
-	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
