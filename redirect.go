@@ -226,6 +226,7 @@ func srvURL(surl string) string {
 }
 
 // helper function to print APS redirect rules from given config
+// the rules should not be sorted as their order affect end-point matching
 func printRules() {
 	var rmap map[string]Ingress
 	var rules []string
@@ -234,7 +235,6 @@ func printRules() {
 	} else {
 		rmap, rules = RedirectRules(Config.Ingress)
 	}
-	sort.Strings(rules)
 	var maxLen int
 	for _, r := range rules {
 		if len(r) > maxLen {
