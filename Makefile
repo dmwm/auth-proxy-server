@@ -86,4 +86,7 @@ tarball:
 	tar cfz auth-proxy-tools.tar.gz auth-proxy-tools
 	rm -rf /tmp/auth-proxy-tools
 
-release: clean build_amd64 build_arm64 build_windows build_power8 build_darwin tarball
+changes:
+	./gen_release_log.sh
+
+release: clean build_amd64 build_arm64 build_windows build_power8 build_darwin tarball changes
