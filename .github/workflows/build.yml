@@ -60,16 +60,16 @@ jobs:
         make release
         make last_changes
 
-    - name: Upload CHANGES.md
-      id: upload-changes
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./LAST_CHANGES.md
-        asset_name: LAST_CHANGES.md
-        asset_content_type: text/plain
+#     - name: Upload CHANGES.md
+#       id: upload-changes
+#       uses: actions/upload-release-asset@v1
+#       env:
+#         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#       with:
+#         upload_url: ${{ steps.create_release.outputs.upload_url }}
+#         asset_path: ./LAST_CHANGES.md
+#         asset_name: LAST_CHANGES.md
+#         asset_content_type: text/plain
 
     - name: Create Release
       id: create_release
