@@ -59,8 +59,17 @@ jobs:
         echo "Build full set of tools"
         make release
         make last_changes
-        last_changes=`cat LAST_CHANGES.md`
-        echo "LAST_CHANGES=${last_changes}" >> $GITHUB_ENV
+
+    - name: Upload CHANGES.md
+      id: upload-changes
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./LAST_CHANGES.md
+        asset_name: LAST_CHANGES.md
+        asset_content_type: text/plain
 
     - name: Create Release
       id: create_release
@@ -70,20 +79,9 @@ jobs:
       with:
         tag_name: ${{ github.ref }}
         release_name: Release ${{ github.ref }}
-        body: ${{ env.LAST_CHANGES }}
+        bodyFile: "LAST_CHANGES.md"
         draft: false
         prerelease: false
-
-    - name: Upload CHANGES.md
-      id: upload-changes
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./CHANGES.md
-        asset_name: CHANGES.md
-        asset_content_type: text/plain
 
     - name: Upload auth-proxy-tools
       id: upload-auth-proxy-tools
