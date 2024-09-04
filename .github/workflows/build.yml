@@ -58,6 +58,7 @@ jobs:
 
         echo "Build full set of tools"
         make release
+        echo "LAST_CHANGES=`make last_changes`" >> "$GITHUB_ENV"
 
     - name: Create Release
       id: create_release
@@ -67,8 +68,7 @@ jobs:
       with:
         tag_name: ${{ github.ref }}
         release_name: Release ${{ github.ref }}
-        body:
-          make last_changes
+        body: ${{ env.LAST_CHANGES }}
         draft: false
         prerelease: false
 
