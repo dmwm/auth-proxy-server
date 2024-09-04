@@ -30,11 +30,11 @@ func TestCollector(t *testing.T) {
 	collector := NewCollector(3, server.URL, "user", "pass")
 
 	// Create some test records
-	records := []LogRecord{
-		{Method: "GET", API: "API1", Status: 200},
-		{Method: "PUT", API: "API2", Status: 200},
-		{Method: "POST", API: "API3", Status: 200},
-		{Method: "DELETE", API: "API4", Status: 200},
+	records := []HTTPRecord{
+		{Data: LogRecord{Method: "GET", API: "API1", Status: 200}},
+		{Data: LogRecord{Method: "PUT", API: "API2", Status: 200}},
+		{Data: LogRecord{Method: "POST", API: "API3", Status: 200}},
+		{Data: LogRecord{Method: "DELETE", API: "API4", Status: 200}},
 	}
 
 	// Collect and send the records

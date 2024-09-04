@@ -33,6 +33,21 @@ var CMSMonitType string
 // CMSMonitProducer controls CMS Monit producer name
 var CMSMonitProducer string
 
+// CollectorURL
+var CollectorURL string
+
+// CollectorSize
+var CollectorSize int
+
+// CollectorLogin
+var CollectorLogin string
+
+// CollectorPassword
+var CollectorPassword string
+
+// LogCollector pointer
+var LogCollector *Collector
+
 // HTTPRecord provides http record we send to logs endpoint
 type HTTPRecord struct {
 	Producer  string    `json:"producer"`  // name of the producer
@@ -218,6 +233,15 @@ func LogRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 	defer logger.Sync()      // flushes buffer, if any
 	zapLog := logger.Sugar() // get sugar logger (JSON one)
 
+	// initialize log collector
+	if CollectorURL != "" && CollectorLogin != "" && CollectorPassword != "" && LogCollector == nil {
+		maxSize := CollectorSize
+		if maxSize == 0 {
+			maxSize = 1000
+		}
+		LogCollector = NewCollector(maxSize, CollectorURL, CollectorLogin, CollectorPassword)
+	}
+
 	// our apache configuration
 	// CustomLog "||@APACHE2_ROOT@/bin/rotatelogs -f @LOGDIR@/access_log_%Y%m%d.txt 86400" \
 	//   "%t %v [client: %a] [backend: %h] \"%r\" %>s [data: %I in %O out %b body %D us ] [auth: %{SSL_PROTOCOL}x %{SSL_CIPHER}x \"%{SSL_CLIENT_S_DN}x\" \"%{cms-auth}C\" ] [ref: \"%{Referer}i\" \"%{User-Agent}i\" ]"
@@ -355,11 +379,15 @@ func LogRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 		Host:      hostname,
 		Data:      rec,
 	}
-	data, err := json.Marshal(hr)
-	if err == nil {
-		fmt.Println(string(data))
+	if LogCollector != nil {
+		err = LogCollector.CollectAndSend(hr)
 	} else {
-		log.Println("unable to produce record for MONIT, error", err)
+		data, err := json.Marshal(hr)
+		if err == nil {
+			fmt.Println(string(data))
+		} else {
+			log.Println("unable to produce record for MONIT, error", err)
+		}
 	}
 }
 

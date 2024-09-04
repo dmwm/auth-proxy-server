@@ -12,7 +12,7 @@ import (
 // Collector holds a fixed-size list of records
 type Collector struct {
 	mu         sync.Mutex
-	records    []LogRecord
+	records    []HTTPRecord
 	maxSize    int
 	endpoint   string
 	httpClient *http.Client
@@ -23,7 +23,7 @@ type Collector struct {
 func NewCollector(maxSize int, endpoint, login, password string) *Collector {
 	auth := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", login, password)))
 	return &Collector{
-		records:    make([]LogRecord, 0, maxSize),
+		records:    make([]HTTPRecord, 0, maxSize),
 		maxSize:    maxSize,
 		endpoint:   endpoint,
 		httpClient: &http.Client{},
@@ -32,7 +32,7 @@ func NewCollector(maxSize int, endpoint, login, password string) *Collector {
 }
 
 // CollectAndSend collects a new record. If the list reaches the maxSize, it sends the records to the configured endpoint and resets the list.
-func (c *Collector) CollectAndSend(record LogRecord) error {
+func (c *Collector) CollectAndSend(record HTTPRecord) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
