@@ -90,6 +90,6 @@ changes:
 	./gen_release_log.sh
 
 last_changes:
-	./extract_last_changes.sh
+	./extract_last_changes.sh 2>&1 1>& last_changes.txt
 
 release: clean build_amd64 build_arm64 build_windows build_power8 build_darwin tarball changes

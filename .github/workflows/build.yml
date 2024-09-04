@@ -58,8 +58,8 @@ jobs:
 
         echo "Build full set of tools"
         make release
-        last_changes=`make last_changes`
-        cat ${last_changes}
+        make last_changes
+        last_changes=`cat last_changes.txt`
         echo "LAST_CHANGES=${last_changes}" >> $GITHUB_ENV
 
     - name: Create Release
