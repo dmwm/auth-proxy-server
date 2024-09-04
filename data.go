@@ -25,50 +25,49 @@ type Ingress struct {
 
 // Configuration stores server configuration parameters
 type Configuration struct {
-	Port                int             `json:"port"`                   // server port number
-	MetricsPort         int             `json:"metrics_port"`           // server metrics port number
-	RootCAs             string          `json:"rootCAs"`                // server Root CAs path
-	Base                string          `json:"base"`                   // base URL
-	StaticPage          string          `json:"static_page"`            // static file to use
-	LogFile             string          `json:"log_file"`               // server log file
-	ClientID            string          `json:"client_id"`              // OICD client id
-	ClientSecret        string          `json:"client_secret"`          // OICD client secret
-	IAMURL              string          `json:"iam_url"`                // IAM URL
-	IAMClientID         string          `json:"iam_client_id"`          // IAM client id
-	IAMClientSecret     string          `json:"iam_client_secret"`      // IAM client secret
-	IAMBatchSize        int             `json:"iam_batch_size"`         // batch size for IAM requests
-	IAMRenewInterval    int             `json:"iam_renew_interval"`     // interval to renew IAM records
-	TargetURL           string          `json:"target_url"`             // proxy target url (where requests will go)
-	XForwardedHost      string          `json:"X-Forwarded-Host"`       // X-Forwarded-Host field of HTTP request
-	XContentTypeOptions string          `json:"X-Content-Type-Options"` // X-Content-Type-Options option
-	DocumentRoot        string          `json:"document_root"`          // root directory for the server
-	OAuthURL            string          `json:"oauth_url"`              // CERN SSO OAuth2 realm url
-	AuthTokenURL        string          `json:"auth_token_url"`         // CERN SSO OAuth2 OICD Token url
-	CMSHeaders          bool            `json:"cms_headers"`            // set CMS headers
-	RedirectURL         string          `json:"redirect_url"`           // redirect auth url for proxy server
-	Verbose             int             `json:"verbose"`                // verbose output
-	Ingress             []Ingress       `json:"ingress"`                // incress section
-	IngressFiles        []string        `json:"ingress_files"`          // use ingress files for ingress rules
-	ServerCrt           string          `json:"server_cert"`            // server certificate
-	ServerKey           string          `json:"server_key"`             // server certificate
-	Hmac                string          `json:"hmac"`                   // cmsweb hmac file
-	CricURL             string          `json:"cric_url"`               // CRIC URL
-	CricFile            string          `json:"cric_file"`              // name of the CRIC file
-	CricVerbose         int             `json:"cric_verbose"`           // verbose output for cric
-	UpdateCricInterval  int64           `json:"update_cric"`            // interval (in sec) to update cric records
-	UTC                 bool            `json:"utc"`                    // report logger time in UTC
-	ReadTimeout         int             `json:"read_timeout"`           // server read timeout in sec
-	WriteTimeout        int             `json:"write_timeout"`          // server write timeout in sec
-	MonitType           string          `json:"monit_type"`             // monit record type
-	MonitProducer       string          `json:"monit_producer"`         // monit record producer
-	Scitokens           ScitokensConfig `json:"scitokens"`              // scitokens configuration
-	WellKnown           string          `json:"well_known"`             // location of well-known area
-	Providers           []string        `json:"providers`               // list of JWKS providers
-	MinTLSVersion       string          `json:"minTLSVersion"`          // minimum TLS version
-	MaxTLSVersion       string          `json:"maxTLSVersion"`          // maximum TLS version
-	CipherSuites        string          `json:"cipher_suites"`          // use custom CipherSuites
-	InsecureSkipVerify  bool            `json:"insecureSkipVerify"`     // tls configuration option
-	DebugTLSHandshake   bool            `json:"debugTLSHandshake"`      // enable TLS handshake debug info on stdout
+	Port                int       `json:"port"`                   // server port number
+	MetricsPort         int       `json:"metrics_port"`           // server metrics port number
+	RootCAs             string    `json:"rootCAs"`                // server Root CAs path
+	Base                string    `json:"base"`                   // base URL
+	StaticPage          string    `json:"static_page"`            // static file to use
+	LogFile             string    `json:"log_file"`               // server log file
+	ClientID            string    `json:"client_id"`              // OICD client id
+	ClientSecret        string    `json:"client_secret"`          // OICD client secret
+	IAMURL              string    `json:"iam_url"`                // IAM URL
+	IAMClientID         string    `json:"iam_client_id"`          // IAM client id
+	IAMClientSecret     string    `json:"iam_client_secret"`      // IAM client secret
+	IAMBatchSize        int       `json:"iam_batch_size"`         // batch size for IAM requests
+	IAMRenewInterval    int       `json:"iam_renew_interval"`     // interval to renew IAM records
+	TargetURL           string    `json:"target_url"`             // proxy target url (where requests will go)
+	XForwardedHost      string    `json:"X-Forwarded-Host"`       // X-Forwarded-Host field of HTTP request
+	XContentTypeOptions string    `json:"X-Content-Type-Options"` // X-Content-Type-Options option
+	DocumentRoot        string    `json:"document_root"`          // root directory for the server
+	OAuthURL            string    `json:"oauth_url"`              // CERN SSO OAuth2 realm url
+	AuthTokenURL        string    `json:"auth_token_url"`         // CERN SSO OAuth2 OICD Token url
+	CMSHeaders          bool      `json:"cms_headers"`            // set CMS headers
+	RedirectURL         string    `json:"redirect_url"`           // redirect auth url for proxy server
+	Verbose             int       `json:"verbose"`                // verbose output
+	Ingress             []Ingress `json:"ingress"`                // incress section
+	IngressFiles        []string  `json:"ingress_files"`          // use ingress files for ingress rules
+	ServerCrt           string    `json:"server_cert"`            // server certificate
+	ServerKey           string    `json:"server_key"`             // server certificate
+	Hmac                string    `json:"hmac"`                   // cmsweb hmac file
+	CricURL             string    `json:"cric_url"`               // CRIC URL
+	CricFile            string    `json:"cric_file"`              // name of the CRIC file
+	CricVerbose         int       `json:"cric_verbose"`           // verbose output for cric
+	UpdateCricInterval  int64     `json:"update_cric"`            // interval (in sec) to update cric records
+	UTC                 bool      `json:"utc"`                    // report logger time in UTC
+	ReadTimeout         int       `json:"read_timeout"`           // server read timeout in sec
+	WriteTimeout        int       `json:"write_timeout"`          // server write timeout in sec
+
+	Scitokens          ScitokensConfig `json:"scitokens"`          // scitokens configuration
+	WellKnown          string          `json:"well_known"`         // location of well-known area
+	Providers          []string        `json:"providers`           // list of JWKS providers
+	MinTLSVersion      string          `json:"minTLSVersion"`      // minimum TLS version
+	MaxTLSVersion      string          `json:"maxTLSVersion"`      // maximum TLS version
+	CipherSuites       string          `json:"cipher_suites"`      // use custom CipherSuites
+	InsecureSkipVerify bool            `json:"insecureSkipVerify"` // tls configuration option
+	DebugTLSHandshake  bool            `json:"debugTLSHandshake"`  // enable TLS handshake debug info on stdout
 
 	KeepAlive           bool `json:"keepAlive"`           // keep alive for http proxy transport
 	KeepAliveTimeout    int  `json:"keepAliveTimeout"`    // keep alive timeout
@@ -81,6 +80,14 @@ type Configuration struct {
 	DomainNames []string `json:"domain_names"` // list of domain names to use for LetsEncrypt
 
 	ZapLogger string `json:"zap_logger"` // define zap logger usage
+
+	// Monit pieces
+	MonitType         string `json:"monit_type"`         // monit record type
+	MonitProducer     string `json:"monit_producer"`     // monit record producer
+	CollectorURL      string `json:"collector_url"`      // collector url end-point
+	CollectorLogin    string `json:"collector_login"`    // collector login name
+	CollectorPassword string `json:"collector_password"` // collector password
+	CollectorSize     int    `json:"collector_size"`     // collector pool size (in terms of record)
 
 	// CouchDB headers, see
 	// https://docs.couchdb.org/en/3.1.2/api/server/authn.html#proxy-authentication
