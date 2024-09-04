@@ -23,8 +23,3 @@ jobs:
 
     - name: Test
       run: make test
-
-    - name: Changes
-      run: |
-        make changes
-        cat CHANGES.md
