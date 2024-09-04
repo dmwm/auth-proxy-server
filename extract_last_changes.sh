@@ -12,5 +12,5 @@ fi
 
 awk '
 /^## / {if (p) exit; p=1; print $0; next} 
-p' CHANGES.md
+p' CHANGES.md | sed -e "s,##,Release:,g" 2>&1 1>& LAST_CHANGES.md
 
