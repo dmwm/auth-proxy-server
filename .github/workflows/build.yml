@@ -58,7 +58,8 @@ jobs:
 
         echo "Build full set of tools"
         make release
-        make last_changes
+        echo "Generate CHANGES.md and LAST_CHANGES.md"
+        make changes
 
     - name: Create Release
       id: create_release
