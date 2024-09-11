@@ -242,7 +242,7 @@ func LogRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 		if maxSize == 0 {
 			maxSize = 1000
 		}
-		LogCollector = NewCollector(maxSize, CollectorURL, CollectorLogin, CollectorPassword)
+		LogCollector = NewCollector(maxSize, CollectorURL, CollectorLogin, CollectorPassword, nil)
 	}
 
 	// our apache configuration

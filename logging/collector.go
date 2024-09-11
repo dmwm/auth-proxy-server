@@ -22,13 +22,16 @@ type Collector struct {
 }
 
 // NewCollector initializes and returns a new Collector
-func NewCollector(maxSize int, endpoint, login, password string) *Collector {
+func NewCollector(maxSize int, endpoint, login, password string, httpClient *http.Client) *Collector {
 	auth := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", login, password)))
+	if httpClient == nil {
+		httpClient = &http.Client{}
+	}
 	return &Collector{
 		records:    make([]HTTPRecord, 0, maxSize),
 		maxSize:    maxSize,
 		endpoint:   endpoint,
-		httpClient: &http.Client{},
+		httpClient: httpClient,
 		authHeader: "Basic " + auth,
 	}
 }
