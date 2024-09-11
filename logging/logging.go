@@ -45,6 +45,9 @@ var CollectorLogin string
 // CollectorPassword
 var CollectorPassword string
 
+// CollectorVerbose
+var CollectorVerbose int
+
 // LogCollector pointer
 var LogCollector *Collector
 
@@ -381,12 +384,19 @@ func LogRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 	}
 	if LogCollector != nil {
 		err = LogCollector.CollectAndSend(hr)
+		if err == nil {
+			if CollectorVerbose > 0 {
+				log.Println("collector successfully send", CollectorSize, "records to MONIT")
+			}
+		} else {
+			log.Println("ERROR: unable to send collector log records, error:", err)
+		}
 	} else {
 		data, err := json.Marshal(hr)
 		if err == nil {
 			fmt.Println(string(data))
 		} else {
-			log.Println("unable to produce record for MONIT, error", err)
+			log.Println("ERROR: unable to produce record for MONIT, error", err)
 		}
 	}
 }

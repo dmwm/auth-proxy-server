@@ -5,7 +5,9 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
+	"net/http/httputil"
 	"sync"
 )
 
@@ -40,6 +42,9 @@ func (c *Collector) CollectAndSend(record HTTPRecord) error {
 
 	if len(c.records) >= c.maxSize {
 		if err := c.Send(); err != nil {
+			if CollectorVerbose > 0 {
+				log.Println("ERROR: collector fails to send record to MONIT with", err)
+			}
 			return err
 		}
 		// Reset the list after sending
@@ -64,6 +69,14 @@ func (c *Collector) Send() error {
 	if err != nil {
 		return fmt.Errorf("failed to create HTTP request: %w", err)
 	}
+	if CollectorVerbose > 2 {
+		reqDump, err := httputil.DumpRequestOut(req, true)
+		if err == nil {
+			log.Println("collector request dump", string(reqDump))
+		} else {
+			log.Println("ERROR: fail to perform dump of HTTP request, error:", err)
+		}
+	}
 	// Set the content type and authorization headers
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", c.authHeader)
@@ -71,6 +84,14 @@ func (c *Collector) Send() error {
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("failed to send HTTP request: %w", err)
+	}
+	if CollectorVerbose > 2 {
+		respDump, err := httputil.DumpResponse(resp, true)
+		if err == nil {
+			log.Println("collector response dump", string(respDump))
+		} else {
+			log.Println("ERROR: fail to perform dump of HTTP response, error:", err)
+		}
 	}
 	defer resp.Body.Close()
 
