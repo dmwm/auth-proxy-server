@@ -88,6 +88,7 @@ type Configuration struct {
 	CollectorLogin    string `json:"collector_login"`    // collector login name
 	CollectorPassword string `json:"collector_password"` // collector password
 	CollectorSize     int    `json:"collector_size"`     // collector pool size (in terms of record)
+	CollectorVerbose  int    `json:"collector_verbose"`  // collector verbosity level
 
 	// CouchDB headers, see
 	// https://docs.couchdb.org/en/3.1.2/api/server/authn.html#proxy-authentication
