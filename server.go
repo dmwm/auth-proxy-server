@@ -98,6 +98,11 @@ func Server(config string, port, metricsPort int, logFile string, useX509, scito
 	// initialize cmsauth module
 	CMSAuth.Init(Config.Hmac)
 
+	// initialize log collector attributes
+	logging.CollectorURL = Config.CollectorURL
+	logging.CollectorLogin = Config.CollectorLogin
+	logging.CollectorPassword = Config.CollectorPassword
+
 	// start our servers
 	if useX509 {
 		if Config.CricURL != "" || Config.CricFile != "" {
