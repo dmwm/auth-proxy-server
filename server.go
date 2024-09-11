@@ -102,6 +102,7 @@ func Server(config string, port, metricsPort int, logFile string, useX509, scito
 	logging.CollectorURL = Config.CollectorURL
 	logging.CollectorLogin = Config.CollectorLogin
 	logging.CollectorPassword = Config.CollectorPassword
+	logging.CollectorSize = Config.CollectorSize
 
 	// start our servers
 	if useX509 {
