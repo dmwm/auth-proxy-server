@@ -4,9 +4,9 @@ go 1.23.1
 
 require (
 	github.com/coreos/go-oidc/v3 v3.11.0
-	github.com/dmwm/auth-proxy-server/auth v0.0.0-20240911114934-33c5f1f2372f
-	github.com/dmwm/auth-proxy-server/cric v0.0.0-20240911114934-33c5f1f2372f
-	github.com/dmwm/auth-proxy-server/logging v0.0.0-20240911114934-33c5f1f2372f
+	github.com/dmwm/auth-proxy-server/auth v0.0.0-20240911151148-0d255915bb68
+	github.com/dmwm/auth-proxy-server/cric v0.0.0-20240911151148-0d255915bb68
+	github.com/dmwm/auth-proxy-server/logging v0.0.0-20240911151148-0d255915bb68
 	github.com/dmwm/cmsauth v0.0.4
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/google/uuid v1.6.0
