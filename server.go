@@ -1,7 +1,9 @@
 package main
 
 import (
+	"crypto/tls"
 	"log"
+	"net/http"
 	"time"
 
 	"github.com/dmwm/auth-proxy-server/auth"
@@ -104,6 +106,19 @@ func Server(config string, port, metricsPort int, logFile string, useX509, scito
 	logging.CollectorPassword = Config.CollectorPassword
 	logging.CollectorSize = Config.CollectorSize
 	logging.CollectorVerbose = Config.CollectorVerbose
+	httpClient := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				RootCAs: _rootCAs,
+			},
+		},
+	}
+	logging.LogCollector = logging.NewCollector(
+		Config.CollectorSize,
+		Config.CollectorURL,
+		Config.CollectorLogin,
+		Config.CollectorPassword,
+		httpClient)
 
 	// start our servers
 	if useX509 {
