@@ -45,7 +45,11 @@ func Server(config string, port, metricsPort int, logFile string, useX509, scito
 	log.SetOutput(new(logging.LogWriter))
 	if logFile != "" {
 		log.Println("overwrite server log file to", logFile)
-		Config.LogFile = logFile
+		if logFile == "stdout" {
+			Config.LogFile = ""
+		} else {
+			Config.LogFile = logFile
+		}
 	}
 	if Config.LogFile != "" {
 		rl, err := rotatelogs.New(LogName())
