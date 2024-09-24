@@ -43,6 +43,10 @@ func Server(config string, port, metricsPort int, logFile string, useX509, scito
 		log.SetFlags(log.Lshortfile)
 	}
 	log.SetOutput(new(logging.LogWriter))
+	if logFile != "" {
+		log.Println("overwrite server log file to", logFile)
+		Config.LogFile = logFile
+	}
 	if Config.LogFile != "" {
 		rl, err := rotatelogs.New(LogName())
 		if err == nil {
@@ -65,10 +69,6 @@ func Server(config string, port, metricsPort int, logFile string, useX509, scito
 	if metricsPort > 0 {
 		log.Println("overwrite server metrics port number to", metricsPort)
 		Config.MetricsPort = metricsPort
-	}
-	if logFile != "" {
-		log.Println("overwrite server log file to", logFile)
-		Config.LogFile = logFile
 	}
 	if Config.Verbose > 0 {
 		log.Printf("%+v\n", Config.String())
