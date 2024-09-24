@@ -89,6 +89,12 @@ type LogRecord struct {
 	Timestamp      int64   `json:"timestamp"`        // record timestamp
 	RecTimestamp   int64   `json:"rec_timestamp"`    // timestamp for backward compatibility with apache
 	RecDate        string  `json:"rec_date"`         // timestamp for backward compatibility with apache
+
+	// additional fields required by monitoring
+	CmswebEnv     string `json:"cmsweb_env"`     // cmsweb environment
+	CmswebCluster string `json:"cmsweb_cluster"` // cmsweb cluster
+	ClientVersion string `json:"client_version"` // client version
+	ProxyServer   string `json:"proxy_server"`   // proxy server
 }
 
 // UTC flag represents UTC time zone for log messages
@@ -369,6 +375,10 @@ func LogRequest(w http.ResponseWriter, r *http.Request, start time.Time, cauth s
 		Timestamp:      tstamp,
 		RecTimestamp:   int64(time.Now().Unix()),
 		RecDate:        time.Now().Format(time.RFC3339),
+		CmswebEnv:      os.Getenv("CMSWEB_ENV"),
+		CmswebCluster:  os.Getenv("CMSWEB_CLUSTER"),
+		ClientVersion:  userAgentName(r.Header.Get("User-Agent")),
+		ProxyServer:    os.Getenv("APS_SERVER"),
 	}
 	// print monit record
 	hostname, err := os.Hostname()
