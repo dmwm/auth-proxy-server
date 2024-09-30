@@ -100,7 +100,9 @@ func UpdateCricRecords(key, cricFile, cricURL string, cricUpdateInterval int64, 
 
 // UpdateCMSRecords updates CMS Records
 func UpdateCMSRecords(cricRecords cmsauth.CricRecords) {
-	//     cmsRecords = make(cmsauth.CricRecords)
+	if cmsRecords == nil {
+		cmsRecords = make(cmsauth.CricRecords)
+	}
 	for _, r := range cricRecords {
 		for _, dn := range r.DNs {
 			sortedDN := cmsauth.GetSortedDN(dn)
