@@ -103,14 +103,18 @@ func UpdateCMSRecords(cricRecords cmsauth.CricRecords) {
 	if cmsRecords == nil {
 		cmsRecords = make(cmsauth.CricRecords)
 	}
+	// create new local copy of cric records map
+	recordMap := make(cmsauth.CricRecords)
 	for _, r := range cricRecords {
 		for _, dn := range r.DNs {
 			sortedDN := cmsauth.GetSortedDN(dn)
 			mutex.Lock()
-			cmsRecords[sortedDN] = r
+			recordMap[sortedDN] = r
 			mutex.Unlock()
 		}
 	}
+	// update cmsRecords with new recordMap
+	cmsRecords = recordMap
 }
 
 // FindUser finds user info in cric records for given DN
