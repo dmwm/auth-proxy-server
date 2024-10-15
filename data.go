@@ -80,6 +80,9 @@ type Configuration struct {
 	DomainNames []string `json:"domain_names"` // list of domain names to use for LetsEncrypt
 
 	ZapLogger string `json:"zap_logger"` // define zap logger usage
+	// debug server info
+
+	DebugAllowedIPs []string `json:"debug_allowed_ips"` // list of allowed IPs to view debug/profile info
 
 	// Monit pieces
 	MonitType         string `json:"monit_type"`         // monit record type

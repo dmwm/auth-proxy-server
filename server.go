@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/tls"
+        "fmt"
 	"log"
 	"net/http"
 	"time"
@@ -25,6 +26,13 @@ var NumLogicalCores int
 
 // CMSAuth structure to create CMS Auth headers
 var CMSAuth cmsauth.CMSAuth
+
+// redirectToHTTPS will redirect all HTTP requests to HTTPS
+func redirectToHTTPS(w http.ResponseWriter, r *http.Request) {
+	httpsURL := fmt.Sprintf("https://%s%s", r.Host, r.URL.RequestURI())
+	log.Printf("redirect %s to https\n", r.URL.String())
+	http.Redirect(w, r, httpsURL, http.StatusMovedPermanently)
+}
 
 // Server starts APS server
 func Server(config string, port, metricsPort int, logFile string, useX509, scitokens, rules bool) {
@@ -123,6 +131,20 @@ func Server(config string, port, metricsPort int, logFile string, useX509, scito
 		Config.CollectorLogin,
 		Config.CollectorPassword,
 		httpClient)
+
+	// start HTTP server for redirecting http requests to https end-point
+	go func() {
+		httpServer := &http.Server{
+			Addr:    ":80", // HTTP on port 80
+			Handler: http.HandlerFunc(redirectToHTTPS),
+		}
+
+		log.Println("HTTP to HTTPS redirect server is running on port 80...")
+		err := httpServer.ListenAndServe()
+		if err != nil {
+			log.Println("Error starting HTTP server:", err)
+		}
+	}()
 
 	// start our servers
 	if useX509 {
