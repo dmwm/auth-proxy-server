@@ -124,6 +124,9 @@ func x509ProxyServer() {
 	// the server settings handler
 	http.HandleFunc(fmt.Sprintf("%s/server", Config.Base), settingsHandler)
 
+	// Only expose debug endpoints (pprof, expvar) if the client IP is allowed
+	http.HandleFunc("/debug/", debugHandler)
+	
 	// the request handler
 	http.HandleFunc("/", x509RequestHandler)
 

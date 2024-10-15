@@ -14,6 +14,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+        "net"
 	"net/http"
 	"net/url"
 	"os"
@@ -647,3 +648,28 @@ func SetReferrer(r *http.Request) {
 	r.Header.Set("Referer", ref)
 	r.Header.Set("Referrer", ref)
 }
+
+// Checks if the remote IP is in the allowed range
+func isAllowedIP(r *http.Request) bool {
+	// Extract the remote IP from the request (format could be IP:port)
+	ip, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		log.Printf("Error parsing RemoteAddr: %v\n", err)
+		return false
+	}
+
+	// check if IP is allowed to view debug info
+	return InList(ip, Config.DebugAllowedIPs)
+}
+
+// Middleware to restrict pprof and expvar to allowed IPs
+func debugHandler(w http.ResponseWriter, r *http.Request) {
+	if !isAllowedIP(r) {
+		http.Error(w, "403 Forbidden", http.StatusForbidden)
+		return
+	}
+
+	// Serve the original debug endpoint if the IP is allowed
+	http.DefaultServeMux.ServeHTTP(w, r)
+}
+
