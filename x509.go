@@ -126,6 +126,7 @@ func x509ProxyServer() {
 
 	// Only expose debug endpoints (pprof, expvar) if the client IP is allowed
 	http.HandleFunc("/debug/", debugHandler)
+	
 	// the request handler
 	http.HandleFunc("/", x509RequestHandler)
 
