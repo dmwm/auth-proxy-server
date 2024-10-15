@@ -670,6 +670,7 @@ func oauthProxyServer() {
 
 	// the callback authentication handler
 	http.HandleFunc(fmt.Sprintf("%s/callback", Config.Base), oauthCallbackHandler)
+	
 	// Only expose debug endpoints (pprof, expvar) if the client IP is allowed
 	http.HandleFunc("/debug/", debugHandler)
 
