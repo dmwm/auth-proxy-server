@@ -45,11 +45,17 @@ func main() {
 	flag.BoolVar(&scitokens, "scitokens", false, "start scitokens server")
 	var rules bool
 	flag.BoolVar(&rules, "rules", false, "print APS redirect rules")
+	var testRule string
+	flag.StringVar(&testRule, "testRule", "", "url path")
 	var version bool
 	flag.BoolVar(&version, "version", false, "print version information about the server")
 	flag.Parse()
 	if version {
 		fmt.Println(info())
+		os.Exit(0)
+	}
+	if testRule != "" {
+		testRedirectRule(config, testRule)
 		os.Exit(0)
 	}
 	Server(config, port, metricsPort, logFile, useX509, scitokens, rules)
