@@ -16,7 +16,6 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -75,6 +74,11 @@ func reverseProxy(targetURL string, w http.ResponseWriter, r *http.Request) {
 			}).DialContext,
 			TLSHandshakeTimeout: time.Duration(Config.TLSHandshakeTimeout) * time.Second,
 		}
+	}
+	// set CORPS headers if server is configured with them
+	if Config.Corps {
+		w.Header().Set("Access-Control-Allow-Origin", "*") // Allow all origins
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 	}
 
 	// set custom transport to capture size of response body
@@ -258,7 +262,6 @@ func readIngressRules() (map[string]Ingress, []string) {
 		rmap, rules = RedirectRules(Config.Ingress)
 	}
 	if Config.Verbose > 0 {
-		sort.Strings(rules)
 		var maxLen int
 		for _, r := range rules {
 			if len(r) > maxLen {
@@ -286,6 +289,31 @@ func redirectRule(r Ingress, maxLen int) string {
 		out += " (strict)"
 	}
 	return out
+}
+
+// helper function to test matching of redirect rule
+// logic should match func redirect
+func testRedirectRule(config, rule string) {
+	err := parseConfig(config)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("find new rule for path", rule)
+	_ingressMap, _ingressRules = readIngressRules()
+	for _, key := range _ingressRules {
+		rec := _ingressMap[key]
+		// check that request URL path had ingress path with slash
+		if PathMatched(rule, rec.Path, rec.Strict) {
+			fmt.Printf("\n--- new match found: rule=%s rec=%+v key=%s\n", rule, rec, key)
+			fmt.Printf("HTTP r.URL.Path=%s redirected to %s%s\n", rule, rec.ServiceURL, rec.NewPath)
+			url := srvURL(rec.ServiceURL)
+			if rec.OldPath != "" {
+				// replace old path to new one, e.g. /couchdb/_all_dbs => /_all_dbs
+				rule = strings.Replace(rule, rec.OldPath, rec.NewPath, 1)
+				fmt.Printf("service url %s, new request path %s\n", url, rule)
+			}
+		}
+	}
 }
 
 // helper function to redirect HTTP requests based on configuration ingress rules
