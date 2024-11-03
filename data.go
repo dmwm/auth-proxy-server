@@ -69,6 +69,7 @@ type Configuration struct {
 	InsecureSkipVerify bool            `json:"insecureSkipVerify"` // tls configuration option
 	DebugTLSHandshake  bool            `json:"debugTLSHandshake"`  // enable TLS handshake debug info on stdout
 
+	Corps               bool `json:"coprs"`               // enable corps CORPS (Cross-Origin Resource Sharing)
 	KeepAlive           bool `json:"keepAlive"`           // keep alive for http proxy transport
 	KeepAliveTimeout    int  `json:"keepAliveTimeout"`    // keep alive timeout
 	IdleConnTimeout     int  `json:"idleConnTimeout"`     // idle connection timeout
