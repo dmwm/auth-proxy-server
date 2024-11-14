@@ -14,7 +14,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
-        "net"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -459,6 +459,7 @@ func getUserData(r *http.Request) map[string]interface{} {
 		cert, err := x509.ParseCertificate(asn1Data.Raw)
 		if err != nil {
 			log.Println("x509RequestHandler tls: failed to parse certificate from server: " + err.Error())
+			continue
 		}
 		if len(cert.UnhandledCriticalExtensions) > 0 {
 			if Config.Verbose > 2 {
@@ -672,4 +673,3 @@ func debugHandler(w http.ResponseWriter, r *http.Request) {
 	// Serve the original debug endpoint if the IP is allowed
 	http.DefaultServeMux.ServeHTTP(w, r)
 }
-
