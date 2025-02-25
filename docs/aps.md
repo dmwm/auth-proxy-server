@@ -115,6 +115,26 @@ log entry:
 As you can see the timestamp provide proper locale, i.e. UTC, and at the end it
 provides request and proxy response times consumed by HTTP request
 
+### Lookup existing rules
+The APS executable can be used to dump rules in human readable form using the following command:
+```
+# download APS executable for your architecture
+curl -ksLO https://github.com/dmwm/auth-proxy-server/releases/download/0.3.14/auth-proxy-tools_amd64.tar.gz
+
+# untar the archite
+tar xvfz  auth-proxy-tools_amd64.tar.gz
+
+# and locate your executable
+./auth-proxy-tools_amd64/auth-proxy-server -help
+
+# adjust your APS config to properly list your ingress files and dump them on stdout
+./auth-proxy-tools_amd64/auth-proxy-server -config=config.json -rules
+^/renew => http://auth-proxy-server.auth.svc.cluster.local:443/
+^/token => http://auth-proxy-server.auth.svc.cluster.local:443/
+....
+```
+The printed rules are shown in **exact order** as they will be traversed by APS server, and order of rules is **important**.
+
 ### Modules
 The APS codebase provides additional modules for day-to-day operations. Here we
 briefly list all of them:
