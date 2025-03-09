@@ -232,13 +232,7 @@ func srvURL(surl string) string {
 // helper function to print APS redirect rules from given config
 // the rules should not be sorted as their order affect end-point matching
 func printRules() {
-	var rmap map[string]Ingress
-	var rules []string
-	if len(Config.IngressFiles) > 0 {
-		rmap, rules = RedirectRulesFromFiles(Config.IngressFiles)
-	} else {
-		rmap, rules = RedirectRules(Config.Ingress)
-	}
+	rmap, rules := readIngressRules()
 	var maxLen int
 	for _, r := range rules {
 		if len(r) > maxLen {
@@ -260,18 +254,6 @@ func readIngressRules() (map[string]Ingress, []string) {
 		rmap, rules = RedirectRulesFromFiles(Config.IngressFiles)
 	} else {
 		rmap, rules = RedirectRules(Config.Ingress)
-	}
-	if Config.Verbose > 0 {
-		var maxLen int
-		for _, r := range rules {
-			if len(r) > maxLen {
-				maxLen = len(r)
-			}
-		}
-		log.Println("ingress paths", rules)
-		for _, item := range rmap {
-			log.Println(redirectRule(item, maxLen))
-		}
 	}
 	return rmap, rules
 }
@@ -436,5 +418,29 @@ func metricsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(promMetrics()))
+	return
+}
+
+// rules handler function to show server rules
+func rulesHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	rmap, rules := readIngressRules()
+	var maxLen int
+	for _, r := range rules {
+		if len(r) > maxLen {
+			maxLen = len(r)
+		}
+	}
+	var strRules []string
+	for _, r := range rules {
+		if rule, ok := rmap[r]; ok {
+			strRules = append(strRules, redirectRule(rule, maxLen))
+		}
+	}
+	w.Write([]byte(strings.Join(strRules, "\n")))
 	return
 }

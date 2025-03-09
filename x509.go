@@ -114,6 +114,8 @@ func x509RequestHandler(w http.ResponseWriter, r *http.Request) {
 func x509ProxyServer() {
 	// metrics handler
 	http.HandleFunc(fmt.Sprintf("%s/metrics", Config.Base), metricsHandler)
+	// rules handler
+	http.HandleFunc(fmt.Sprintf("%s/rules", Config.Base), rulesHandler)
 
 	// start http server to serve metrics only
 	if Config.MetricsPort > 0 {
@@ -126,7 +128,7 @@ func x509ProxyServer() {
 
 	// Only expose debug endpoints (pprof, expvar) if the client IP is allowed
 	http.HandleFunc("/debug/", debugHandler)
-	
+
 	// the request handler
 	http.HandleFunc("/", x509RequestHandler)
 

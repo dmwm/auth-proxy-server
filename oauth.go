@@ -658,6 +658,8 @@ func oauthProxyServer() {
 
 	// metrics handler
 	http.HandleFunc(fmt.Sprintf("%s/metrics", Config.Base), metricsHandler)
+	// rules handler
+	http.HandleFunc(fmt.Sprintf("%s/rules", Config.Base), rulesHandler)
 
 	// start http server to serve metrics only
 	if Config.MetricsPort > 0 {
@@ -670,7 +672,7 @@ func oauthProxyServer() {
 
 	// the callback authentication handler
 	http.HandleFunc(fmt.Sprintf("%s/callback", Config.Base), oauthCallbackHandler)
-	
+
 	// Only expose debug endpoints (pprof, expvar) if the client IP is allowed
 	http.HandleFunc("/debug/", debugHandler)
 
