@@ -18,7 +18,10 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
+
+	"github.com/dmwm/auth-proxy-server/cric"
 )
 
 // common set of ingress rule maps
@@ -425,6 +428,19 @@ func metricsHandler(w http.ResponseWriter, r *http.Request) {
 func rulesHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	userData := getUserData(r)
+	mapMutex := sync.RWMutex{}
+	mapMutex.RLock()
+	CMSAuth.SetCMSHeaders(r, userData, cric.CricRecords, false)
+	mapMutex.RUnlock()
+	authStatus := CMSAuth.CheckAuthnAuthz(r.Header)
+	mapMutex.RLock()
+	_, ok := userData["name"]
+	mapMutex.RUnlock()
+	if !ok || !authStatus {
+		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
