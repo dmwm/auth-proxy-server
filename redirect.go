@@ -439,7 +439,7 @@ func rulesHandler(w http.ResponseWriter, r *http.Request) {
 	mapMutex.RLock()
 	_, ok := userData["name"]
 	mapMutex.RUnlock()
-	if !ok || !authStatus {
+	if !(ok && authStatus) {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
