@@ -27,7 +27,7 @@ type Ingress struct {
 type Configuration struct {
 	Port                int       `json:"port"`                   // server port number
 	MetricsPort         int       `json:"metrics_port"`           // server metrics port number
-	RootCAs             string    `json:"rootCAs"`                // server Root CAs path
+	RootCAs             []string  `json:"rootCAs"`                // server Root CAs paths
 	Base                string    `json:"base"`                   // base URL
 	StaticPage          string    `json:"static_page"`            // static file to use
 	LogFile             string    `json:"log_file"`               // server log file

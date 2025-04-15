@@ -76,26 +76,28 @@ func RootCAs() *x509.CertPool {
 		log.Println("Load RootCAs from", Config.RootCAs)
 	}
 	rootCAs := x509.NewCertPool()
-	files, err := ioutil.ReadDir(Config.RootCAs)
-	if err != nil {
-		log.Printf("Unable to list files in '%s', error: %v\n", Config.RootCAs, err)
-		return rootCAs
-	}
-	for _, finfo := range files {
-		fname := fmt.Sprintf("%s/%s", Config.RootCAs, finfo.Name())
-		caCert, err := os.ReadFile(filepath.Clean(fname))
+	for _, rootCAdir := range Config.RootCAs {
+		files, err := ioutil.ReadDir(rootCAdir)
 		if err != nil {
-			if Config.Verbose > 2 {
-				log.Printf("Unable to read %s\n", fname)
-			}
+			log.Printf("Unable to list files in '%s', error: %v\n", Config.RootCAs, err)
+			return rootCAs
 		}
-		if ok := rootCAs.AppendCertsFromPEM(caCert); !ok {
-			if Config.Verbose > 2 {
-				log.Printf("invalid PEM format while importing trust-chain: %q", fname)
+		for _, finfo := range files {
+			fname := fmt.Sprintf("%s/%s", Config.RootCAs, finfo.Name())
+			caCert, err := os.ReadFile(filepath.Clean(fname))
+			if err != nil {
+				if Config.Verbose > 2 {
+					log.Printf("Unable to read %s\n", fname)
+				}
 			}
-		}
-		if Config.Verbose > 2 {
-			log.Println("Load CA file", fname)
+			if ok := rootCAs.AppendCertsFromPEM(caCert); !ok {
+				if Config.Verbose > 2 {
+					log.Printf("invalid PEM format while importing trust-chain: %q", fname)
+				}
+			}
+			if Config.Verbose > 2 {
+				log.Println("Load CA file", fname)
+			}
 		}
 	}
 	return rootCAs
