@@ -83,7 +83,7 @@ func RootCAs() *x509.CertPool {
 			return rootCAs
 		}
 		for _, finfo := range files {
-			fname := fmt.Sprintf("%s/%s", Config.RootCAs, finfo.Name())
+			fname := fmt.Sprintf("%s/%s", rootCAdir, finfo.Name())
 			caCert, err := os.ReadFile(filepath.Clean(fname))
 			if err != nil {
 				if Config.Verbose > 2 {
