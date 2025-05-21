@@ -79,7 +79,7 @@ func RootCAs() *x509.CertPool {
 	for _, rootCAdir := range Config.RootCAs {
 		files, err := ioutil.ReadDir(rootCAdir)
 		if err != nil {
-			log.Printf("Unable to list files in '%s', error: %v\n", Config.RootCAs, err)
+			log.Printf("Unable to list files in '%s', error: %v\n", rootCAdir, err)
 			return rootCAs
 		}
 		for _, finfo := range files {
