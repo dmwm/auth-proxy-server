@@ -1,12 +1,12 @@
 module github.com/dmwm/auth-proxy-server
 
-go 1.24.2
+go 1.24.5
 
 require (
-	github.com/coreos/go-oidc/v3 v3.14.1
-	github.com/dmwm/auth-proxy-server/auth v0.0.0-20250415153458-8ca09e6fb321
-	github.com/dmwm/auth-proxy-server/cric v0.0.0-20250415153458-8ca09e6fb321
-	github.com/dmwm/auth-proxy-server/logging v0.0.0-20250415153458-8ca09e6fb321
+	github.com/coreos/go-oidc/v3 v3.15.0
+	github.com/dmwm/auth-proxy-server/auth v0.0.0-20250731150723-80a856dbd588
+	github.com/dmwm/auth-proxy-server/cric v0.0.0-20250731150723-80a856dbd588
+	github.com/dmwm/auth-proxy-server/logging v0.0.0-20250731150723-80a856dbd588
 	github.com/dmwm/cmsauth v0.0.4
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/google/uuid v1.6.0
@@ -14,8 +14,8 @@ require (
 	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/stretchr/testify v1.10.0
 	github.com/thomasdarimont/go-kc-example v0.0.0-20170529223628-e3951d8faa4c
-	golang.org/x/crypto v0.37.0
-	golang.org/x/oauth2 v0.29.0
+	golang.org/x/crypto v0.40.0
+	golang.org/x/oauth2 v0.30.0
 )
 
 require (
@@ -33,9 +33,9 @@ require (
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
-	golang.org/x/net v0.37.0 // indirect
-	golang.org/x/sys v0.32.0 // indirect
-	golang.org/x/term v0.31.0 // indirect
-	golang.org/x/text v0.24.0 // indirect
+	golang.org/x/net v0.41.0 // indirect
+	golang.org/x/sys v0.34.0 // indirect
+	golang.org/x/term v0.33.0 // indirect
+	golang.org/x/text v0.27.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
