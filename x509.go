@@ -117,6 +117,9 @@ func x509ProxyServer() {
 	// rules handler
 	http.HandleFunc(fmt.Sprintf("%s/rules", Config.Base), rulesHandler)
 
+	// trouble page
+	http.HandleFunc("/auth/trouble", authTroubleHandler)
+
 	// start http server to serve metrics only
 	if Config.MetricsPort > 0 {
 		log.Println("Start x509 server metrics on port", Config.MetricsPort)
