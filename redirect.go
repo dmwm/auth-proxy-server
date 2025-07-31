@@ -86,9 +86,6 @@ func reverseProxy(targetURL string, w http.ResponseWriter, r *http.Request) {
 
 	// set custom transport to capture size of response body
 	//     proxy.Transport = &transport{http.DefaultTransport}
-	if Config.Verbose > 2 {
-		log.Printf("HTTP headers: %+v\n", r.Header)
-	}
 
 	// handle double slashes in request path
 	r.URL.Path = strings.Replace(r.URL.Path, "//", "/", -1)
@@ -132,11 +129,18 @@ func reverseProxy(targetURL string, w http.ResponseWriter, r *http.Request) {
 	}
 	r.Header.Set("X-Forwarded-For", r.RemoteAddr)
 	r.Host = url.Host
+	// Set Referrer header
+	SetReferrer(r)
+
+	// explicitly check ContentLength and if it zero make sure that request sets it
+	if r.Header.Get("Content-Length") == "0" {
+		r.ContentLength = 0
+	}
+
+	// log our proxy request
 	if Config.Verbose > 1 {
 		log.Printf("proxy request: %+v\n", r)
 	}
-	// Set Referrer header
-	SetReferrer(r)
 
 	// use custom modify response function to setup response headers
 	proxy.ModifyResponse = func(resp *http.Response) error {
