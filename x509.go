@@ -153,7 +153,11 @@ func x509ProxyServer() {
 			// start main HTTP server
 			customVerify := true
 			tlsCertVerify := false
-			server, err := getServer(":4443", serverCrt, serverKey, customVerify, tlsCertVerify)
+			addr := ":4443" // default port for /auth/trouble end-point
+			if Config.AuthTroublePort != 0 {
+				addr = fmt.Sprintf(":%d", Config.AuthTroublePort)
+			}
+			server, err := getServer(addr, serverCrt, serverKey, customVerify, tlsCertVerify)
 			if err != nil {
 				log.Fatalf("ERROR: unable to start x509 server, error %v\n", err)
 			}
