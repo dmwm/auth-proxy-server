@@ -112,6 +112,56 @@ func x509RequestHandler(w http.ResponseWriter, r *http.Request) {
 
 // helper function to start x509 proxy server
 func x509ProxyServer() {
+	// metrics handler
+	http.HandleFunc(fmt.Sprintf("%s/metrics", Config.Base), metricsHandler)
+	// rules handler
+	http.HandleFunc(fmt.Sprintf("%s/rules", Config.Base), rulesHandler)
+
+	// trouble page
+	//http.HandleFunc("/auth/trouble", authTroubleHandler)
+	http.HandleFunc("/auth/trouble", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "https://localhost:4443/auth/trouble", http.StatusFound)
+	})
+
+	// start http server to serve metrics only
+	if Config.MetricsPort > 0 {
+		log.Println("Start x509 server metrics on port", Config.MetricsPort)
+		go http.ListenAndServe(fmt.Sprintf(":%d", Config.MetricsPort), nil)
+	}
+
+	// the server settings handler
+	http.HandleFunc(fmt.Sprintf("%s/server", Config.Base), settingsHandler)
+
+	// Only expose debug endpoints (pprof, expvar) if the client IP is allowed
+	http.HandleFunc("/debug/", debugHandler)
+
+	// the request handler
+	http.HandleFunc("/", x509RequestHandler)
+
+	// start HTTPS server
+	if Config.LetsEncrypt {
+		server := LetsEncryptServer(Config.DomainNames...)
+		log.Println("Start X509 HTTPs server with LetsEncrypt", Config.DomainNames)
+		log.Fatal(server.ListenAndServeTLS("", ""))
+	} else {
+		// check if provided crt/key files exists
+		serverCrt := checkFile(Config.ServerCrt)
+		serverKey := checkFile(Config.ServerKey)
+
+		// start main HTTP server
+		server, err := getServer(serverCrt, serverKey, true)
+		if err != nil {
+			log.Fatalf("unable to start x509 server, error %v\n", err)
+		}
+		log.Println("Start X509 HTTPs server with", serverCrt, serverKey)
+		log.Fatal(server.ListenAndServeTLS(serverCrt, serverKey))
+	}
+
+}
+
+// helper function to start x509 proxy server
+func x509ProxyMiddlewareServer() {
+	log.Println("Use x509ProxyMiddlewareServer")
 	// use http mux server and attach to it our middleware layers
 	// this allows to move user certificate verification into middleware layer, see certMiddleware
 	// instead of using TLS handshake phase (original VerifyPeerCertificate option/function)

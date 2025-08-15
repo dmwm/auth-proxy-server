@@ -151,7 +151,11 @@ func Server(config string, port, metricsPort int, logFile string, useX509, scito
 		if Config.CricURL != "" || Config.CricFile != "" {
 			go cric.UpdateCricRecords("dn", Config.CricFile, Config.CricURL, Config.UpdateCricInterval, Config.CricVerbose)
 		}
-		x509ProxyServer()
+		if Config.X509MiddlewareServer {
+			x509ProxyMiddlewareServer()
+		} else {
+			x509ProxyServer()
+		}
 		return
 	} else if scitokens {
 		if Config.CricURL != "" || Config.CricFile != "" {

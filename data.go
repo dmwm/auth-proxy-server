@@ -60,14 +60,15 @@ type Configuration struct {
 	ReadTimeout         int       `json:"read_timeout"`           // server read timeout in sec
 	WriteTimeout        int       `json:"write_timeout"`          // server write timeout in sec
 
-	Scitokens          ScitokensConfig `json:"scitokens"`          // scitokens configuration
-	WellKnown          string          `json:"well_known"`         // location of well-known area
-	Providers          []string        `json:"providers`           // list of JWKS providers
-	MinTLSVersion      string          `json:"minTLSVersion"`      // minimum TLS version
-	MaxTLSVersion      string          `json:"maxTLSVersion"`      // maximum TLS version
-	CipherSuites       string          `json:"cipher_suites"`      // use custom CipherSuites
-	InsecureSkipVerify bool            `json:"insecureSkipVerify"` // tls configuration option
-	DebugTLSHandshake  bool            `json:"debugTLSHandshake"`  // enable TLS handshake debug info on stdout
+	Scitokens            ScitokensConfig `json:"scitokens"`            // scitokens configuration
+	WellKnown            string          `json:"well_known"`           // location of well-known area
+	Providers            []string        `json:"providers`             // list of JWKS providers
+	MinTLSVersion        string          `json:"minTLSVersion"`        // minimum TLS version
+	MaxTLSVersion        string          `json:"maxTLSVersion"`        // maximum TLS version
+	CipherSuites         string          `json:"cipher_suites"`        // use custom CipherSuites
+	InsecureSkipVerify   bool            `json:"insecureSkipVerify"`   // tls configuration option
+	DebugTLSHandshake    bool            `json:"debugTLSHandshake"`    // enable TLS handshake debug info on stdout
+	X509MiddlewareServer bool            `json:"x509MiddlewareServer"` // use X509 proxy middleware server
 
 	Corps               bool `json:"coprs"`               // enable corps CORPS (Cross-Origin Resource Sharing)
 	KeepAlive           bool `json:"keepAlive"`           // keep alive for http proxy transport

@@ -230,10 +230,13 @@ func getServer(serverCrt, serverKey string, customVerify bool) (*http.Server, er
 			ClientCAs:    _rootCAs, // this comes from /etc/grid-security/certificate
 			RootCAs:      _rootCAs,
 			Certificates: []tls.Certificate{cert},
-			// to use TLS handshake phase for client certificate validation use
-			// VerifyPeerCertificate: VerifyPeerCertificate,
-			// but if we want to move this validation to middleware layer (after TLS handshake but before end-point)
-			// we do not need this assignment. Insetad, use certMiddleware and HTTP server mux
+		}
+		// to use TLS handshake phase for client certificate validation use
+		// VerifyPeerCertificate: VerifyPeerCertificate,
+		// but if we want to move this validation to middleware layer (after TLS handshake but before end-point)
+		// we do not need this assignment. Insetad, use certMiddleware and HTTP server mux
+		if !Config.X509MiddlewareServer {
+			tlsConfig.VerifyPeerCertificate = VerifyPeerCertificate
 		}
 	}
 	// enable debugging of TLS handshake
