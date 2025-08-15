@@ -112,13 +112,18 @@ func x509RequestHandler(w http.ResponseWriter, r *http.Request) {
 
 // helper function to start x509 proxy server
 func x509ProxyServer() {
+	// use http mux server and attach to it our middleware layers
+	// this allows to move user certificate verification into middleware layer, see certMiddleware
+	// instead of using TLS handshake phase (original VerifyPeerCertificate option/function)
+	mux := http.NewServeMux()
+
 	// metrics handler
-	http.HandleFunc(fmt.Sprintf("%s/metrics", Config.Base), metricsHandler)
+	mux.HandleFunc(fmt.Sprintf("%s/metrics", Config.Base), metricsHandler)
 	// rules handler
-	http.HandleFunc(fmt.Sprintf("%s/rules", Config.Base), rulesHandler)
+	mux.HandleFunc(fmt.Sprintf("%s/rules", Config.Base), rulesHandler)
 
 	// trouble page
-	http.HandleFunc("/auth/trouble", authTroubleHandler)
+	mux.HandleFunc("/auth/trouble", authTroubleHandler)
 
 	// start http server to serve metrics only
 	if Config.MetricsPort > 0 {
@@ -127,17 +132,18 @@ func x509ProxyServer() {
 	}
 
 	// the server settings handler
-	http.HandleFunc(fmt.Sprintf("%s/server", Config.Base), settingsHandler)
+	mux.HandleFunc(fmt.Sprintf("%s/server", Config.Base), settingsHandler)
 
 	// Only expose debug endpoints (pprof, expvar) if the client IP is allowed
-	http.HandleFunc("/debug/", debugHandler)
+	mux.HandleFunc("/debug/", debugHandler)
 
 	// the request handler
-	http.HandleFunc("/", x509RequestHandler)
+	mux.HandleFunc("/", x509RequestHandler)
 
 	// start HTTPS server
 	if Config.LetsEncrypt {
 		server := LetsEncryptServer(Config.DomainNames...)
+		server.Handler = certMiddleware(mux)
 		log.Println("Start X509 HTTPs server with LetsEncrypt", Config.DomainNames)
 		log.Fatal(server.ListenAndServeTLS("", ""))
 	} else {
@@ -149,6 +155,7 @@ func x509ProxyServer() {
 		if err != nil {
 			log.Fatalf("unable to start x509 server, error %v\n", err)
 		}
+		server.Handler = certMiddleware(mux)
 		log.Println("Start X509 HTTPs server with", serverCrt, serverKey)
 		log.Fatal(server.ListenAndServeTLS(serverCrt, serverKey))
 	}

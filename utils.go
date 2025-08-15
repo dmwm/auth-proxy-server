@@ -226,11 +226,14 @@ func getServer(serverCrt, serverKey string, customVerify bool) (*http.Server, er
 			// we must use tls.RequestClientCert for CMS proxy, otherwise client
 			// cert will not be present during TLS handshake
 			// then it will only work for user's cert but not for proxies
-			ClientAuth:            tls.RequestClientCert,
-			ClientCAs:             _rootCAs, // this comes from /etc/grid-security/certificate
-			RootCAs:               _rootCAs,
-			Certificates:          []tls.Certificate{cert},
-			VerifyPeerCertificate: VerifyPeerCertificate,
+			ClientAuth:   tls.RequestClientCert,
+			ClientCAs:    _rootCAs, // this comes from /etc/grid-security/certificate
+			RootCAs:      _rootCAs,
+			Certificates: []tls.Certificate{cert},
+			// to use TLS handshake phase for client certificate validation use
+			// VerifyPeerCertificate: VerifyPeerCertificate,
+			// but if we want to move this validation to middleware layer (after TLS handshake but before end-point)
+			// we do not need this assignment. Insetad, use certMiddleware and HTTP server mux
 		}
 	}
 	// enable debugging of TLS handshake
