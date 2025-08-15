@@ -62,6 +62,7 @@ func authTroubleHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "No client certificate provided", http.StatusUnauthorized)
 		return
 	}
+	badCertificate := false
 
 	cert := r.TLS.PeerCertificates[0]
 	dn := cert.Subject.String()
@@ -73,10 +74,12 @@ func authTroubleHandler(w http.ResponseWriter, r *http.Request) {
 	cmsVOMember := "CMS VO member"
 	if !isCMSVOMember(cert) {
 		cmsVOMember = "not CMS VO member"
+		badCertificate = true
 	}
 	passed := "passed"
 	if daysRemaining < 0 {
 		passed = "not passed"
+		badCertificate = true
 	}
 
 	var details string
@@ -85,6 +88,7 @@ func authTroubleHandler(w http.ResponseWriter, r *http.Request) {
 			rec.Name, rec.Login, rec.ID, map2string(rec.Roles), rec.DNs)
 	} else {
 		details = fmt.Sprintf("Provided certificate does not match with any record in CRIC database. ERROR: %v", err.Error())
+		badCertificate = true
 	}
 
 	data := struct {
@@ -103,6 +107,19 @@ func authTroubleHandler(w http.ResponseWriter, r *http.Request) {
 		Userdetails:   template.HTML(details),
 		Passed:        passed,
 		CMSVOMember:   cmsVOMember,
+	}
+	if badCertificate {
+		w.WriteHeader(http.StatusUnauthorized)
+	}
+
+	// check if client asked for JSON
+	if r.Header.Get("Accept") == "application/json" {
+		if bytes, err := json.MarshalIndent(data, "", "  "); err == nil {
+			w.Write(bytes)
+		} else {
+			w.Write([]byte(fmt.Sprintf("%v", data)))
+		}
+		return
 	}
 
 	err := tmpl.Execute(w, data)
