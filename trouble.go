@@ -39,14 +39,19 @@ func map2string(roles map[string][]string) string {
 var tmpl = template.Must(template.New("help").Parse(`
 <!DOCTYPE html>
 <html>
-<head><title>Certificate authentication help</title></head>
+<head>
+ <title>CMSWEB authentication help</title>
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+ <link rel="stylesheet" type="text/css" media="screen" href="/css/cmsweb.css" />
+</head>
 <body>
 <h2>Certificate authentication help</h2>
 <p>Your browser offered valid DN '{{.DN}}'.</p>
 <p>Your certificate is valid from {{.NotBefore}} to {{.NotAfter}}; {{.DaysRemaining}} days of validity remain.</p>
 <p>Your certificate {{.Passed}} basic validation.</p>
 <p>Your certificate is {{.CMSVOMember}}.</p>
-<p>Your certificate is mapped to {{.Userdetails}} in CRIC database</p>
+<p>{{.Userdetails}}</p>
 <p>For more details please see <a href="https://twiki.cern.ch/twiki/bin/view/CMS/DQMGUIGridCertificate">certificate setup instructions</a> for the most commonly needed steps.</p>
 </body>
 </html>
@@ -76,10 +81,10 @@ func authTroubleHandler(w http.ResponseWriter, r *http.Request) {
 
 	var details string
 	if rec, err := userDetails(cert); err == nil {
-		details = fmt.Sprintf("<br/><b>Name:</b> %s<br/><b>Login:</b> %s<br/><b>ID:</b> %v<br/><b>Roles:</b> %+v<br/><b>DNs:</b> %v<br/>",
+		details = fmt.Sprintf("Your certificate is mapped to <br/><b>Name:</b> %s<br/><b>Login:</b> %s<br/><b>ID:</b> %v<br/><b>Roles:</b> %+v<br/><b>DNs:</b> %v<br/>in CRIC database",
 			rec.Name, rec.Login, rec.ID, map2string(rec.Roles), rec.DNs)
 	} else {
-		details = err.Error()
+		details = fmt.Sprintf("Provided certificate does not match with any record in CRIC database. ERROR: %v", err.Error())
 	}
 
 	data := struct {
