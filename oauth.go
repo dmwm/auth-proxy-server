@@ -689,7 +689,10 @@ func oauthProxyServer() {
 		serverCrt := checkFile(Config.ServerCrt)
 		serverKey := checkFile(Config.ServerKey)
 
-		server, err := getServer(serverCrt, serverKey, false)
+		addr := fmt.Sprintf(":%d", Config.Port)
+		customVerify := false
+		tlsCertVerify := true
+		server, err := getServer(addr, serverCrt, serverKey, customVerify, tlsCertVerify)
 		if err != nil {
 			log.Fatalf("unable to start oauth server, error %v\n", err)
 		}

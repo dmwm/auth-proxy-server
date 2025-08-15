@@ -178,7 +178,7 @@ func VerifyPeerCertificate(certificates [][]byte, _ [][]*x509.Certificate) error
 // helper function to construct http server with TLS
 // very informative blog about TLS setup:
 // https://youngkin.github.io/post/gohttpsclientserver/
-func getServer(serverCrt, serverKey string, customVerify bool) (*http.Server, error) {
+func getServer(addr, serverCrt, serverKey string, customVerify, tlsCertVerify bool) (*http.Server, error) {
 	// start HTTP or HTTPs server based on provided configuration
 
 	var tlsConfig *tls.Config
@@ -235,7 +235,7 @@ func getServer(serverCrt, serverKey string, customVerify bool) (*http.Server, er
 		// VerifyPeerCertificate: VerifyPeerCertificate,
 		// but if we want to move this validation to middleware layer (after TLS handshake but before end-point)
 		// we do not need this assignment. Insetad, use certMiddleware and HTTP server mux
-		if !Config.X509MiddlewareServer {
+		if tlsCertVerify {
 			tlsConfig.VerifyPeerCertificate = VerifyPeerCertificate
 		}
 	}
@@ -288,7 +288,6 @@ func getServer(serverCrt, serverKey string, customVerify bool) (*http.Server, er
 		}
 	}
 	// setup HTTPs server
-	addr := fmt.Sprintf(":%d", Config.Port)
 	server := &http.Server{
 		Addr:           addr,
 		TLSConfig:      tlsConfig,

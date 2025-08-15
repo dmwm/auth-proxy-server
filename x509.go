@@ -119,9 +119,6 @@ func x509ProxyServer() {
 
 	// trouble page
 	//http.HandleFunc("/auth/trouble", authTroubleHandler)
-	http.HandleFunc("/auth/trouble", func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, "https://localhost:4443/auth/trouble", http.StatusFound)
-	})
 
 	// start http server to serve metrics only
 	if Config.MetricsPort > 0 {
@@ -139,6 +136,7 @@ func x509ProxyServer() {
 	http.HandleFunc("/", x509RequestHandler)
 
 	// start HTTPS server
+	addr := fmt.Sprintf(":%d", Config.Port)
 	if Config.LetsEncrypt {
 		server := LetsEncryptServer(Config.DomainNames...)
 		log.Println("Start X509 HTTPs server with LetsEncrypt", Config.DomainNames)
@@ -148,8 +146,26 @@ func x509ProxyServer() {
 		serverCrt := checkFile(Config.ServerCrt)
 		serverKey := checkFile(Config.ServerKey)
 
+		// start go routine to server /auth/trouble via middleware server
+		go func() {
+			mux := http.NewServeMux()
+			mux.HandleFunc("/auth/trouble", authTroubleHandler)
+			// start main HTTP server
+			customVerify := true
+			tlsCertVerify := false
+			server, err := getServer(":4443", serverCrt, serverKey, customVerify, tlsCertVerify)
+			if err != nil {
+				log.Fatalf("ERROR: unable to start x509 server, error %v\n", err)
+			}
+			server.Handler = certMiddleware(mux)
+			log.Println("Start X509 HTTPs server :4443/auth/trouble")
+			log.Fatal(server.ListenAndServeTLS(serverCrt, serverKey))
+		}()
+
 		// start main HTTP server
-		server, err := getServer(serverCrt, serverKey, true)
+		customVerify := true
+		tlsCertVerify := true
+		server, err := getServer(addr, serverCrt, serverKey, customVerify, tlsCertVerify)
 		if err != nil {
 			log.Fatalf("unable to start x509 server, error %v\n", err)
 		}
@@ -191,6 +207,7 @@ func x509ProxyMiddlewareServer() {
 	mux.HandleFunc("/", x509RequestHandler)
 
 	// start HTTPS server
+	addr := fmt.Sprintf(":%d", Config.Port)
 	if Config.LetsEncrypt {
 		server := LetsEncryptServer(Config.DomainNames...)
 		server.Handler = certMiddleware(mux)
@@ -201,7 +218,9 @@ func x509ProxyMiddlewareServer() {
 		serverCrt := checkFile(Config.ServerCrt)
 		serverKey := checkFile(Config.ServerKey)
 
-		server, err := getServer(serverCrt, serverKey, true)
+		customVerify := true
+		tlsCertVerify := false
+		server, err := getServer(addr, serverCrt, serverKey, customVerify, tlsCertVerify)
 		if err != nil {
 			log.Fatalf("unable to start x509 server, error %v\n", err)
 		}
