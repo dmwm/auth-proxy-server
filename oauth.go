@@ -690,8 +690,8 @@ func oauthProxyServer() {
 		serverKey := checkFile(Config.ServerKey)
 
 		addr := fmt.Sprintf(":%d", Config.Port)
-		customVerify := false
-		tlsCertVerify := true
+		customVerify := false // do not use certificate verification, e.g. OAuth server
+		tlsCertVerify := true // use HTTPs server and perform cert verification during TLS handshake
 		server, err := getServer(addr, serverCrt, serverKey, customVerify, tlsCertVerify)
 		if err != nil {
 			log.Fatalf("unable to start oauth server, error %v\n", err)
