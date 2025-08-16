@@ -393,8 +393,8 @@ func scitokensServer() {
 
 	// start HTTPS server
 	addr := fmt.Sprintf(":%d", Config.Port)
-	customVerify := true
-	tlsCertVerify := true
+	customVerify := true  // use certificate verification
+	tlsCertVerify := true // use HTTPs server and perform cert verification during TLS handshake
 	server, err := getServer(addr, serverCrt, serverKey, customVerify, tlsCertVerify)
 	if err != nil {
 		log.Fatalf("unable to start scitokens server, error %v\n", err)
