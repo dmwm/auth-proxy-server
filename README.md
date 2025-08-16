@@ -56,3 +56,57 @@ This codebase is based on different examples taken from:
 - [Reverse proxy server](https://imti.co/golang-reverse-proxy/)
 - [Metrics in reverse proxy server](https://itnext.io/capturing-metrics-with-gos-reverse-proxy-5c36cb20cb20)
 - [GoLang reverse proxy](https://www.integralist.co.uk/posts/golang-reverse-proxy/)
+
+### examples
+Here we will provide few examples how to run APS (auth-proxy-server) in
+different modes:
+- first mode is X509 server which accepts users certificates. The user
+  certificate verification is done via TLS handshake mode (before passing HTTP
+  request to particular end-point):
+```
+# x509 server
+auth-proxy-server -port 7743 -useX509 -config config.json
+```
+- x509 server with mix modes TLS handshake certification verification for all
+  end-points and additional middleware certificte verication for dedicated
+  end-point). This mode is useful to provide end-users a web UI interface
+  to inspect and troubleshoot their certificates
+
+```
+# x509 server with additional /auth/trouble on separate port
+# please include in your config.json the option
+# please include in your config.json the option
+# "auth_trouble_port": 4443 // or any port you want
+auth-proxy-server -port 7743 -useX509 -config config.json
+
+# in this mode you'll get APS with two ports, one main port for all HTTP
+# requests and another (port 4443) where /auth/trouble end-point will be served
+```
+
+- x509 server with midleeware certificate verification (during TLS handshake
+layer server will accept any user certificate but it will be verified within
+middleware layer but before passing request to particular end-point). This
+method provides ability to customize HTTP response when user provide wrong
+certificate but adds overhead (and loose rejection of clients at TLS handshake
+mode) in terms of processing of user ceriticates.
+
+```
+# x509 server with additional /auth/trouble on separate port
+# please include in your config.json the option
+# "x509MiddlewareServer": true,
+auth-proxy-server -port 7743 -useX509 -config config.json
+```
+
+- OAuth server with token based authentication
+
+```
+# oauth server, in this mode your config should have the following settings:
+#    "client_id": "xxx",
+#    "client_secret": "yyy",
+#    "iam_client_id": "abc",
+#    "iam_client_secret": "sldkfjlskdfj",
+#    "iam_url": "https://cms-auth.web.cern.ch",
+#    "oauth_url": "https://auth.cern.ch/auth/realms/cern",
+#    "providers": ["https://auth.cern.ch/auth/realms/cern"],
+auth-proxy-server -port 7743 -config config.json
+```
