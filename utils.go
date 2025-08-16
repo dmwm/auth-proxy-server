@@ -12,7 +12,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
@@ -77,7 +76,7 @@ func RootCAs() *x509.CertPool {
 	}
 	rootCAs := x509.NewCertPool()
 	for _, rootCAdir := range Config.RootCAs {
-		files, err := ioutil.ReadDir(rootCAdir)
+		files, err := os.ReadDir(rootCAdir)
 		if err != nil {
 			log.Printf("Unable to list files in '%s', error: %v\n", rootCAdir, err)
 			return rootCAs
