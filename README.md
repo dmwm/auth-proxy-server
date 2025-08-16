@@ -45,6 +45,8 @@ The code is implemented as the following modules:
 - [scitokens.go](scitokens.go) module provides support for [SciTokens](https://scitokens.org/)
 - [utils.go](utils.go) provides various utils used in a code
 - [x509.go](x509.go) provides implementation of x509ProxyServer
+- [middleware.go](middleware.go) middleware functions
+- [trouble.go](trouble.go) certification troubleshooting
 
 Both server implementations (oauthProxyServer and x509ProxyServer) support
 /server end-point which can be used to update server settings, e.g.
@@ -57,7 +59,7 @@ This codebase is based on different examples taken from:
 - [Metrics in reverse proxy server](https://itnext.io/capturing-metrics-with-gos-reverse-proxy-5c36cb20cb20)
 - [GoLang reverse proxy](https://www.integralist.co.uk/posts/golang-reverse-proxy/)
 
-### examples
+### Examples
 Here we will provide few examples how to run APS (auth-proxy-server) in
 different modes:
 - first mode is X509 server which accepts users certificates. The user
