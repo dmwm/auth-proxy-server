@@ -146,29 +146,28 @@ func x509ProxyServer() {
 		serverCrt := checkFile(Config.ServerCrt)
 		serverKey := checkFile(Config.ServerKey)
 
-		// start go routine to server /auth/trouble via middleware server
-		go func() {
-			mux := http.NewServeMux()
-			mux.HandleFunc("/auth/trouble", authTroubleHandler)
-			// start main HTTP server
-			customVerify := true
-			tlsCertVerify := false
-			addr := ":4443" // default port for /auth/trouble end-point
-			if Config.AuthTroublePort != 0 {
-				addr = fmt.Sprintf(":%d", Config.AuthTroublePort)
-			}
-			server, err := getServer(addr, serverCrt, serverKey, customVerify, tlsCertVerify)
-			if err != nil {
-				log.Fatalf("ERROR: unable to start x509 server, error %v\n", err)
-			}
-			server.Handler = certMiddleware(mux)
-			log.Println("Start X509 HTTPs server :4443/auth/trouble")
-			log.Fatal(server.ListenAndServeTLS(serverCrt, serverKey))
-		}()
+		// start middleware server with /auth/trouble end-point only if AuthTroublePort is provided
+		if Config.AuthTroublePort > 0 {
+			go func() {
+				mux := http.NewServeMux()
+				mux.HandleFunc("/auth/trouble", authTroubleHandler)
+				// start main HTTP server
+				customVerify := true   // use certificate verification
+				tlsCertVerify := false // use middleware server and do not perform cert verification during TLS handshake
+				addr := fmt.Sprintf(":%d", Config.AuthTroublePort)
+				server, err := getServer(addr, serverCrt, serverKey, customVerify, tlsCertVerify)
+				if err != nil {
+					log.Fatalf("ERROR: unable to start x509 server, error %v\n", err)
+				}
+				server.Handler = certMiddleware(mux)
+				log.Printf("Start X509 middleware HTTPs server :%d/auth/trouble", Config.AuthTroublePort)
+				log.Fatal(server.ListenAndServeTLS(serverCrt, serverKey))
+			}()
+		}
 
 		// start main HTTP server
-		customVerify := true
-		tlsCertVerify := true
+		customVerify := true  // use certificate verification
+		tlsCertVerify := true // use HTTPs server and perform cert verification during TLS handshake
 		server, err := getServer(addr, serverCrt, serverKey, customVerify, tlsCertVerify)
 		if err != nil {
 			log.Fatalf("unable to start x509 server, error %v\n", err)
@@ -179,7 +178,7 @@ func x509ProxyServer() {
 
 }
 
-// helper function to start x509 proxy server
+// helper function to start x509 proxy middleware server
 func x509ProxyMiddlewareServer() {
 	log.Println("Use x509ProxyMiddlewareServer")
 	// use http mux server and attach to it our middleware layers
@@ -187,28 +186,17 @@ func x509ProxyMiddlewareServer() {
 	// instead of using TLS handshake phase (original VerifyPeerCertificate option/function)
 	mux := http.NewServeMux()
 
-	// metrics handler
-	mux.HandleFunc(fmt.Sprintf("%s/metrics", Config.Base), metricsHandler)
 	// rules handler
 	mux.HandleFunc(fmt.Sprintf("%s/rules", Config.Base), rulesHandler)
 
 	// trouble page
 	mux.HandleFunc("/auth/trouble", authTroubleHandler)
 
-	// start http server to serve metrics only
-	if Config.MetricsPort > 0 {
-		log.Println("Start x509 server metrics on port", Config.MetricsPort)
-		go http.ListenAndServe(fmt.Sprintf(":%d", Config.MetricsPort), nil)
-	}
-
 	// the server settings handler
 	mux.HandleFunc(fmt.Sprintf("%s/server", Config.Base), settingsHandler)
 
 	// Only expose debug endpoints (pprof, expvar) if the client IP is allowed
 	mux.HandleFunc("/debug/", debugHandler)
-
-	// the request handler
-	mux.HandleFunc("/", x509RequestHandler)
 
 	// start HTTPS server
 	addr := fmt.Sprintf(":%d", Config.Port)
@@ -222,8 +210,8 @@ func x509ProxyMiddlewareServer() {
 		serverCrt := checkFile(Config.ServerCrt)
 		serverKey := checkFile(Config.ServerKey)
 
-		customVerify := true
-		tlsCertVerify := false
+		customVerify := true   // use certificate verification
+		tlsCertVerify := false // use middleware server and do not perform cert verification during TLS handshake
 		server, err := getServer(addr, serverCrt, serverKey, customVerify, tlsCertVerify)
 		if err != nil {
 			log.Fatalf("unable to start x509 server, error %v\n", err)
