@@ -35,7 +35,7 @@ func redirectToHTTPS(w http.ResponseWriter, r *http.Request) {
 }
 
 // Server starts APS server
-func Server(config string, port, metricsPort int, logFile string, useX509, scitokens, rules bool) {
+func Server(config string, port, metricsPort int, logFile string, useX509, useX509middleware, scitokens, rules bool) {
 	err := parseConfig(config)
 	if err != nil {
 		log.Fatalf("unable to parse config %s, error %v\n", config, err)
@@ -147,11 +147,11 @@ func Server(config string, port, metricsPort int, logFile string, useX509, scito
 	}()
 
 	// start our servers
-	if useX509 {
+	if useX509 || useX509middleware {
 		if Config.CricURL != "" || Config.CricFile != "" {
 			go cric.UpdateCricRecords("dn", Config.CricFile, Config.CricURL, Config.UpdateCricInterval, Config.CricVerbose)
 		}
-		if Config.X509MiddlewareServer {
+		if Config.X509MiddlewareServer || useX509middleware {
 			x509ProxyMiddlewareServer()
 		} else {
 			x509ProxyServer()

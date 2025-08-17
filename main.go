@@ -12,9 +12,8 @@ import (
 	"os"
 	"runtime"
 	"time"
-
-//	_ "expvar"         // to be used for monitoring, see https://github.com/divan/expvarmon
-//	_ "net/http/pprof" // profiler, see https://golang.org/pkg/net/http/pprof/
+	// _ "expvar"         // to be used for monitoring, see https://github.com/divan/expvarmon
+	// _ "net/http/pprof" // profiler, see https://golang.org/pkg/net/http/pprof/
 )
 
 // gitVersion of the code shows git hash
@@ -41,6 +40,8 @@ func main() {
 	flag.StringVar(&logFile, "logFile", "", "log file")
 	var useX509 bool
 	flag.BoolVar(&useX509, "useX509", false, "start X509 auth server")
+	var useX509middleware bool
+	flag.BoolVar(&useX509middleware, "useX509middleware", false, "start X509middleware auth server")
 	var scitokens bool
 	flag.BoolVar(&scitokens, "scitokens", false, "start scitokens server")
 	var rules bool
@@ -58,5 +59,5 @@ func main() {
 		testRedirectRule(config, testRule)
 		os.Exit(0)
 	}
-	Server(config, port, metricsPort, logFile, useX509, scitokens, rules)
+	Server(config, port, metricsPort, logFile, useX509, useX509middleware, scitokens, rules)
 }

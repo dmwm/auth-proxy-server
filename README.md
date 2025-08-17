@@ -97,6 +97,10 @@ mode) in terms of processing of user ceriticates.
 # please include in your config.json the option
 # "x509MiddlewareServer": true,
 auth-proxy-server -port 7743 -useX509 -config config.json
+
+# or you can use -useX509middleware flag to start it without change of
+# any changes in configuration file
+auth-proxy-server -port 7743 -useX509middleware -config config.json
 ```
 
 - OAuth server with token based authentication
