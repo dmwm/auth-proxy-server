@@ -1,3 +1,4 @@
+// server.go
 package main
 
 import (
@@ -88,6 +89,21 @@ func Server(config string, port, metricsPort int, logFile string, useX509, useX5
 
 	// read RootCAs once
 	_rootCAs = RootCAs()
+	
+	// load CRLs once and start refresher
+	revoked.Store(loadLocalCRLs(Config.CRLDirs, Config.CRLGlobs, Config.CRLQuarantine))
+	startCRLRefresher(Config.CRLDirs, Config.CRLGlobs, Config.CRLInterval, Config.CRLQuarantine)
+
+	// manual refresh endpoint on a dedicated port(CRLPort)
+	mux := http.NewServeMux()
+        mux.HandleFunc("/refresh-crls", RefreshCRLsHandler)
+	go func() {
+		addr := fmt.Sprintf(":%d", Config.CRLPort)
+		log.Printf("CRL refresh endpoint running at http://localhost%s/refresh-crls", addr)
+		if err := http.ListenAndServe(addr, mux); err != nil {
+			log.Printf("[CRL] refresh server error: %v", err)
+		}
+	}()
 
 	// initialize ingress rules only once
 	_ingressMap, _ingressRules = readIngressRules()
@@ -106,7 +122,7 @@ func Server(config string, port, metricsPort int, logFile string, useX509, useX5
 		NumLogicalCores = 0
 	}
 
-	// initialize all particiapted providers
+	// initialize all participated providers
 	auth.Init(Config.Providers, Config.Verbose)
 
 	// initialize cmsauth module
@@ -122,6 +138,7 @@ func Server(config string, port, metricsPort int, logFile string, useX509, useX5
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{
 				RootCAs: _rootCAs,
+				VerifyPeerCertificate: verifyPeerCertificateWithCRL,
 			},
 		},
 	}
@@ -168,8 +185,9 @@ func Server(config string, port, metricsPort int, logFile string, useX509, useX5
 		// Get CRIC records
 		go cric.UpdateCricRecords("id", Config.CricFile, Config.CricURL, Config.UpdateCricInterval, Config.CricVerbose)
 	}
-	// Get AIM records
+	// Get IAM records
 	go getIAMInfo()
 	// start OAuth server
 	oauthProxyServer()
 }
+
