@@ -258,8 +258,6 @@ func checkAccessToken(r *http.Request) (auth.TokenAttributes, error) {
 			attrs.UserName = user.UserName
 			return attrs, nil
 		}
-	} else {
-		log.Println("fail to match AIM token, error", err)
 	}
 
 	// first, we inspect our token
@@ -313,6 +311,7 @@ func oauthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	sessLock.Lock()
 	state := sess.Get("somestate")
+	originalURI := sess.Get("originalURI")
 	sessLock.Unlock()
 	if state == nil {
 		http.Error(w, fmt.Sprintf("state did not match, %v", state), http.StatusBadRequest)
@@ -388,6 +387,9 @@ func oauthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println("redirect to", urlPath)
 		printHTTPRequest(r, "new http request headers after CERN SSO")
 	}
+	if originalURI != "" {
+		urlPath = fmt.Sprintf("%v", originalURI)
+	}
 	http.Redirect(w, r, urlPath, http.StatusFound)
 	return
 }
@@ -413,6 +415,9 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 	atomic.AddUint64(&TotalOAuthRequests, 1)
 	defer getRPS(start)
 
+	// Capture full original path + query
+	originalURI := r.URL.RequestURI()
+
 	status := http.StatusOK
 	userData := make(map[string]interface{})
 	mapMutex := sync.RWMutex{}
@@ -425,6 +430,9 @@ func oauthRequestHandler(w http.ResponseWriter, r *http.Request) {
 	sess.Set("somestate", oauthState)
 	if sess.Get("path") == nil || sess.Get("path") == "" {
 		sess.Set("path", r.URL.Path)
+	}
+	if sess.Get("originalURI") == nil || sess.Get("originalURI") == "" {
+		sess.Set("originalURI", originalURI)
 	}
 	if sess.Get("accessToken") != nil && sess.Get("accessToken") != "" && r.Header.Get("Authorization") == "" {
 		r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", sess.Get("accessToken")))
