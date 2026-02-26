@@ -217,8 +217,8 @@ func tokenClaims(provider Provider, token string) (map[string]interface{}, error
 	mapMutex := sync.RWMutex{}
 	// First parse without checking signature, to get the Kid
 	claims, err := jwt.ParseWithoutCheck([]byte(token))
-	log.Println("ParseWithoutCheck returns %v", err)
 	if err != nil {
+		log.Printf("tokenClaims: jwt.ParseWithoutCheck returns error: %v", err)
 		return out, err
 	}
 	var pub *rsa.PublicKey
