@@ -150,7 +150,9 @@ func loadLocalCRLs(dirs, globs []string, quarantine bool) map[string]bool {
 			log.Printf("Loaded CRL %s", f)
 		}
 	}
-	log.Printf("[CRL-DEBUG] TOTAL revoked certs loaded: %d", len(out))
+	if Config.Verbose > 0 {
+		log.Printf("[CRL-DEBUG] TOTAL revoked certs loaded: %d", len(out))
+	}
 	return out
 }
 
