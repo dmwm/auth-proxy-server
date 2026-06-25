@@ -1,6 +1,6 @@
 module github.com/dmwm/auth-proxy-server
 
-go 1.25.0
+go 1.26.4
 
 require (
 	github.com/coreos/go-oidc/v3 v3.19.0
